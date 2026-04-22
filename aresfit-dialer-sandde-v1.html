@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AresFit S">
+<meta name="theme-color" content="#08080d">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href='data:application/manifest+json,{"name":"AresFit Dialer Sandde","short_name":"AresFitS","start_url":".","display":"standalone","background_color":"%2308080d","theme_color":"%2308080d","icons":[{"src":"data:image/svg%2Bxml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 rx=%2232%22 fill=%22%2308080d%22/><text x=%2296%22 y=%22130%22 font-size=%22110%22 text-anchor=%22middle%22>🏋️</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏋️</text></svg>'>
+<title>AresFit Dialer · Sandde v1</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+html,body{-webkit-text-size-adjust:100%;overscroll-behavior:none}
+:root{--bg:#08080d;--panel:#0e0e16;--card:#131320;--border:#1c1c2e;--border2:#262640;--red:#ff3b5c;--red2:#ff5a7a;--green:#00e676;--amber:#ffab00;--blue:#448aff;--purple:#b388ff;--danger:#ff1744;--txt:#e4e4ec;--txt2:#8e8ea0;--txt3:#55556a;--font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);min-height:100vh}
+*::-webkit-scrollbar{width:6px;height:6px}
+*::-webkit-scrollbar-track{background:#0a0a14}
+*::-webkit-scrollbar-thumb{background:#252538;border-radius:3px}
+
+/* Layout */
+.app{max-width:640px;margin:0 auto;padding:10px;padding-bottom:40px}
+.sticky-top{position:sticky;top:0;z-index:50;background:var(--bg);padding-top:6px;margin:-10px -10px 8px;padding:10px 10px 8px;border-bottom:1px solid var(--border)}
+.head-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.logo{font-size:15px;font-weight:800;letter-spacing:.04em;flex:1}
+.logo span{background:linear-gradient(135deg,var(--red),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+.save-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--txt3);margin-left:6px;vertical-align:middle;transition:background .25s}
+.save-dot.ok{background:var(--green);box-shadow:0 0 8px rgba(0,230,118,.6)}
+.save-dot.fail{background:var(--danger)}
+.save-dot.pulse{animation:pulse .6s ease-out}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.stat{background:var(--card);padding:8px 6px;border-radius:9px;border:1px solid var(--border);text-align:center}
+.stat-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--red2);line-height:1.1}
+.stat-lbl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+
+/* Call block banner */
+.block-banner{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:12px;font-weight:600;border-left:4px solid;display:flex;align-items:center;gap:8px}
+.block-banner .ico{font-size:16px}
+.block-banner .msg{flex:1}
+.block-banner.prime{background:rgba(0,230,118,.08);border-color:var(--green);color:var(--green)}
+.block-banner.secondary{background:rgba(255,171,0,.08);border-color:var(--amber);color:var(--amber)}
+.block-banner.dead{background:rgba(255,23,68,.1);border-color:var(--danger);color:var(--red2)}
+
+/* Buttons */
+button{font-family:var(--font);cursor:pointer;border:none;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--txt);transition:transform .1s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-red{background:linear-gradient(135deg,var(--red),#e8364f);color:#fff}
+.btn-ghost{background:var(--card);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border2)}
+.btn-sm{padding:6px 10px;font-size:11px;border-radius:7px}
+
+/* Inputs */
+input,textarea,select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--txt);font-family:var(--font);font-size:13px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red)}
+textarea{resize:vertical;min-height:70px}
+textarea.pending{border-color:var(--amber);box-shadow:0 0 0 2px rgba(255,171,0,.12)}
+select{appearance:none;-webkit-appearance:none;padding-right:28px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238e8ea0' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 10px center;color-scheme:dark}
+option{background:#131320;color:#e4e4ec;padding:6px}
+
+/* Custom dropdown (Status/Stage) */
+.dd{position:relative;padding:5px 22px 5px 2px;font-size:13px;border-bottom:1px solid var(--border);cursor:pointer;color:var(--txt);user-select:none}
+.dd-val{min-height:18px;display:flex;align-items:center}
+.dd-caret{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:9px}
+.dd-list{display:none;position:absolute;left:-10px;right:-10px;top:calc(100% + 4px);background:#131320;border:1px solid var(--border2);border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.7);z-index:20;max-height:300px;overflow-y:auto}
+.dd.open .dd-list{display:block}
+.dd-opt{padding:9px 12px;font-size:13px;color:var(--txt);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03)}
+.dd-opt:last-child{border-bottom:none}
+.dd-opt:hover{background:#fff;color:#000}
+.dd-opt.selected{color:var(--red2);font-weight:600}
+.dd-opt.selected:hover{background:#fff;color:#000}
+
+/* Gates (P1) */
+.gate{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin:10px 0}
+.gate.pre{border-left:4px solid var(--amber)}
+.gate.mobile{border-left:4px solid var(--danger);background:rgba(255,23,68,.06)}
+.gate h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:6px;font-weight:700}
+.gate.mobile h4{color:var(--danger)}
+.gate label{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--txt);cursor:pointer}
+.gate input[type=checkbox]{width:16px;height:16px;accent-color:var(--green);flex:0 0 auto;cursor:pointer}
+.gate .hint{font-size:10px;color:var(--txt3);margin-top:4px;line-height:1.4}
+
+/* Deconflict + dead air (P2) */
+.flag-bar{background:rgba(255,171,0,.12);border-left:3px solid var(--amber);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--amber);margin-bottom:8px}
+.flag-bar.danger{background:rgba(255,23,68,.1);border-left-color:var(--danger);color:var(--red2)}
+.deconflict-toggle{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt3);margin-top:6px;padding:4px 0;cursor:pointer}
+.deconflict-toggle input{width:14px;height:14px;accent-color:var(--amber)}
+
+/* Brand swap chip (P2) */
+.swap-chip{display:inline-block;background:linear-gradient(135deg,rgba(255,59,92,.18),rgba(255,171,0,.15));border:1px solid var(--amber);border-radius:8px;padding:7px 11px;margin-top:6px;font-size:11px;cursor:pointer;color:var(--amber);line-height:1.35;animation:fadein .25s}
+.swap-chip .brand{color:#fff;font-weight:700}
+.swap-chip:hover{background:var(--amber);color:#000}
+.swap-chip:hover .brand{color:#000}
+@keyframes fadein{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+
+/* Due banner (P3) */
+.due-banner{background:linear-gradient(135deg,#3a1a00,#2a1500);border:1px solid var(--amber);border-left:4px solid var(--amber);border-radius:10px;padding:10px 12px;margin-bottom:10px;animation:pulse-border 2s infinite}
+.due-banner.overdue{background:linear-gradient(135deg,#2a0505,#1a0303);border-color:var(--danger);border-left-color:var(--danger)}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 0 rgba(255,171,0,0)}50%{box-shadow:0 0 16px rgba(255,171,0,.3)}}
+.due-banner h3{font-size:11px;text-transform:uppercase;font-weight:800;color:var(--amber);margin-bottom:4px}
+.due-banner.overdue h3{color:var(--danger)}
+.due-banner .biz{font-size:14px;font-weight:700;color:#fff}
+.due-banner-btns{display:flex;gap:6px;margin-top:8px}
+.due-banner .jump{background:var(--amber);color:#000;flex:1;padding:8px;font-size:12px;font-weight:700;border-radius:8px;border:none;cursor:pointer}
+.due-banner.overdue .jump{background:var(--danger);color:#fff}
+.due-banner .dismiss{background:transparent;color:var(--txt2);border:1px solid var(--border2);padding:8px 12px;font-size:11px;border-radius:8px;cursor:pointer}
+
+/* Email button (P3) */
+.email-btn{width:100%;background:linear-gradient(135deg,var(--blue),#2962ff);color:#fff;padding:12px;font-size:14px;font-weight:700;border-radius:12px;box-shadow:0 4px 16px rgba(68,138,255,.18);margin-top:10px;border:none;cursor:pointer}
+.email-btn:active{transform:scale(.98)}
+
+/* Toast (P1/P3) */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--amber);border-left:4px solid var(--amber);border-radius:10px;padding:12px 18px;font-size:12px;color:var(--amber);z-index:300;max-width:90%;box-shadow:0 8px 30px rgba(0,0,0,.7);animation:slideup .3s;font-weight:600}
+.toast.danger{border-color:var(--danger);border-left-color:var(--danger);color:var(--red2)}
+@keyframes slideup{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* DNC row marker (P1) */
+.lead-item.dnc-row{background:rgba(255,23,68,.08)!important;border-left-color:var(--danger)!important}
+
+/* Handover modal */
+.handover-box{background:#0a0a14;border:1px solid var(--border);border-radius:8px;padding:10px;font-family:var(--mono);font-size:10px;line-height:1.5;color:var(--txt2);max-height:320px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;margin:8px 0}
+.subj-pool textarea{min-height:140px;font-family:var(--mono);font-size:11px}
+
+/* Call card */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
+.row-line{font-family:var(--mono);font-size:11px;color:var(--txt3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row-line .pri{color:var(--amber);font-weight:700}
+.row-line .pri.top{color:var(--red2)}
+.row-line .r{color:var(--red2);font-weight:700}
+.row-line .att{background:var(--border2);padding:1px 6px;border-radius:10px;color:var(--txt);font-weight:600}
+.biz-head{font-size:22px;font-weight:800;line-height:1.15;margin-bottom:3px;word-break:break-word}
+.sub{color:var(--txt2);font-size:12px}
+
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.field{background:var(--card);padding:8px 9px;border-radius:8px;border:1px solid var(--border);cursor:pointer;min-height:42px}
+.field.full{grid-column:1 / -1}
+.field:hover{border-color:var(--border2)}
+.field-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center}
+.field-lbl .edit{color:var(--txt3);font-size:8px}
+.field-val{font-size:13px;color:var(--txt);word-break:break-word;min-height:18px}
+.field-val.mono{font-family:var(--mono);font-size:14px;letter-spacing:.02em}
+.field-val.empty{color:var(--txt3);font-style:italic;font-size:12px}
+.field select{padding:5px 26px 5px 2px;font-size:12px;border:none;background-color:transparent;border-bottom:1px solid var(--border)}
+.field input{padding:4px 0;font-size:13px;background:transparent;border:none;border-bottom:1px solid var(--red)}
+.reveal{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:12px;color:var(--txt2)}
+.reveal summary{cursor:pointer;color:var(--txt);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.reveal summary::marker{color:var(--txt3)}
+.reveal div{margin-top:6px;white-space:pre-wrap;line-height:1.55}
+.ref-chip{display:inline-block;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:11px;color:var(--txt2);margin:2px 4px 2px 0}
+
+/* CALL button */
+.call-row{display:flex;gap:8px;margin:12px 0 10px}
+.call-btn{flex:1;padding:18px;font-size:19px;font-weight:800;border-radius:14px;background:linear-gradient(135deg,var(--green),#00c853);color:#fff;box-shadow:0 4px 20px rgba(0,230,118,.18);letter-spacing:.02em;border:none;cursor:pointer}
+.call-btn:active{transform:scale(.98)}
+.call-btn .n{font-family:var(--mono);font-size:15px;font-weight:700;display:block;margin-top:2px;opacity:.95}
+.copy-btn{width:54px;background:var(--card);border:1px solid var(--border);font-size:20px;border-radius:14px}
+.call-info{font-size:11px;padding:8px 10px;background:rgba(255,171,0,.08);border-left:3px solid var(--amber);border-radius:6px;margin-bottom:10px;color:var(--amber);display:none}
+.call-info.show{display:block}
+.call-info .t{font-family:var(--mono);font-weight:700}
+
+/* Outcomes */
+.outcomes{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.outcomes button{padding:10px 4px;font-size:11px;background:var(--card);border:1px solid var(--border);min-height:48px;line-height:1.25;border-radius:9px}
+.outcomes button.sel{background:var(--red);border-color:var(--red);color:#fff}
+.outcomes button[data-out="Provider Reject"].sel{background:var(--danger);border-color:var(--danger)}
+.outcomes button[data-out="HOT"].sel{background:#ff4081;border-color:#ff4081}
+.outcomes button[data-out="Callback"].sel{background:var(--amber);border-color:var(--amber);color:#000}
+
+/* Notes */
+.notes-wrap{margin-top:12px}
+.notes-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.notes-hist{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 11px;max-height:180px;overflow-y:auto;font-size:12px;line-height:1.55;color:var(--txt);white-space:pre-wrap;word-break:break-word;margin-bottom:6px}
+.notes-hist:empty::before{content:"No notes yet. Pick outcome below, type note, tap Next to log.";color:var(--txt3);font-style:italic;font-size:11px}
+.notes-hist .entry{padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.04)}
+.notes-hist .entry:last-child{border-bottom:none}
+.notes-hist .entry .ts{color:var(--red2);font-family:var(--mono);font-weight:600}
+.notes-hist .entry .oc{color:var(--amber);font-weight:700}
+.notes-hist .legacy{color:var(--txt2);font-size:11px;font-style:italic}
+.new-note-row{display:flex;gap:4px;align-items:flex-start}
+.new-note-row textarea{flex:1}
+.time-pill{font-family:var(--mono);font-size:10px;padding:4px 6px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--amber);cursor:pointer;white-space:nowrap;align-self:stretch;display:flex;align-items:center}
+.time-pill.unset{color:var(--txt3)}
+.note-warn{font-size:11px;color:var(--red2);margin-top:3px;display:none}
+.note-warn.show{display:block}
+
+/* Nav */
+.nav-row{display:flex;gap:6px;margin-top:10px;align-items:center}
+.nav-row .pos{flex:1;text-align:center;font-family:var(--mono);font-size:12px;color:var(--txt2)}
+.nav-row button{flex:0 0 auto;padding:10px 14px}
+.next-btn{background:var(--red);color:#fff}
+
+/* Toolbar bottom */
+.toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.toolbar button{font-size:11px;padding:9px 4px;background:var(--card);border:1px solid var(--border)}
+
+/* Upload screen */
+.upload-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.upload-card{max-width:520px;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;position:relative}
+.upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;background:var(--card);transition:all .2s;margin-top:14px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--red);background:#181828}
+.upload-zone .big{font-size:38px}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto}
+.modal-box{background:var(--panel);border-radius:14px;padding:16px;max-width:600px;width:100%;border:1px solid var(--border);position:relative;margin-top:20px;margin-bottom:20px}
+.x-btn{position:absolute;top:10px;right:10px;background:none;color:var(--txt3);font-size:20px;padding:4px 10px}
+.x-btn:hover{color:var(--txt)}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3);margin-bottom:8px;font-weight:700}
+
+/* Import mapping */
+.map-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.map-grid label{font-size:10px;color:var(--txt2);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
+.map-grid select{font-size:12px;padding:7px 26px 7px 8px}
+.import-stats{font-size:12px;color:var(--txt2);margin:10px 0;background:var(--card);padding:10px;border-radius:8px;border:1px solid var(--border);line-height:1.6}
+.import-stats strong{color:var(--green)}
+.import-stats .warn{color:var(--amber)}
+
+/* Leads modal */
+.search-row{margin-bottom:8px}
+.filter-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.filter-bar button{padding:6px 10px;font-size:11px;background:var(--card);border:1px solid var(--border);border-radius:7px}
+.filter-bar button.active{background:var(--red);border-color:var(--red);color:#fff}
+.lead-list{display:flex;flex-direction:column;gap:3px;max-height:60vh;overflow-y:auto}
+.lead-item{padding:9px 10px;background:var(--card);border-left:3px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px}
+.lead-item:hover{background:#16162a}
+.lead-item.active{background:#1a1a30;border-left-color:var(--red)}
+.lead-item .r{font-family:var(--mono);font-size:10px;color:var(--red2);font-weight:700;min-width:34px}
+.lead-item .biz{flex:1;font-weight:700;color:#fff;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead-item .meta{font-size:10px;color:var(--txt2);display:flex;gap:5px;align-items:center;flex-shrink:0}
+.lead-item .att{background:var(--border2);padding:1px 5px;border-radius:8px;font-family:var(--mono);font-size:9px;color:var(--txt)}
+.lead-item .st-pill{font-size:9px;padding:1px 6px;border-radius:8px;background:var(--border);text-transform:uppercase;letter-spacing:.04em}
+.lead-item.s-Callback{border-left-color:var(--amber)}
+.lead-item.s-Callback .st-pill{background:rgba(255,171,0,.2);color:var(--amber)}
+.lead-item.s-HotLead{border-left-color:#ff4081}
+.lead-item.s-HotLead .st-pill{background:rgba(255,64,129,.2);color:#ff4081}
+.lead-item.s-Quoted{border-left-color:var(--purple)}
+.lead-item.s-Quoted .st-pill{background:rgba(179,136,255,.2);color:var(--purple)}
+.lead-item.s-NotInterested{border-left-color:#444}
+.lead-item.s-NoAnswer{border-left-color:var(--txt3)}
+.lead-item.s-Emailed{border-left-color:var(--blue)}
+.lead-item.s-DONOTCALL{border-left-color:var(--danger);background:rgba(255,23,68,.05)!important}
+.lead-item.s-DONOTCALL .st-pill{background:rgba(255,23,68,.2);color:var(--danger)}
+
+/* Misc */
+table{width:100%;font-size:10px;border-collapse:collapse;margin:8px 0}
+th,td{padding:5px;border:1px solid var(--border);text-align:left;color:var(--txt2)}
+th{background:var(--card);font-weight:600}
+.tbl-wrap{max-width:100%;overflow-x:auto}
+.empty-card{text-align:center;padding:40px 20px;color:var(--txt3);font-size:13px}
+.badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:700;letter-spacing:.04em;vertical-align:middle;margin-left:4px}
+.badge.att{background:var(--border2);color:var(--txt);font-family:var(--mono)}
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL (first use) -->
+<div class="modal" id="setup-modal" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <button class="x-btn" onclick="closeSetup()">✕</button>
+    <div class="logo" style="margin-bottom:10px">🏋️ <span>ARESFIT · SANDDE</span></div>
+    <p class="sub" style="margin-bottom:14px">Your name and email — used for email signatures later. Sandde defaults pre-filled.</p>
+    <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Name</label>
+    <input type="text" id="setup-name" placeholder="Sandde" style="margin:4px 0 10px">
+    <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Email</label>
+    <input type="email" id="setup-email" placeholder="info@aresfit.co.uk" style="margin:4px 0 14px">
+    <button class="btn-red" style="width:100%;padding:12px" onclick="saveSetup()">Save</button>
+  </div>
+</div>
+
+<!-- UPLOAD SCREEN -->
+<div id="upload-screen" class="upload-screen" style="display:none">
+  <div class="upload-card">
+    <button class="x-btn" onclick="openSetup()">⚙</button>
+    <div class="logo" style="font-size:20px;margin-bottom:4px">🏋️ <span>ARESFIT DIALER</span> <span style="font-size:11px;color:var(--txt3);font-weight:500">· sandde v1</span></div>
+    <p class="sub">22-column AresFit call sheet import. Notes pipe-joined, row numbers preserved.</p>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('csv-in').click()">
+      <div class="big">📂</div>
+      <div style="margin-top:8px;font-weight:800;font-size:16px">Drop your CSV</div>
+      <div class="sub" style="margin-top:3px">or tap to browse</div>
+    </div>
+    <input type="file" id="csv-in" accept=".csv" style="display:none" onchange="handleFile(event)">
+    <div id="resume-box" style="display:none;margin-top:12px">
+      <button class="btn-red" style="width:100%;padding:14px" onclick="loadSession()">↻ Resume previous session</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MAPPING MODAL -->
+<div class="modal" id="map-modal" style="display:none">
+  <div class="modal-box">
+    <div class="logo" style="margin-bottom:8px">🏋️ <span>CONFIRM IMPORT</span></div>
+    <p class="sub" style="margin-bottom:10px">Auto-detected column mapping. Legacy columns (last 8) preserved round-trip.</p>
+    <div class="map-grid" id="map-grid"></div>
+    <div id="import-info"></div>
+    <h2 style="margin-top:12px">Preview (first 3 rows)</h2>
+    <div class="tbl-wrap"><table id="preview-tbl"></table></div>
+    <button class="btn-red" style="width:100%;margin-top:12px;padding:13px" onclick="confirmImport()">Import leads →</button>
+  </div>
+</div>
+
+<!-- LEADS MODAL -->
+<div class="modal" id="leads-modal" style="display:none">
+  <div class="modal-box">
+    <button class="x-btn" onclick="closeLeads()">✕</button>
+    <div class="logo" style="margin-bottom:8px">🏋️ <span>LEADS</span> <span style="font-size:11px;color:var(--txt3)" id="leads-count"></span></div>
+    <div class="search-row"><input type="text" id="lead-search" placeholder="🔍 Search R-number, business, DM, phone" oninput="onSearch()"></div>
+    <div class="filter-bar" id="filter-bar"></div>
+    <div class="lead-list" id="lead-list"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal" id="settings-modal" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <button class="x-btn" onclick="closeSettings()">✕</button>
+    <div class="logo" style="margin-bottom:10px">🏋️ <span>SETTINGS</span></div>
+    <h2>Sender</h2>
+    <p style="font-size:12px;margin-bottom:8px;color:var(--txt2)"><strong style="color:var(--txt)" id="st-name"></strong><br><span id="st-email"></span></p>
+    <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="openSetup()">Edit sender</button>
+    <h2>Data</h2>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="document.getElementById('csv-in').click()">📂 Upload new CSV (keeps session)</button>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportCSV()">📥 Export CSV (22 cols)</button>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="manualBackup()">💾 Manual backup</button>
+    <button class="btn-red" style="width:100%;margin-bottom:14px;padding:11px" onclick="closeSettings();showHandover()">📝 Generate session handover</button>
+    <h2>Email subjects</h2>
+    <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="closeSettings();openSubjectEditor()">✉ Edit subject rotation pool</button>
+    <h2>CircleLoop scheme (iOS)</h2>
+    <p class="sub" style="font-size:11px;margin-bottom:6px">Test which scheme auto-populates the keypad.</p>
+    <select id="cl-scheme-sel" onchange="saveClScheme(this.value)" style="margin-bottom:14px"></select>
+    <h2>Danger</h2>
+    <button style="width:100%;background:#1a0f0f;color:var(--red2);border:1px solid var(--red);padding:10px;border-radius:8px;font-size:12px" onclick="clearSession()">🗑 Clear all session data</button>
+    <p class="sub" style="text-align:center;font-size:10px;margin-top:14px;color:var(--txt3)">AresFit Dialer Sandde · v1 (P0)</p>
+  </div>
+</div>
+
+<!-- HANDOVER MODAL -->
+<div class="modal" id="handover-modal" style="display:none">
+  <div class="modal-box">
+    <button class="x-btn" onclick="closeHandover()">✕</button>
+    <div class="logo" style="margin-bottom:8px">🏋️ <span>SESSION HANDOVER</span></div>
+    <p class="sub" style="margin-bottom:10px">Markdown summary of today. Paste into a fresh Claude chat to continue tomorrow.</p>
+    <div class="handover-box" id="handover-body"></div>
+    <div style="display:flex;gap:6px"><button class="btn-red" style="flex:1;padding:11px" onclick="copyHandover()">📋 Copy to clipboard</button><button class="btn-ghost" style="flex:1;padding:11px" onclick="downloadHandover()">⬇ Download .md</button></div>
+  </div>
+</div>
+
+<!-- SUBJECTS MODAL -->
+<div class="modal" id="subjects-modal" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <button class="x-btn" onclick="closeSubjects()">✕</button>
+    <div class="logo" style="margin-bottom:8px">🏋️ <span>EMAIL SUBJECT POOL</span></div>
+    <p class="sub" style="margin-bottom:10px">One subject per line. Rotation picks unused-today first.</p>
+    <div class="subj-pool"><textarea id="subjects-ta" placeholder="one subject per line"></textarea></div>
+    <div style="display:flex;gap:6px;margin-top:10px"><button class="btn-red" style="flex:1;padding:10px" onclick="saveSubjects()">Save pool</button><button class="btn-ghost" style="padding:10px" onclick="resetSubjectsToday()">Reset today</button></div>
+  </div>
+</div>
+
+<!-- TIME EDIT MODAL -->
+<div class="modal" id="time-modal" style="display:none">
+  <div class="modal-box" style="max-width:340px">
+    <button class="x-btn" onclick="closeTime()">✕</button>
+    <div class="logo" style="margin-bottom:10px">🏋️ <span>EDIT CALL TIME</span></div>
+    <p class="sub" style="margin-bottom:10px">HH:MM (24h). Also accepts 1432 / 14:32 / half 2.</p>
+    <input type="text" id="time-in" placeholder="14:32" style="margin-bottom:12px">
+    <div style="display:flex;gap:6px"><button class="btn-ghost" style="flex:1" onclick="closeTime()">Cancel</button><button class="btn-red" style="flex:1" onclick="saveTime()">Save</button></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="app" style="display:none">
+
+  <div class="sticky-top">
+    <div class="head-row">
+      <div class="logo">🏋️ <span>ARESFIT</span><span class="save-dot" id="save-dot"></span></div>
+      <button class="btn-ghost btn-sm" onclick="openLeads()">📋 Leads</button>
+      <button class="btn-ghost btn-sm" onclick="openSettings()">⚙</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="s-calls">0</div><div class="stat-lbl">Dialled</div></div>
+      <div class="stat"><div class="stat-val" id="s-rate">0%</div><div class="stat-lbl">Contact%</div></div>
+      <div class="stat"><div class="stat-val" id="s-cb">0</div><div class="stat-lbl">Callbacks</div></div>
+      <div class="stat"><div class="stat-val" id="s-hot">0</div><div class="stat-lbl">Hot</div></div>
+    </div>
+    <div id="block-banner-slot"></div>
+    <div id="due-queue-slot"></div>
+  </div>
+
+  <div id="card-slot"></div>
+
+  <div class="toolbar">
+    <button onclick="openLeads()">📋 Leads</button>
+    <button onclick="showHandover()">📝 Handover</button>
+    <button onclick="exportCSV()">📥 Export</button>
+    <button onclick="openSettings()">⚙ Settings</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   AresFit Dialer Sandde v1 — P0
+   Mobile-first single-column. 22-col sheet. Pipe-append notes.
+   ============================================================ */
+
+// ===== Config / constants =====
+const FIELDS = ['priority','business','phone','website','status','stage','notes','followUp','equipBrands','aresBrands','dm','email','callAngle','research'];
+const LABELS = {
+  priority:'FINAL PRIORITY', business:'Business Name', phone:'Phone', website:'Website',
+  status:'Status', stage:'Stage', notes:'Notes', followUp:'Follow-up Date',
+  equipBrands:'Equipment Brands', aresBrands:'AresFit Brands', dm:'PSC / Decision Maker',
+  email:'Email', callAngle:'Call Angle', research:'Research Notes'
+};
+// Exact 14 → 22 column order for export round-trip
+const SHEET_COLS = ['FINAL PRIORITY','Business Name','Phone','Website','Status','Stage','Notes','Follow-up Date','Equipment Brands','AresFit Brands','PSC / Decision Maker','Email','Call Angle','Research Notes','Lead Priority','Segment','Lead_ID','Research Status','Verified','Viability Score','Verification Notes','Sort'];
+// Header → FIELDS key
+const HEADER_MAP = {'FINAL PRIORITY':'priority','Business Name':'business','Phone':'phone','Website':'website','Status':'status','Stage':'stage','Notes':'notes','Follow-up Date':'followUp','Equipment Brands':'equipBrands','AresFit Brands':'aresBrands','PSC / Decision Maker':'dm','Email':'email','Call Angle':'callAngle','Research Notes':'research'};
+
+const STATUS_OPTS = ['','Callback','Quoted','No Answer','Not Interested','Hot Lead','DO NOT CALL','Emailed'];
+const STAGE_OPTS  = ['','Intro','Contacted','Quoted','Lost','Closed'];
+const OUTCOMES = ['Contacted','VM','NA','Dead Air','Provider Reject','Not Int.','Callback','HOT'];
+const ATTEMPT_OUTCOMES = new Set(['VM','NA','Dead Air']); // increment attempts on these
+const FILTERS = ['All','Uncalled','Callback','Quoted','Hot','NA','Contacted','DNC'];
+
+// Save keys
+const SAVE_KEY    = 'aresfit_sandde_state';
+const SETUP_KEY   = 'aresfit_sandde_user';
+const PREFS_KEY   = 'aresfit_sandde_prefs';
+const IDB_NAME    = 'aresfit_sandde_dialer';
+
+// CircleLoop scheme - user-selectable in settings for iOS testing
+const CL_SCHEME_OPTIONS = [
+  {label:'circleloop://call/ (default)', value:'circleloop://call/'},
+  {label:'circleloop://dial/', value:'circleloop://dial/'},
+  {label:'circleloop://keypad/', value:'circleloop://keypad/'},
+  {label:'circleloop://contact/', value:'circleloop://contact/'},
+  {label:'circleloop:// + number only', value:'circleloop://'},
+  {label:'tel: (uses iOS default Phone app)', value:'tel:'}
+];
+const CL_SCHEME_DEFAULT = 'circleloop://call/';
+
+const BACKUP_INTERVAL = 25;
+const DUE_WINDOW_MS = 5 * 60 * 1000; // ±5 min callback window
+
+// Brand swap map — typing these in notes surfaces the swap angle as a chip (P2)
+const BRAND_MAP = {
+  'life fitness':'Star Trac cardio, Nautilus resistance',
+  'hammer strength':'Nautilus plate-loaded',
+  'precor':'Star Trac cardio, Nautilus resistance',
+  'cybex':'Nautilus resistance',
+  'matrix':'Star Trac cardio, Nautilus resistance',
+  'technogym':'Star Trac cardio, Nautilus resistance',
+  'pulse fitness':'Nautilus, Star Trac',
+  'panatta':'Nautilus',
+  'watson':'Jordan Fitness',
+  'arsenal strength':'Nautilus (closest equivalent)',
+  'gym80':'Nautilus',
+  'gym 80':'Nautilus'
+};
+
+// Default email subject rotation pool (editable in settings)
+const DEFAULT_SUBJECTS = [
+  'Introducing AresFit',
+  'AresFit - commercial equipment supplier',
+  'Following up on our call earlier',
+  'StairMaster options for low-ceiling space',
+  'Treadmill pricing - Star Trac range',
+  'Nautilus resistance options',
+  'Jordan functional kit',
+  'Schwinn cycle options',
+  'Commercial gym equipment - quick intro',
+  'AresFit equipment options'
+];
+
+// ===== State =====
+let raw=[], headers=[], mapping={}, leads=[], idx=0, filter='All', filtered=[], searchTerm='';
+let user={name:'Sandde', email:'info@aresfit.co.uk'};
+let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null};
+let idb=null;
+let outcomesSinceBackup=0;
+let timeEditContext=null; // {leadId, noteId} for time-modal
+let lastToastTs=0;
+
+// ===== Utils =====
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function pad2(n){return String(n).padStart(2,'0')}
+function format443(s){const d=(s||'').replace(/\D/g,'');if(d.length<4)return d;if(d.length<8)return d.slice(0,4)+' '+d.slice(4);return d.slice(0,4)+' '+d.slice(4,8)+' '+d.slice(8)}
+function ddmm(ts){const d=new Date(ts);return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)}
+function hhmm(ts){const d=new Date(ts);return pad2(d.getHours())+':'+pad2(d.getMinutes())}
+function todayKey(){const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())}
+// Parse flexible user time input → "HH:MM" or null
+function parseTime(s){
+  s=String(s||'').trim().toLowerCase();
+  if(!s)return null;
+  // half-past style
+  let m=s.match(/^half(?:\s*past)?\s*(\d{1,2})/);
+  if(m)return pad2(+m[1])+':30';
+  // 4-digit like 1432
+  m=s.match(/^(\d{2})(\d{2})$/);
+  if(m&&+m[1]<24&&+m[2]<60)return m[1]+':'+m[2];
+  // h:mm or hh:mm
+  m=s.match(/^(\d{1,2})[:\.](\d{2})$/);
+  if(m&&+m[1]<24&&+m[2]<60)return pad2(+m[1])+':'+m[2];
+  // 3-digit like 932 -> 09:32
+  m=s.match(/^(\d{1})(\d{2})$/);
+  if(m&&+m[2]<60)return '0'+m[1]+':'+m[2];
+  return null;
+}
+
+// ===== CSV parser — handles quoted fields, embedded newlines =====
+function parseCSV(text){
+  text=text.replace(/^\ufeff/,'');
+  const rows=[];let row=[],field='',q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i],nx=text[i+1];
+    if(ch==='"'){
+      if(q&&nx==='"'){field+='"';i++} else q=!q;
+    }else if(ch===','&&!q){
+      row.push(field);field='';
+    }else if((ch==='\n'||ch==='\r')&&!q){
+      if(ch==='\r'&&nx==='\n')i++;
+      row.push(field);field='';
+      if(row.some(v=>v!==''))rows.push(row);
+      row=[];
+    }else{field+=ch}
+  }
+  if(field.length||row.length){row.push(field);if(row.some(v=>v!==''))rows.push(row)}
+  return rows;
+}
+function csvEscape(v){v=String(v==null?'':v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+
+// ===== IndexedDB =====
+function openIDB(){return new Promise((res,rej)=>{try{const r=indexedDB.open(IDB_NAME,1);r.onerror=()=>rej(r.error);r.onsuccess=()=>res(r.result);r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('state'))db.createObjectStore('state')}}catch(e){rej(e)}})}
+async function idbSave(data){try{if(!idb)idb=await openIDB();return new Promise((res,rej)=>{const tx=idb.transaction('state','readwrite');tx.objectStore('state').put(data,'main');tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error)})}catch(e){return false}}
+async function idbLoad(){try{if(!idb)idb=await openIDB();return new Promise((res,rej)=>{const tx=idb.transaction('state','readonly');const req=tx.objectStore('state').get('main');req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error)})}catch(e){return null}}
+
+// ===== Save / load =====
+function flashDot(ok){const d=document.getElementById('save-dot');if(!d)return;d.classList.remove('ok','fail','pulse');void d.offsetWidth;d.classList.add(ok?'ok':'fail','pulse')}
+function save(){
+  const data={raw,headers,mapping,leads,idx,filter,ts:Date.now()};
+  let ok=false;
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(data));ok=true}catch(e){console.warn('LS save failed',e)}
+  idbSave(data).catch(()=>{});
+  flashDot(ok);
+  return ok;
+}
+function hasSession(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));return d&&d.leads&&d.leads.length>0}catch(e){return false}}
+async function loadSession(){
+  let data=null;
+  try{const ls=JSON.parse(localStorage.getItem(SAVE_KEY));if(ls)data=ls}catch(e){}
+  try{const id=await idbLoad();if(id&&(!data||(id.ts||0)>(data.ts||0)))data=id}catch(e){}
+  if(!data||!data.leads)return;
+  raw=data.raw||[];headers=data.headers||[];mapping=data.mapping||{};leads=data.leads;idx=data.idx||0;filter=data.filter||'All';
+  // Back-compat: ensure per-lead fields exist
+  leads.forEach(l=>{
+    if(!Array.isArray(l.notes))l.notes=[];
+    if(typeof l.attempts!=='number')l.attempts=0;
+    if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+    if(!('preflightPassed' in l))l.preflightPassed=false;
+    if(!('mobileVerified' in l))l.mobileVerified=false;
+    if(!('michaelAlsoCalled' in l))l.michaelAlsoCalled=false;
+    if(!('providerReject' in l))l.providerReject=false;
+  });
+  showApp();render();flashDot(true);
+}
+function clearSession(){if(!confirm('Clear all session data? Export first if you care about it.'))return;localStorage.removeItem(SAVE_KEY);idbSave(null);location.reload()}
+
+// ===== Prefs =====
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY));if(p)prefs={...prefs,...p}}catch(e){}if(!Array.isArray(prefs.subjects)||!prefs.subjects.length)prefs.subjects=[...DEFAULT_SUBJECTS];if(!prefs.usedSubjects||typeof prefs.usedSubjects!=='object')prefs.usedSubjects={};if(!Array.isArray(prefs.dismissedOverdue))prefs.dismissedOverdue=[];if(typeof prefs.autoQueue!=='boolean')prefs.autoQueue=true;if(!prefs.clScheme)prefs.clScheme=CL_SCHEME_DEFAULT}
+function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs))}catch(e){}}
+
+// ===== Setup / user =====
+function loadUser(){try{const u=JSON.parse(localStorage.getItem(SETUP_KEY));if(u&&u.name){user=u;return true}}catch(e){}return false}
+function openSetup(){document.getElementById('setup-name').value=user.name||'Sandde';document.getElementById('setup-email').value=user.email||'info@aresfit.co.uk';document.getElementById('setup-modal').style.display='flex'}
+function closeSetup(){document.getElementById('setup-modal').style.display='none'}
+function saveSetup(){
+  const n=document.getElementById('setup-name').value.trim()||'Sandde';
+  const e=document.getElementById('setup-email').value.trim()||'info@aresfit.co.uk';
+  user={name:n,email:e};
+  try{localStorage.setItem(SETUP_KEY,JSON.stringify(user))}catch(err){console.warn('localStorage blocked in this preview — settings kept in memory only',err)}
+  document.getElementById('setup-modal').style.display='none';
+  if(!leads.length){
+    document.getElementById('upload-screen').style.display='flex';
+    if(hasSession())document.getElementById('resume-box').style.display='block';
+  } else { render(); }
+}
+function openSettings(){
+  document.getElementById('st-name').textContent=user.name||'(not set)';
+  document.getElementById('st-email').textContent=user.email||'';
+  const sel=document.getElementById('cl-scheme-sel');
+  if(sel)sel.innerHTML=CL_SCHEME_OPTIONS.map(o=>`<option value="${esc(o.value)}"${(prefs.clScheme||CL_SCHEME_DEFAULT)===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
+  document.getElementById('settings-modal').style.display='flex';
+}
+function saveClScheme(v){prefs.clScheme=v;savePrefs();showToast('CircleLoop scheme set → '+v)}
+function closeSettings(){document.getElementById('settings-modal').style.display='none'}
+
+// ===== CSV import =====
+function handleFile(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{const rows=parseCSV(e.target.result);if(rows.length<2){alert('CSV looks empty');return}
+    headers=rows[0].map(h=>h.trim().replace(/^\ufeff/,''));
+    raw=rows.slice(1).map(cols=>{const o={};headers.forEach((h,i)=>o[h]=(cols[i]||'').trim());return o}).filter(r=>Object.values(r).some(v=>v));
+    showMapping();
+  };
+  r.readAsText(f);
+}
+function showMapping(){
+  mapping={};
+  FIELDS.forEach(f=>{const lbl=LABELS[f];if(headers.includes(lbl))mapping[f]=lbl});
+  const grid=document.getElementById('map-grid');
+  grid.innerHTML=FIELDS.map(f=>`<div><label>${LABELS[f]}</label><select id="map-${f}">${['',...headers].map(h=>`<option value="${esc(h)}"${mapping[f]===h?' selected':''}>${esc(h)||'— skip —'}</option>`).join('')}</select></div>`).join('');
+  // Preview
+  document.getElementById('preview-tbl').innerHTML=`<tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`+raw.slice(0,3).map(r=>`<tr>${headers.map(h=>`<td>${esc((r[h]||'').slice(0,50))}</td>`).join('')}</tr>`).join('');
+  // Stats
+  const ph=mapping.phone||'Phone', nm=mapping.business||'Business Name', st=mapping.status||'Status';
+  let dnc=0,dead=0,noP=0,noN=0;
+  raw.forEach(r=>{const s=(r[st]||'').toUpperCase();if(s==='DNC'||s==='DO NOT CALL')dnc++;else if(s==='DEAD')dead++;if(!(r[ph]||'').replace(/\D/g,''))noP++;if(!(r[nm]||'').trim())noN++});
+  const extra=headers.filter(h=>!FIELDS.some(f=>LABELS[f]===h));
+  document.getElementById('import-info').innerHTML=`<div class="import-stats"><strong>${raw.length}</strong> total rows · <strong>${extra.length}</strong> legacy cols preserved: <span style="color:var(--txt3);font-size:11px">${extra.map(esc).join(', ')||'(none)'}</span><br><span class="warn">${dnc} DNC</span>, ${dead} Dead, ${noP} no phone, ${noN} no name<br><strong>~${raw.length-noP-noN} callable</strong> after filter</div>`;
+  document.getElementById('map-modal').style.display='flex';
+}
+function confirmImport(){
+  FIELDS.forEach(f=>{mapping[f]=document.getElementById('map-'+f).value});
+  leads=[];idx=0;filter='All';
+  raw.forEach((r,i)=>{
+    const rowN=i+1;
+    const nm=mapping.business?(r[mapping.business]||'').trim():'';
+    const ph=mapping.phone?(r[mapping.phone]||'').replace(/\D/g,''):'';
+    if(!nm||!ph)return;
+    const o={
+      id:i, row:rowN, rawIdx:i,
+      attempts:0, notes:[], cbDate:'', cbSetAt:0,
+      preflightPassed:false, mobileVerified:false, michaelAlsoCalled:false, providerReject:false,
+      pending:{outcome:'',text:'',callStartTs:0,editedHm:''}
+    };
+    FIELDS.forEach(f=>o[f]=mapping[f]?(r[mapping[f]]||''):'');
+    // Parse existing Notes column into a single legacy entry (preserves round-trip)
+    if(o.notes_raw===undefined){
+      const rawNotes=o.notes||'';
+      o.notes=[];
+      if(rawNotes.trim()){
+        o.notes.push({id:uid(),ts:0,dmy:'',hm:'',outcome:'legacy',text:rawNotes,legacy:true});
+      }
+    }
+    leads.push(o);
+  });
+  document.getElementById('map-modal').style.display='none';
+  showApp();save();render();
+}
+function showApp(){document.getElementById('upload-screen').style.display='none';document.getElementById('main-app').style.display='block'}
+
+// ===== Filters / search =====
+function applyFilter(){
+  let r=leads.slice();
+  const f=filter;
+  if(f==='Uncalled') r=r.filter(l=>!l.notes.some(n=>!n.legacy));
+  else if(f==='Callback') r=r.filter(l=>(l.status||'').trim()==='Callback');
+  else if(f==='Quoted') r=r.filter(l=>(l.status||'').trim()==='Quoted'||(l.stage||'').trim()==='Quoted');
+  else if(f==='Hot') r=r.filter(l=>(l.status||'').trim()==='Hot Lead');
+  else if(f==='NA') r=r.filter(l=>(l.status||'').trim()==='No Answer');
+  else if(f==='Contacted') r=r.filter(l=>(l.stage||'').trim()==='Contacted');
+  else if(f==='DNC') r=r.filter(l=>(l.status||'').trim()==='DO NOT CALL');
+  if(searchTerm){const s=searchTerm;r=r.filter(l=>(l.business||'').toLowerCase().includes(s)||(l.dm||'').toLowerCase().includes(s)||(l.phone||'').toLowerCase().includes(s)||('r'+l.row).includes(s)||String(l.row).includes(s))}
+  return r;
+}
+function setFilter(f){filter=f;idx=0;renderFilterBar();renderLeadList();save()}
+function onSearch(){searchTerm=document.getElementById('lead-search').value.trim().toLowerCase();renderLeadList()}
+
+// ===== Render =====
+function render(){
+  filtered=leads.slice(); // call card navigates whole list, not filtered
+  if(idx>=filtered.length)idx=Math.max(0,filtered.length-1);
+  renderCard();renderStats();renderBlockBanner();renderLeadList();renderFilterBar();renderDueQueueBanner();
+}
+function renderStats(){
+  const today=todayKey();
+  const todayCalls=leads.reduce((n,l)=>n+l.notes.filter(x=>!x.legacy&&x.ts&&(new Date(x.ts).toISOString().slice(0,10)===today)).length,0);
+  const dialledLeads=leads.filter(l=>l.notes.some(n=>!n.legacy)).length;
+  const contactedLeads=leads.filter(l=>l.notes.some(n=>!n.legacy&&['Contacted','HOT','Callback'].includes(n.outcome))).length;
+  const hotLeads=leads.filter(l=>(l.status||'').trim()==='Hot Lead'||l.notes.some(n=>n.outcome==='HOT')).length;
+  const cbLeads=leads.filter(l=>(l.status||'').trim()==='Callback').length;
+  document.getElementById('s-calls').textContent=todayCalls;
+  document.getElementById('s-rate').textContent=dialledLeads?Math.round(contactedLeads/dialledLeads*100)+'%':'0%';
+  document.getElementById('s-cb').textContent=cbLeads;
+  document.getElementById('s-hot').textContent=hotLeads;
+}
+function renderBlockBanner(){
+  const h=new Date().getHours();
+  const dow=new Date().getDay();
+  let kind,ico,msg;
+  if(h>=13&&h<16){kind='prime';ico='🟢';msg='PRIME BLOCK 13:00-15:59 · fresh / hot / important'}
+  else if(h>=10&&h<12){kind='secondary';ico='🟡';msg='SECONDARY 10:00-11:59 · volume / fresh leads'}
+  else if(h===9){kind='secondary';ico='🟡';msg='OPTIONAL 09:00-09:59 · middle tier'}
+  else if(h===12){kind='dead';ico='🔴';msg='DEAD ZONE 12:00-12:59 · lunch gatekeeping. Use for emails/admin'}
+  else if(h>=16){kind='dead';ico='🔴';msg='DEAD ZONE 16:00+ · DMs winding down'}
+  else if(h<9){kind='dead';ico='🔴';msg='DEAD ZONE · venues not staffed before 09:00'}
+  if(dow===5&&h>=12){kind='dead';ico='🔴';msg='FRIDAY PM · weekend drift'}
+  document.getElementById('block-banner-slot').innerHTML=`<div class="block-banner ${kind}"><span class="ico">${ico}</span><span class="msg">${msg}</span></div>`;
+}
+function renderCard(){
+  const slot=document.getElementById('card-slot');
+  const l=filtered[idx];
+  if(!l){slot.innerHTML='<div class="card empty-card">No leads. Upload a CSV to get started.</div>';return}
+
+  const phoneFmt=format443(l.phone);
+  const priClass=(l.priority||'').toUpperCase().includes('TOP')?'top':'';
+  const pending=l.pending||{outcome:'',text:'',callStartTs:0,editedHm:''};
+  const pendingTime=pending.editedHm||(pending.callStartTs?hhmm(pending.callStartTs):'');
+  const canNext=!pending.outcome||pending.text.trim().length>0;
+
+  const callInfo=pending.callStartTs?`<div class="call-info show">📞 Called <span class="t">${hhmm(pending.callStartTs)}</span> — number copied. Paste into CircleLoop if it didn't auto-launch.</div>`:'';
+
+  // P1: Virgin row check + gates
+  const virgin=!l.notes.some(n=>!n.legacy);
+  const digits=(l.phone||'').replace(/\D/g,'');
+  const is07=digits.startsWith('07');
+  const gatesPassed=canCall(l);
+  const dACount=deadAirCount(l);
+  const poolFlag=poolStatus(l.id);
+
+  // Due banner (P3) — when this lead IS the due/overdue one
+  const dueBanner=poolFlag?`<div class="due-banner ${poolFlag==='overdue'?'overdue':''}"><h3>${poolFlag==='overdue'?'⚠ OVERDUE':'⏰ DUE NOW'} — scheduled ${esc((l.cbDate||'').replace('T',' '))}</h3><div class="biz">Tap CALL when ready</div></div>`:'';
+
+  // Gates
+  const mobileGate=is07?`<div class="gate mobile"><h4>📱 Mobile number on sheet</h4>
+    <label><input type="checkbox" ${l.mobileVerified?'checked':''} onchange="toggleFlag('mobileVerified')"> Verified this mobile number on the venue's own website</label>
+    <div class="hint">Mobile numbers are higher risk — always cross-check before dialling.</div>
+  </div>`:'';
+
+  // Deconflict bar + toggle
+  const deconBar=l.michaelAlsoCalled?`<div class="flag-bar">⚠ Michael also called this row — apologise if they mention a double-call</div>`:'';
+  const deconToggle=`<label class="deconflict-toggle"><input type="checkbox" ${l.michaelAlsoCalled?'checked':''} onchange="toggleFlag('michaelAlsoCalled')"> Michael also called this row</label>`;
+
+  // Dead Air 2x warning
+  const dA2xBar=dACount>=2?`<div class="flag-bar danger">🔇 ${dACount}× Dead Air on this row — skill says treat as VM. Find email, send follow-up.</div>`:'';
+
+  // DNC / Provider Reject visual
+  const dncBar=(l.status||'').trim()==='DO NOT CALL'?`<div class="flag-bar danger">⛔ DO NOT CALL — ${l.providerReject?'provider reject':'flagged'}. Do not dial.</div>`:'';
+
+  // Email button — only when email present and gates passed for general email, or always
+  const emailBtn=l.email?`<button class="email-btn" onclick="openEmail()">📧 Compose email → ${esc(l.email)}</button>`:'';
+
+  // Swap chip slot (filled by updateSwapChip on input)
+  const swapChipHtml=(()=>{const m=detectBrand(pending.text||'');return m?`<div class="swap-chip" onclick="applyBrandSwap('${esc(m.brand)}','${esc(m.swap)}')"><span class="brand">${esc(m.brand)}</span> → swap: ${esc(m.swap)} <span style="opacity:.7;font-size:10px">· tap to append</span></div>`:''})();
+
+  slot.innerHTML=`
+    <div class="card">
+      ${dueBanner}
+      ${deconBar}
+      ${dA2xBar}
+      ${dncBar}
+      <div class="row-line">
+        <span class="r">R${l.row}</span>
+        ${l.priority?`<span class="pri ${priClass}">${esc(l.priority)}</span>`:''}
+        <span class="att" title="Attempts">${l.attempts||0} attempts</span>
+      </div>
+      <div class="biz-head">${esc(l.business)}</div>
+      ${l.website?`<div class="sub"><a href="${esc(l.website)}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">${esc(l.website)} ↗</a></div>`:''}
+
+      <div class="fields">
+        <div class="field" onclick="editField('dm',event)">
+          <div class="field-lbl">Decision Maker <span class="edit">tap</span></div>
+          <div class="field-val ${l.dm?'':'empty'}" id="fv-dm">${l.dm?esc(l.dm):'+ add'}</div>
+        </div>
+        <div class="field" onclick="editField('phone',event)">
+          <div class="field-lbl">Phone <span class="edit">tap</span></div>
+          <div class="field-val mono ${phoneFmt?'':'empty'}" id="fv-phone">${phoneFmt||'+ add'}</div>
+        </div>
+        <div class="field full" onclick="editField('email',event)">
+          <div class="field-lbl">Email <span class="edit">tap</span></div>
+          <div class="field-val ${l.email?'':'empty'}" id="fv-email">${l.email?esc(l.email):'+ add email'}</div>
+        </div>
+        <div class="field" onclick="event.stopPropagation()">
+          <div class="field-lbl">Status</div>
+          <div class="dd" id="dd-status" onclick="toggleDD('status',event)">
+            <div class="dd-val">${l.status?esc(l.status):'—'}</div>
+            <div class="dd-caret">▾</div>
+            <div class="dd-list">${STATUS_OPTS.map(o=>`<div class="dd-opt ${(l.status||'')===o?'selected':''}" onclick="pickDD(event,'status','${esc(o)}')">${o||'—'}</div>`).join('')}</div>
+          </div>
+        </div>
+        <div class="field" onclick="event.stopPropagation()">
+          <div class="field-lbl">Stage</div>
+          <div class="dd" id="dd-stage" onclick="toggleDD('stage',event)">
+            <div class="dd-val">${l.stage?esc(l.stage):'—'}</div>
+            <div class="dd-caret">▾</div>
+            <div class="dd-list">${STAGE_OPTS.map(o=>`<div class="dd-opt ${(l.stage||'')===o?'selected':''}" onclick="pickDD(event,'stage','${esc(o)}')">${o||'—'}</div>`).join('')}</div>
+          </div>
+        </div>
+      </div>
+
+      ${deconToggle}
+      ${l.callAngle?`<details class="reveal" open><summary>Call angle</summary><div>${esc(l.callAngle)}</div></details>`:''}
+      ${(l.equipBrands||l.aresBrands)?`<div style="margin:6px 0">${l.equipBrands?`<span class="ref-chip"><strong style="color:var(--txt)">Equip:</strong> ${esc(l.equipBrands)}</span>`:''}${l.aresBrands?`<span class="ref-chip"><strong style="color:var(--txt)">AresFit:</strong> ${esc(l.aresBrands)}</span>`:''}</div>`:''}
+      ${l.research?`<details class="reveal"><summary>Research notes</summary><div>${esc(l.research)}</div></details>`:''}
+
+      ${mobileGate}
+
+      ${callInfo}
+      <div class="call-row">
+        <button class="call-btn" onclick="tapCall()" ${gatesPassed?'':'disabled'} style="${gatesPassed?'':'opacity:.4;cursor:not-allowed'}">📞 CALL<span class="n">${phoneFmt||'(no number)'}</span></button>
+        <button class="copy-btn" onclick="copyPhone()" title="Copy number">📋</button>
+      </div>
+      ${emailBtn}
+
+      <div class="outcomes">
+        ${OUTCOMES.map(o=>`<button data-out="${esc(o)}" class="${pending.outcome===o?'sel':''}" onclick="setOutcome('${esc(o)}')">${outcomeLabel(o)}</button>`).join('')}
+      </div>
+
+      <div class="notes-wrap">
+        <div class="notes-lbl">
+          <span>Notes history ${l.notes.length?`· ${l.notes.length}`:''}</span>
+          ${l.notes.length?`<button class="btn-sm btn-ghost" style="font-size:10px;padding:3px 8px" onclick="copyNotes()">📋 Copy all</button>`:''}
+        </div>
+        <div class="notes-hist" id="notes-hist">${renderNotesHist(l)}</div>
+
+        <div class="notes-lbl" style="margin-top:10px">
+          <span>New note ${pending.outcome?`· <span style="color:var(--amber)">${esc(pending.outcome)}</span> pending`:'· pick outcome first'}</span>
+          ${pending.callStartTs?`<span class="time-pill" onclick="openTime('${l.id}','pending')" title="Edit call start time">⏱ ${pendingTime}</span>`:''}
+        </div>
+        <div class="new-note-row">
+          <textarea id="new-note" class="${pending.outcome&&!pending.text.trim()?'pending':''}" placeholder="${pending.outcome?'who answered · brands · timing · next action':'tap an outcome above'}" oninput="updatePending(this.value)">${esc(pending.text)}</textarea>
+        </div>
+        <div id="swap-chip-slot">${swapChipHtml}</div>
+        <div class="note-warn ${pending.outcome&&!pending.text.trim()?'show':''}">⚠ Note required before logging — skill rule: notes = data vault</div>
+        ${pending.outcome==='Callback'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Callback date & time <span style="color:var(--amber)">· required</span></div><input type="datetime-local" id="cb-in" value="${esc(l.cbDate||'')}" onchange="updateCb(this.value)"></div>`:''}
+        ${l.cbDate&&pending.outcome!=='Callback'?`<div style="margin-top:8px;font-size:11px;color:var(--amber)">📅 Scheduled callback: ${esc(l.cbDate.replace('T',' '))}</div>`:''}
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-ghost" onclick="nav(-1)">← Prev</button>
+        <div class="pos">${filtered.length?idx+1:0} / ${filtered.length}</div>
+        <button class="next-btn" onclick="nav(1)" ${canNext?'':'disabled'}>Log &amp; Next →</button>
+      </div>
+    </div>
+  `;
+
+  // Dead Air 2x toast (once per render if >3s since last)
+  if(dACount>=2&&Date.now()-lastToastTs>5000){showToast('🔇 2× Dead Air on this row — treat as VM, send email instead of redialling','danger')}
+}
+function outcomeLabel(o){return {'Contacted':'✅ Contacted','VM':'📱 VM','NA':'❌ NA','Dead Air':'🔇 Dead Air','Provider Reject':'⛔ Prov Reject','Not Int.':'🚫 Not Int.','Callback':'📅 Callback','HOT':'🔥 HOT'}[o]||o}
+function renderNotesHist(l){
+  if(!l.notes.length)return '';
+  return l.notes.map(n=>{
+    if(n.legacy)return `<div class="entry legacy">${esc(n.text)}</div>`;
+    const time=(n.dmy||n.hm)?`<span class="ts">${esc(n.dmy)}${n.hm?' '+esc(n.hm):''}</span>`:'';
+    const oc=n.outcome?` <span class="oc">${esc(n.outcome)}</span>`:'';
+    return `<div class="entry">${time}${oc} — ${esc(n.text)}<button class="btn-sm btn-ghost" style="font-size:9px;padding:2px 6px;margin-left:6px;float:right" onclick="openTime('${esc(l.id)}','${esc(n.id)}')" title="Edit time">⏱ ${esc(n.hm||'--:--')}</button></div>`;
+  }).join('');
+}
+function renderFilterBar(){
+  const bar=document.getElementById('filter-bar');
+  bar.innerHTML=FILTERS.map(f=>`<button class="${filter===f?'active':''}" onclick="setFilter('${f}')">${f}</button>`).join('');
+  document.getElementById('leads-count').textContent=leads.length?`· ${leads.length} total`:'';
+}
+function renderLeadList(){
+  const list=document.getElementById('lead-list');
+  const rows=applyFilter();
+  if(!rows.length){list.innerHTML='<div class="empty-card" style="padding:20px">No matches.</div>';return}
+  const activeId=filtered[idx]?filtered[idx].id:null;
+  list.innerHTML=rows.slice(0,300).map(l=>{
+    const stKey=(l.status||'').replace(/\s/g,'');
+    const pill=l.status?`<span class="st-pill">${esc(l.status)}</span>`:'';
+    const dnc=(l.status||'').trim()==='DO NOT CALL'?' dnc-row':'';
+    return `<div class="lead-item s-${stKey}${dnc} ${l.id===activeId?'active':''}" onclick="jumpTo(${l.id})"><span class="r">R${l.row}</span><span class="biz">${esc(l.business)}</span><span class="meta"><span class="att">${l.attempts||0}</span>${pill}</span></div>`;
+  }).join('')+(rows.length>300?`<div class="empty-card" style="padding:10px;font-size:11px">+ ${rows.length-300} more (refine search)</div>`:'');
+}
+
+// ===== Leads modal =====
+function openLeads(){renderFilterBar();renderLeadList();document.getElementById('leads-modal').style.display='flex';setTimeout(()=>document.getElementById('lead-search').focus(),100)}
+function closeLeads(){document.getElementById('leads-modal').style.display='none'}
+function jumpTo(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();idx=i;filtered=leads.slice();closeLeads();render();save();window.scrollTo({top:0,behavior:'smooth'})}
+
+// ===== Field editing =====
+function editField(f,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault()}
+  const l=filtered[idx];if(!l)return;
+  const el=document.getElementById('fv-'+f);if(!el)return;
+  const cur=l[f]||'';
+  el.innerHTML=`<input type="text" id="ei-${f}" value="${esc(cur)}" style="width:100%;padding:3px 0">`;
+  const ip=document.getElementById('ei-'+f);ip.focus();ip.select();
+  const finish=()=>{const v=ip.value.trim();l[f]=v;save();renderCard();renderLeadList()};
+  ip.addEventListener('blur',finish,{once:true});
+  ip.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ip.blur()}if(e.key==='Escape'){ip.value=cur;ip.blur()}});
+}
+function updateField(f,v){const l=filtered[idx];if(!l)return;l[f]=v;save();renderLeadList();renderStats()}
+function updateCb(v){const l=filtered[idx];if(!l)return;l.cbDate=v||'';l.cbSetAt=Date.now();save()}
+
+// ===== P1: Gates =====
+function canCall(l){
+  if(!l)return false;
+  const digits=(l.phone||'').replace(/\D/g,'');
+  if(!digits)return false;
+  if(digits.startsWith('07')&&!l.mobileVerified)return false;
+  return true;
+}
+function deadAirCount(l){return l.notes.filter(n=>!n.legacy&&n.outcome==='Dead Air').length}
+function toggleFlag(field){
+  const l=filtered[idx];if(!l)return;
+  l[field]=!l[field];
+  save();renderCard();renderLeadList();
+}
+
+// ===== P2: Brand swap detection =====
+function detectBrand(text){
+  if(!text)return null;
+  const t=text.toLowerCase();
+  for(const brand of Object.keys(BRAND_MAP)){
+    if(t.includes(brand))return{brand,swap:BRAND_MAP[brand]};
+  }
+  return null;
+}
+function applyBrandSwap(brand,swap){
+  const l=filtered[idx];if(!l||!l.pending)return;
+  const addition=` → swap: ${swap}`;
+  if(l.pending.text.includes('→ swap:'))return;
+  l.pending.text=l.pending.text+addition;
+  save();renderCard();
+  setTimeout(()=>{const t=document.getElementById('new-note');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}},50);
+}
+function updateSwapChip(text){
+  const slot=document.getElementById('swap-chip-slot');if(!slot)return;
+  const m=detectBrand(text);
+  slot.innerHTML=m?`<div class="swap-chip" onclick="applyBrandSwap('${esc(m.brand)}','${esc(m.swap)}')"><span class="brand">${esc(m.brand)}</span> → swap: ${esc(m.swap)} <span style="opacity:.7;font-size:10px">· tap to append</span></div>`:'';
+}
+
+// ===== P3: Callback auto-queue =====
+function getDuePool(){
+  if(!prefs.autoQueue)return{due:[],overdue:[]};
+  const now=Date.now();const pool={due:[],overdue:[]};
+  leads.forEach(l=>{
+    if(!l.cbDate)return;
+    if((l.status||'').trim()!=='Callback')return;
+    const cbTs=new Date(l.cbDate).getTime();if(isNaN(cbTs))return;
+    const diff=now-cbTs;
+    if(diff>DUE_WINDOW_MS){if(!prefs.dismissedOverdue.includes(l.id))pool.overdue.push(l)}
+    else if(diff>=-DUE_WINDOW_MS){pool.due.push(l)}
+  });
+  const sortByMod=(a,b)=>(b.cbSetAt||0)-(a.cbSetAt||0);
+  pool.due.sort(sortByMod);pool.overdue.sort(sortByMod);
+  return pool;
+}
+function poolStatus(leadId){const p=getDuePool();if(p.overdue.some(l=>l.id===leadId))return'overdue';if(p.due.some(l=>l.id===leadId))return'due';return null}
+function renderDueQueueBanner(){
+  const slot=document.getElementById('due-queue-slot');if(!slot)return;
+  const pool=getDuePool();
+  const target=pool.overdue[0]||pool.due[0];
+  if(!target||target.id===(filtered[idx]||{}).id){slot.innerHTML='';return}
+  const isOver=pool.overdue.length>0;
+  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} — scheduled ${esc((target.cbDate||'').replace('T',' '))}${(pool.overdue.length+pool.due.length)>1?` <span style="color:var(--txt2);font-size:10px">(+${pool.overdue.length+pool.due.length-1} more)</span>`:''}</h3><div class="biz">R${target.row} ${esc(target.business)}</div><div class="due-banner-btns"><button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button>${isOver?`<button class="dismiss" onclick="dismissDue(${target.id})">Dismiss</button>`:''}</div></div>`;
+}
+function jumpToDue(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();idx=i;filtered=leads.slice();render();window.scrollTo({top:0,behavior:'smooth'})}
+function dismissDue(id){if(!prefs.dismissedOverdue.includes(id))prefs.dismissedOverdue.push(id);savePrefs();renderDueQueueBanner();renderCard()}
+
+// ===== P3: Email launcher + subject rotation =====
+function openEmail(){
+  const l=filtered[idx];if(!l||!l.email){showToast('No email on this row','danger');return}
+  // Domain mismatch check
+  const emailDom=(l.email.split('@')[1]||'').toLowerCase().trim();
+  const siteRaw=(l.website||'').toLowerCase().trim();
+  if(siteRaw){
+    const siteDom=siteRaw.replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0];
+    const eCore=emailDom.split('.')[0];
+    const sCore=siteDom.split('.')[0];
+    if(eCore&&sCore&&eCore!==sCore&&!siteDom.includes(eCore)&&!emailDom.includes(sCore)){
+      if(!confirm(`⚠ Email domain mismatch.\n\nEmail: @${emailDom}\nWebsite: ${siteDom}\n\nThe email may belong to a different business. Proceed anyway?`))return;
+    }
+  }
+  const subj=pickSubject();
+  const to=encodeURIComponent(l.email);
+  const su=encodeURIComponent(subj);
+  const appUrl=`googlegmail://co?to=${decodeURIComponent(to)}&subject=${decodeURIComponent(su)}`;
+  const webUrl=`https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${su}`;
+  // Try Gmail iOS/Android app; fall back to web if the app isn't installed
+  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile){
+    let cancelled=false;
+    const hide=()=>{cancelled=true};
+    document.addEventListener('visibilitychange',hide,{once:true});
+    window.addEventListener('pagehide',hide,{once:true});
+    window.location.href=appUrl;
+    setTimeout(()=>{
+      document.removeEventListener('visibilitychange',hide);
+      window.removeEventListener('pagehide',hide);
+      if(!cancelled&&!document.hidden)window.open(webUrl,'_blank');
+    },1400);
+  } else {
+    window.open(webUrl,'_blank');
+  }
+  // Track subject use
+  const k=todayKey();
+  if(!prefs.usedSubjects[k])prefs.usedSubjects[k]=[];
+  if(!prefs.usedSubjects[k].includes(subj))prefs.usedSubjects[k].push(subj);
+  savePrefs();
+  // Auto-log email as a note entry so it's in the history + exports with DD/MM HH:MM
+  const ts=Date.now();
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:`Sent to ${l.email} · subject: "${subj}"`});
+  // Auto-set Status=Emailed if currently empty
+  if(!l.status)l.status='Emailed';
+  save();renderCard();renderLeadList();renderStats();
+  flashDot(true);
+  showToast(`📧 Email launched · subject "${subj}" · logged`);
+}
+function pickSubject(){
+  const k=todayKey();const used=prefs.usedSubjects[k]||[];
+  const avail=(prefs.subjects||DEFAULT_SUBJECTS).filter(s=>!used.includes(s));
+  if(avail.length)return avail[0];
+  showToast('⚠ All subjects used today — reusing oldest','danger');
+  return (prefs.subjects||DEFAULT_SUBJECTS)[0]||'Introducing AresFit';
+}
+
+// ===== Toast =====
+function showToast(msg,kind){
+  lastToastTs=Date.now();
+  const existing=document.querySelector('.toast');if(existing)existing.remove();
+  const t=document.createElement('div');t.className='toast'+(kind==='danger'?' danger':'');t.textContent=msg;document.body.appendChild(t);
+  setTimeout(()=>{if(t.parentNode)t.remove()},4500);
+}
+
+// ===== P4: Handover markdown =====
+function generateHandover(){
+  const today=todayKey();
+  const isToday=ts=>ts&&new Date(ts).toISOString().slice(0,10)===today;
+  const todayCalls=[];
+  leads.forEach(l=>{l.notes.forEach(n=>{if(!n.legacy&&isToday(n.ts))todayCalls.push({l,n})})});
+  todayCalls.sort((a,b)=>a.n.ts-b.n.ts);
+  const upcomingCbs=leads.filter(l=>(l.status||'').trim()==='Callback'&&l.cbDate).sort((a,b)=>new Date(a.cbDate)-new Date(b.cbDate));
+  const dncToday=leads.filter(l=>(l.status||'').trim()==='DO NOT CALL'&&l.notes.some(n=>!n.legacy&&isToday(n.ts)));
+  const hotToday=leads.filter(l=>(l.status||'').trim()==='Hot Lead'&&l.notes.some(n=>!n.legacy&&isToday(n.ts)));
+  const uncalled=leads.filter(l=>!l.notes.some(n=>!n.legacy)).sort((a,b)=>{
+    const pa=(a.priority||'').toLowerCase().includes('top')?0:1;
+    const pb=(b.priority||'').toLowerCase().includes('top')?0:1;
+    if(pa!==pb)return pa-pb;
+    return a.row-b.row;
+  });
+  const dialled=leads.filter(l=>l.notes.some(n=>!n.legacy)).length;
+  const contactedSet=new Set();
+  leads.forEach(l=>{if(l.notes.some(n=>!n.legacy&&['Contacted','HOT','Callback'].includes(n.outcome)))contactedSet.add(l.id)});
+  const contactPct=dialled?Math.round(contactedSet.size/dialled*100):0;
+  const subjUsedToday=(prefs.usedSubjects[today]||[]);
+  const lines=[];
+  lines.push(`# AresFit Dialer Handover — ${new Date().toLocaleString('en-GB')}`);
+  lines.push('');
+  lines.push(`**Session stats:** ${todayCalls.length} calls logged · ${contactPct}% contact · ${hotToday.length} new hot · ${upcomingCbs.length} callbacks on book`);
+  lines.push(`**Emails sent today:** ${subjUsedToday.length} (subjects used: ${subjUsedToday.map(s=>`"${s}"`).join(', ')||'none'})`);
+  lines.push('');
+  lines.push('## Today\'s calls');
+  if(!todayCalls.length)lines.push('_No calls logged today._');
+  else todayCalls.forEach(({l,n})=>lines.push(`- **R${l.row} ${l.business}** · ${n.dmy} ${n.hm} · **${n.outcome}** — ${n.text}`));
+  lines.push('');
+  lines.push('## Outstanding callbacks (all rows w/ Callback status)');
+  if(!upcomingCbs.length)lines.push('_None scheduled._');
+  else upcomingCbs.forEach(l=>lines.push(`- **R${l.row} ${l.business}** · ${(l.cbDate||'').replace('T',' ')} · DM: ${l.dm||'?'} · ${format443(l.phone)}`));
+  lines.push('');
+  lines.push('## Hot leads added today');
+  if(!hotToday.length)lines.push('_None._');
+  else hotToday.forEach(l=>lines.push(`- R${l.row} ${l.business}`));
+  lines.push('');
+  lines.push('## DNC / Provider Reject added today');
+  if(!dncToday.length)lines.push('_None._');
+  else dncToday.forEach(l=>lines.push(`- R${l.row} ${l.business}${l.providerReject?' (provider reject)':''}`));
+  lines.push('');
+  lines.push('## Tomorrow — top 10 uncalled by priority');
+  if(!uncalled.length)lines.push('_Sheet cleared, nothing uncalled._');
+  else uncalled.slice(0,10).forEach(l=>lines.push(`- R${l.row} ${l.business} · ${l.priority||'—'} · ${format443(l.phone)}`));
+  lines.push('');
+  lines.push('_Generated by AresFit Dialer Sandde v1._');
+  return lines.join('\n');
+}
+function showHandover(){const md=generateHandover();document.getElementById('handover-body').textContent=md;document.getElementById('handover-modal').style.display='flex'}
+function copyHandover(){copyToClipboard(document.getElementById('handover-body').textContent);flashDot(true);showToast('✅ Handover copied to clipboard')}
+function downloadHandover(){const md=document.getElementById('handover-body').textContent;const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const ts=new Date();a.download=`handover-${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.md`;a.click()}
+function closeHandover(){document.getElementById('handover-modal').style.display='none'}
+
+// ===== Subject pool editor =====
+function openSubjectEditor(){
+  const ta=document.getElementById('subjects-ta');if(ta)ta.value=(prefs.subjects||DEFAULT_SUBJECTS).join('\n');
+  document.getElementById('subjects-modal').style.display='flex';
+}
+function saveSubjects(){
+  const ta=document.getElementById('subjects-ta');if(!ta)return;
+  const lines=ta.value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!lines.length){alert('Keep at least one subject');return}
+  prefs.subjects=lines;savePrefs();
+  document.getElementById('subjects-modal').style.display='none';
+  showToast('✅ Subject pool saved');
+}
+function closeSubjects(){document.getElementById('subjects-modal').style.display='none'}
+function resetSubjectsToday(){if(!confirm('Reset today\'s used subjects list?'))return;const k=todayKey();prefs.usedSubjects[k]=[];savePrefs();showToast('✅ Subject tracker reset for today')}
+function toggleDD(f,ev){
+  if(ev)ev.stopPropagation();
+  document.querySelectorAll('.dd.open').forEach(d=>{if(d.id!=='dd-'+f)d.classList.remove('open')});
+  const el=document.getElementById('dd-'+f);if(el)el.classList.toggle('open');
+}
+function pickDD(ev,f,v){
+  if(ev)ev.stopPropagation();
+  const l=filtered[idx];if(!l)return;
+  l[f]=v;
+  const el=document.getElementById('dd-'+f);if(el)el.classList.remove('open');
+  save();renderCard();renderLeadList();renderStats();
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.dd'))document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'))});
+
+// ===== CALL =====
+function tapCall(){
+  const l=filtered[idx];if(!l)return;
+  const digits=(l.phone||'').replace(/\D/g,'');
+  if(!digits){alert('No phone number on this row');return}
+  // Auto-capture call start time
+  if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+  l.pending.callStartTs=Date.now();
+  l.pending.editedHm='';
+  // Clipboard copy — always, as failsafe
+  copyToClipboard(digits);
+  // Use user-selected scheme (default circleloop://call/). On desktop also works via Chrome extension.
+  const scheme=(prefs.clScheme||CL_SCHEME_DEFAULT);
+  try{window.location.href=scheme+digits}catch(e){}
+  save();renderCard();
+}
+function copyPhone(){const l=filtered[idx];if(!l)return;const d=(l.phone||'').replace(/\D/g,'');if(!d)return;copyToClipboard(d);flashDot(true)}
+function copyToClipboard(txt){
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);return}
+  }catch(e){}
+  const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);
+}
+function copyNotes(){
+  const l=filtered[idx];if(!l||!l.notes.length)return;
+  const s=l.notes.map(n=>n.legacy?n.text:`${n.dmy} ${n.hm} - ${n.outcome} - ${n.text}`).join(' | ');
+  copyToClipboard(s);flashDot(true);
+}
+
+// ===== Outcome / pending note =====
+function setOutcome(o){
+  const l=filtered[idx];if(!l)return;
+  if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+  l.pending.outcome=o;
+  // Auto-prefill structural hint in empty note
+  if(!l.pending.text.trim()){
+    // Empty — leave cursor-ready placeholder handled by textarea
+  }
+  save();renderCard();
+  setTimeout(()=>{const t=document.getElementById('new-note');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}},50);
+}
+function updatePending(v){
+  const l=filtered[idx];if(!l)return;
+  if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+  l.pending.text=v;
+  // Light-touch: update warn class without full re-render
+  const warn=document.querySelector('.note-warn');if(warn)warn.classList.toggle('show',!!l.pending.outcome&&!v.trim());
+  const ta=document.getElementById('new-note');if(ta)ta.classList.toggle('pending',!!l.pending.outcome&&!v.trim());
+  const nb=document.querySelector('.next-btn');if(nb)nb.disabled=!!l.pending.outcome&&!v.trim();
+  updateSwapChip(v);
+  // Throttled save
+  clearTimeout(updatePending._t);updatePending._t=setTimeout(save,400);
+}
+function commitPending(){
+  const l=filtered[idx];if(!l)return false;
+  const p=l.pending||{};
+  if(!p.outcome)return true; // nothing to commit
+  if(!p.text.trim())return false; // can't commit without note
+  const ts=p.callStartTs||Date.now();
+  const hm=p.editedHm||hhmm(ts);
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm,outcome:p.outcome,text:p.text.trim()});
+  if(ATTEMPT_OUTCOMES.has(p.outcome))l.attempts=(l.attempts||0)+1;
+  // Auto-sync Status/Stage on certain outcomes (non-destructive — only fills if empty)
+  if(p.outcome==='HOT'&&!l.status)l.status='Hot Lead';
+  if(p.outcome==='Callback'&&!l.status)l.status='Callback';
+  if(p.outcome==='Not Int.'&&!l.status)l.status='Not Interested';
+  if(p.outcome==='Provider Reject'){l.status='DO NOT CALL';l.stage='Lost';l.providerReject=true}
+  if(p.outcome==='Contacted'&&!l.stage)l.stage='Contacted';
+  // Clear pending
+  l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+  outcomesSinceBackup++;
+  if(outcomesSinceBackup>=BACKUP_INTERVAL){autoBackup();outcomesSinceBackup=0}
+  save();return true;
+}
+function nav(dir){
+  if(dir>0){
+    const l=filtered[idx];
+    if(l&&l.pending&&l.pending.outcome&&!l.pending.text.trim()){
+      alert('Note required before logging. Type the note or clear the outcome.');return;
+    }
+    if(!commitPending())return;
+  } else {
+    // Prev: commit if possible, don't block if not
+    commitPending();
+  }
+  idx=Math.max(0,Math.min(filtered.length-1,idx+dir));
+  render();window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== Time edit =====
+function openTime(leadId,noteId){
+  timeEditContext={leadId:String(leadId),noteId:String(noteId)};
+  const l=leads.find(x=>String(x.id)===String(leadId));if(!l){return}
+  let cur='';
+  if(noteId==='pending'){cur=l.pending?(l.pending.editedHm||(l.pending.callStartTs?hhmm(l.pending.callStartTs):'')):''}
+  else{const n=l.notes.find(x=>x.id===noteId);if(n)cur=n.hm||''}
+  document.getElementById('time-in').value=cur;
+  document.getElementById('time-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('time-in').focus(),80);
+}
+function closeTime(){document.getElementById('time-modal').style.display='none';timeEditContext=null}
+function saveTime(){
+  if(!timeEditContext)return;
+  const raw=document.getElementById('time-in').value;
+  const parsed=parseTime(raw);
+  if(!parsed){alert('Bad time. Use HH:MM, 1432, or "half 2".');return}
+  const l=leads.find(x=>String(x.id)===timeEditContext.leadId);
+  if(!l){closeTime();return}
+  if(timeEditContext.noteId==='pending'){
+    if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+    l.pending.editedHm=parsed;
+    if(!l.pending.callStartTs)l.pending.callStartTs=Date.now();
+  } else {
+    const n=l.notes.find(x=>x.id===timeEditContext.noteId);
+    if(n)n.hm=parsed;
+  }
+  closeTime();save();render();
+}
+
+// ===== Export =====
+function exportCSV(){
+  if(!leads.length){alert('No leads');return}
+  // Reconstruct 22-column rows. Use original raw[] as source of truth for legacy cols,
+  // overwriting only the mapped 14 with current lead state.
+  const cols=SHEET_COLS;
+  const lines=[cols.map(csvEscape).join(',')];
+  // Rebuild map: for every original raw row index, find corresponding lead (if kept)
+  const byIdx=new Map();leads.forEach(l=>byIdx.set(l.rawIdx,l));
+  raw.forEach((r,i)=>{
+    const l=byIdx.get(i);
+    const rowObj={...r};
+    if(l){
+      // Overwrite the 14 mapped fields with lead state
+      if(mapping.priority)rowObj[mapping.priority]=l.priority||'';
+      if(mapping.business)rowObj[mapping.business]=l.business||'';
+      if(mapping.phone)rowObj[mapping.phone]=l.phone||'';
+      if(mapping.website)rowObj[mapping.website]=l.website||'';
+      if(mapping.status)rowObj[mapping.status]=l.status||'';
+      if(mapping.stage)rowObj[mapping.stage]=l.stage||'';
+      if(mapping.followUp)rowObj[mapping.followUp]=l.followUp||'';
+      if(mapping.equipBrands)rowObj[mapping.equipBrands]=l.equipBrands||'';
+      if(mapping.aresBrands)rowObj[mapping.aresBrands]=l.aresBrands||'';
+      if(mapping.dm)rowObj[mapping.dm]=l.dm||'';
+      if(mapping.email)rowObj[mapping.email]=l.email||'';
+      if(mapping.callAngle)rowObj[mapping.callAngle]=l.callAngle||'';
+      if(mapping.research)rowObj[mapping.research]=l.research||'';
+      // Notes = join array with ' | '
+      if(mapping.notes){
+        const noteStr=l.notes.map(n=>n.legacy?n.text:`${n.dmy} ${n.hm} - ${n.outcome} - ${n.text}`).join(' | ');
+        rowObj[mapping.notes]=noteStr;
+      }
+    }
+    // Write line using original header order (headers[] from import)
+    lines.push(headers.map(h=>csvEscape(rowObj[h]||'')).join(','));
+  });
+  const csv=lines.join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const ts=new Date();const fn=`AresFit_Call_Sheet_${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click();
+  flashDot(true);
+}
+function autoBackup(){if(!leads.length)return;exportCSV()}
+function manualBackup(){exportCSV()}
+
+// ===== Init =====
+loadPrefs();
+openIDB().catch(()=>{});
+loadUser(); // Hydrate user defaults if previously saved; else keep hardcoded Sandde defaults
+document.getElementById('upload-screen').style.display='flex';
+if(hasSession())document.getElementById('resume-box').style.display='block';
+
+// Drag-drop on upload zone
+const uz=document.getElementById('upload-zone');
+['dragover','dragenter'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.classList.add('drag')}));
+['dragleave','drop'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.classList.remove('drag')}));
+uz.addEventListener('drop',ev=>{const f=ev.dataTransfer.files[0];if(f){const r=new FileReader();r.onload=e=>{const rows=parseCSV(e.target.result);if(rows.length<2){alert('CSV looks empty');return}headers=rows[0].map(h=>h.trim().replace(/^\ufeff/,''));raw=rows.slice(1).map(cols=>{const o={};headers.forEach((h,i)=>o[h]=(cols[i]||'').trim());return o}).filter(r=>Object.values(r).some(v=>v));showMapping()};r.readAsText(f)}});
+
+// Refresh block banner every 5 min in case session crosses an hour
+setInterval(()=>{if(leads.length)renderBlockBanner()},5*60*1000);
+// Callback auto-queue check every 30s
+setInterval(()=>{if(leads.length){renderDueQueueBanner();renderLeadList()}},30000);
+</script>
+</body>
+</html>
