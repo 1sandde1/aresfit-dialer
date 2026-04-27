@@ -261,6 +261,9 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3
 .lead-item .st-pill{font-size:9px;padding:1px 6px;border-radius:8px;background:var(--border);text-transform:uppercase;letter-spacing:.04em}
 .lead-item.s-Callback{border-left-color:var(--amber)}
 .lead-item.s-Callback .st-pill{background:rgba(255,171,0,.2);color:var(--amber)}
+.lead-item.s-AwaitingCallback{border-left:3px dashed var(--amber)}
+.lead-item.s-AwaitingCallback .st-pill{background:rgba(255,171,0,.12);color:var(--amber);border:1px dashed var(--amber)}
+.recent-chip{font-size:10px;color:var(--txt3);font-family:var(--mono);margin-left:6px;white-space:nowrap}
 .lead-item.s-HotLead{border-left-color:#ff4081}
 .lead-item.s-HotLead .st-pill{background:rgba(255,64,129,.2);color:#ff4081}
 .lead-item.s-Quoted{border-left-color:var(--purple)}
@@ -595,19 +598,20 @@ const SHEET_COLS = ['FINAL PRIORITY','Business Name','Phone','Website','Status',
 // Header → FIELDS key
 const HEADER_MAP = {'FINAL PRIORITY':'priority','Business Name':'business','Phone':'phone','Website':'website','Status':'status','Stage':'stage','Notes':'notes','Follow-up Date':'followUp','Equipment Brands':'equipBrands','AresFit Brands':'aresBrands','PSC / Decision Maker':'dm','Email':'email','Call Angle':'callAngle','Research Notes':'research'};
 
-const STATUS_OPTS = ['','Callback','Quoted','No Answer','Not Interested','Hot Lead','DO NOT CALL','Emailed','Awaiting Pass-Through'];
+const STATUS_OPTS = ['','Callback','Quoted','No Answer','Awaiting Callback','Not Interested','Hot Lead','DO NOT CALL','Emailed','Awaiting Pass-Through'];
 const STAGE_OPTS  = ['','Intro','Contacted','Quoted','Lost','Closed'];
-const OUTCOMES = ['Contacted','VM','NA','Dead Air','Provider Reject','Not Int.','Callback','HOT'];
+const OUTCOMES = ['Contacted','VM','NA','Awaiting Callback','Dead Air','Provider Reject','Not Int.','Callback','HOT'];
 const ATTEMPT_OUTCOMES = new Set(['VM','NA','Dead Air']); // increment attempts on these
 // Outcomes that auto-fill a default note if user leaves the note blank — removes friction on the low-info outcomes
 const AUTOFILL_OUTCOMES = {
   'VM':'VM - no message left',
   'NA':'NA - no answer',
+  'Awaiting Callback':'Reception/staff took details, expecting callback (no time given)',
   'Dead Air':'Dead air - picked up silent or dropped',
   'Provider Reject':'Provider reject - dead number',
   'Not Int.':'Not interested - declined'
 };
-const FILTERS = ['All','Uncalled','Callback','Quoted','Hot','NA','Contacted','Reached','DNC'];
+const FILTERS = ['All','Recent','Uncalled','Callback','Awaiting CB','Quoted','Hot','NA','Contacted','Reached','DNC'];
 
 // Save keys
 const SAVE_KEY    = 'aresfit_sandde_state';
@@ -736,7 +740,11 @@ const OUTCOME_AUTO_SET = {
     {field:'stage',value:'Contacted',safe:['','Intro']}
   ],
   'Callback':[
-    {field:'status',value:'Callback',safe:['','Uncalled','No Answer','Voicemail','Emailed','Hot Lead','Awaiting Pass-Through']},
+    {field:'status',value:'Callback',safe:['','Uncalled','No Answer','Voicemail','Emailed','Hot Lead','Awaiting Pass-Through','Awaiting Callback']},
+    {field:'stage',value:'Contacted',safe:['','Intro']}
+  ],
+  'Awaiting Callback':[
+    {field:'status',value:'Awaiting Callback',safe:['','Uncalled','No Answer','Voicemail']},
     {field:'stage',value:'Contacted',safe:['','Intro']}
   ],
   'Not Int.':[
@@ -750,6 +758,7 @@ const OUTCOME_AUTO_SET = {
 
 // ===== State =====
 let raw=[], headers=[], mapping={}, leads=[], idx=0, filter='All', filtered=[], searchTerm='';
+let justLoggedId=null; // tracks lead.id that just had an outcome logged — flips Log/Next button to Next on second tap
 let user={name:'Sandde', email:'info@aresfit.co.uk'};
 let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null};
 let idb=null;
@@ -765,6 +774,33 @@ function format443(s){const d=(s||'').replace(/\D/g,'');if(d.length<4)return d;i
 function ddmm(ts){const d=new Date(ts);return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)}
 function hhmm(ts){const d=new Date(ts);return pad2(d.getHours())+':'+pad2(d.getMinutes())}
 function todayKey(){const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())}
+// Relative time string for Recent filter chips ("2h ago", "yesterday", "5d ago")
+function relTime(ts){
+  if(!ts)return '';
+  const diff=Date.now()-ts;
+  if(diff<0)return 'soon';
+  const m=Math.floor(diff/60000);
+  if(m<1)return 'just now';
+  if(m<60)return m+'m ago';
+  const h=Math.floor(m/60);
+  if(h<24)return h+'h ago';
+  const d=Math.floor(h/24);
+  if(d===1)return 'yesterday';
+  if(d<7)return d+'d ago';
+  if(d<30)return Math.floor(d/7)+'w ago';
+  return Math.floor(d/30)+'mo ago';
+}
+// Latest note timestamp helper — used for Recent sort
+function latestNoteTs(l){
+  if(!l||!l.notes||!l.notes.length)return 0;
+  let max=0;
+  for(const n of l.notes){
+    if(n.legacy)continue;
+    const t=n.ts||0;
+    if(t>max)max=t;
+  }
+  return max;
+}
 // Parse Follow-up Date column — handles ISO date, ISO datetime, UK date, UK date+time range, datetime-local
 function parseFollowUp(s){
   if(!s)return null;
@@ -791,7 +827,7 @@ function parseFollowUp(s){
 function normStatus(s){
   if(!s)return '';
   const clean=String(s).trim();if(!clean)return '';
-  const map={'hot lead':'Hot Lead','callback':'Callback','no answer':'No Answer','not interested':'Not Interested','quoted':'Quoted','do not call':'DO NOT CALL','emailed':'Emailed','uncalled':'Uncalled','voicemail':'Voicemail','contacted':'Contacted','hot':'Hot Lead','dnc':'DO NOT CALL','awaiting pass-through':'Awaiting Pass-Through','awaiting pass through':'Awaiting Pass-Through','pass-through':'Awaiting Pass-Through'};
+  const map={'hot lead':'Hot Lead','callback':'Callback','no answer':'No Answer','not interested':'Not Interested','quoted':'Quoted','do not call':'DO NOT CALL','emailed':'Emailed','uncalled':'Uncalled','voicemail':'Voicemail','contacted':'Contacted','hot':'Hot Lead','dnc':'DO NOT CALL','awaiting pass-through':'Awaiting Pass-Through','awaiting pass through':'Awaiting Pass-Through','pass-through':'Awaiting Pass-Through','awaiting callback':'Awaiting Callback','awaiting cb':'Awaiting Callback'};
   return map[clean.toLowerCase()]||clean;
 }
 // Start-of-today and end-of-today timestamps
@@ -897,7 +933,14 @@ async function loadSession(){
     if(!('mobileVerified' in l))l.mobileVerified=false;
     if(!('michaelAlsoCalled' in l))l.michaelAlsoCalled=false;
     if(!('providerReject' in l))l.providerReject=false;
+    if(!('phone2' in l))l.phone2='';
     if(l.status)l.status=normStatus(l.status);
+    // Back-compat: split pipe-separated phone if migrating from older sessions
+    if(l.phone&&l.phone.includes('|')&&!l.phone2){
+      const parts=l.phone.split('|').map(s=>s.trim()).filter(Boolean);
+      l.phone=parts[0]||'';
+      l.phone2=parts[1]||'';
+    }
     // Back-compat: hydrate cbDate from followUp if it has a time and cbDate is empty
     if(!l.cbDate&&l.followUp){
       const fu=parseFollowUp(l.followUp);
@@ -978,11 +1021,18 @@ function confirmImport(){
     if(!nm||!ph)return;
     const o={
       id:i, row:rowN, rawIdx:i,
-      attempts:0, notes:[], cbDate:'', cbSetAt:0,
+      attempts:0, notes:[], cbDate:'', cbSetAt:0, phone2:'',
       preflightPassed:false, mobileVerified:false, michaelAlsoCalled:false, providerReject:false,
       pending:{outcome:'',text:'',callStartTs:0,editedHm:''}
     };
     FIELDS.forEach(f=>o[f]=mapping[f]?(r[mapping[f]]||''):'');
+    // Two-number support: sheet stores both numbers pipe-separated in single Phone column.
+    // Split on '|' — first part = primary phone, second part (if any) = phone2.
+    if(o.phone&&o.phone.includes('|')){
+      const parts=o.phone.split('|').map(s=>s.trim()).filter(Boolean);
+      o.phone=parts[0]||'';
+      o.phone2=parts[1]||'';
+    }
     // Normalise Status case variants to match dropdown values
     if(o.status)o.status=normStatus(o.status);
     // Hydrate cbDate from Follow-up Date if it has a time component — restores pill on round-trip
@@ -1014,7 +1064,13 @@ function showApp(){document.getElementById('upload-screen').style.display='none'
 function applyFilter(){
   let r=leads.slice();
   const f=filter;
-  if(f==='Uncalled') r=r.filter(l=>!l.notes.length&&!(l.status||'').trim());
+  if(f==='Recent'){
+    // Most recent activity first. Excludes DNC. Caps at top 50 for mobile snappiness.
+    r=r.filter(l=>(l.status||'').trim()!=='DO NOT CALL');
+    r.sort((a,b)=>latestNoteTs(b)-latestNoteTs(a));
+    r=r.slice(0,50);
+  }
+  else if(f==='Uncalled') r=r.filter(l=>!l.notes.length&&!(l.status||'').trim());
   else if(f==='Callback'){
     const eot=endOfToday();
     r=r.filter(l=>{
@@ -1038,6 +1094,7 @@ function applyFilter(){
       });
     }
   }
+  else if(f==='Awaiting CB') r=r.filter(l=>(l.status||'').trim()==='Awaiting Callback');
   else if(f==='Quoted') r=r.filter(l=>(l.status||'').trim()==='Quoted'||(l.stage||'').trim()==='Quoted');
   else if(f==='Hot') r=r.filter(l=>{const lp=((raw[l.rawIdx]||{})['Lead Priority']||'').toLowerCase();return (l.status||'').trim()==='Hot Lead'||l.notes.some(n=>n.outcome==='HOT')||lp==='hot'});
   else if(f==='NA') r=r.filter(l=>(l.status||'').trim()==='No Answer');
@@ -1050,7 +1107,7 @@ function applyFilter(){
     else r.sort((a,b)=>latestTs(b)-latestTs(a));
   }
   else if(f==='DNC') r=r.filter(l=>(l.status||'').trim()==='DO NOT CALL');
-  if(searchTerm){const s=searchTerm;r=r.filter(l=>(l.business||'').toLowerCase().includes(s)||(l.dm||'').toLowerCase().includes(s)||(l.phone||'').toLowerCase().includes(s)||('r'+l.row).includes(s)||String(l.row).includes(s))}
+  if(searchTerm){const s=searchTerm;r=r.filter(l=>(l.business||'').toLowerCase().includes(s)||(l.dm||'').toLowerCase().includes(s)||(l.phone||'').toLowerCase().includes(s)||(l.phone2||'').toLowerCase().includes(s)||('r'+l.row).includes(s)||String(l.row).includes(s))}
   return r;
 }
 function setFilter(f){filter=f;idx=0;renderFilterBar();renderLeadList();save()}
@@ -1107,6 +1164,7 @@ function renderCard(){
   if(!l){slot.innerHTML='<div class="card empty-card">No leads. Upload a CSV to get started.</div>';return}
 
   const phoneFmt=format443(l.phone);
+  const phone2Fmt=format443(l.phone2);
   const priClass=(l.priority||'').toUpperCase().includes('TOP')?'top':'';
   const pending=l.pending||{outcome:'',text:'',callStartTs:0,editedHm:''};
   const pendingTime=pending.editedHm||(pending.callStartTs?hhmm(pending.callStartTs):'');
@@ -1171,6 +1229,10 @@ function renderCard(){
           <div class="field-lbl">Phone <span class="edit">tap</span></div>
           <div class="field-val mono ${phoneFmt?'':'empty'}" id="fv-phone">${phoneFmt||'+ add'}</div>
         </div>
+        <div class="field" onclick="editField('phone2',event)">
+          <div class="field-lbl">Secondary number <span class="edit">tap</span></div>
+          <div class="field-val mono ${phone2Fmt?'':'empty'}" id="fv-phone2">${phone2Fmt||'+ add secondary'}</div>
+        </div>
         <div class="field full" onclick="editField('email',event)">
           <div class="field-lbl">Email <span class="edit">tap</span></div>
           <div class="field-val ${l.email?'':'empty'}" id="fv-email">${l.email?esc(l.email):'+ add email'}</div>
@@ -1207,9 +1269,13 @@ function renderCard(){
 
       ${callInfo}
       <div class="call-row">
-        <button class="call-btn" onclick="tapCall()" ${gatesPassed?'':'disabled'} style="${gatesPassed?'':'opacity:.4;cursor:not-allowed'}">📞 CALL<span class="n">${phoneFmt||'(no number)'}</span></button>
+        <button class="call-btn" onclick="tapCall('primary')" ${gatesPassed?'':'disabled'} style="${gatesPassed?'':'opacity:.4;cursor:not-allowed'}">📞 CALL<span class="n">${phoneFmt||'(no number)'}</span></button>
         <button class="copy-btn" onclick="copyPhone()" title="Copy number">📋</button>
       </div>
+      ${l.phone2?`<div class="call-row" style="margin-top:6px">
+        <button class="call-btn" onclick="tapCall('secondary')" style="font-size:13px;padding:10px">📞 CALL (alt)<span class="n">${phone2Fmt}</span></button>
+        <button class="copy-btn" onclick="copyPhone2()" title="Copy alt number">📋</button>
+      </div>`:''}
       ${emailBtn}
 
       <div class="outcomes">
@@ -1239,7 +1305,7 @@ function renderCard(){
       <div class="nav-row">
         <button class="btn-ghost" onclick="nav(-1)">← Prev</button>
         <div class="pos">${filtered.length?idx+1:0} / ${filtered.length}</div>
-        <button class="next-btn" onclick="nav(1)" ${canNext?'':'disabled'}>Log &amp; Next →</button>
+        <button class="next-btn" onclick="nav(1)" ${canNext?'':'disabled'}>${pending.outcome?'Log →':'Next →'}</button>
       </div>
     </div>
   `;
@@ -1247,7 +1313,7 @@ function renderCard(){
   // Dead Air 2x toast (once per render if >3s since last)
   if(dACount>=2&&Date.now()-lastToastTs>5000){showToast('🔇 2× Dead Air on this row — treat as VM, send email instead of redialling','danger')}
 }
-function outcomeLabel(o){return {'Contacted':'✅ Contacted','VM':'📱 Voicemail','NA':'❌ No Answer','Dead Air':'🔇 Dead Air','Provider Reject':'⛔ Provider Reject','Not Int.':'🚫 Not Interested','Callback':'📅 Callback','HOT':'🔥 Hot Lead'}[o]||o}
+function outcomeLabel(o){return {'Contacted':'✅ Contacted','VM':'📱 Voicemail','NA':'❌ No Answer','Awaiting Callback':'🔔 Awaiting Callback','Dead Air':'🔇 Dead Air','Provider Reject':'⛔ Provider Reject','Not Int.':'🚫 Not Interested','Callback':'📅 Callback','HOT':'🔥 Hot Lead'}[o]||o}
 function renderNotesHist(l){
   if(!l.notes.length)return '';
   return l.notes.map(n=>{
@@ -1281,6 +1347,7 @@ function renderLeadList(){
   const rows=applyFilter();
   if(!rows.length){list.innerHTML='<div class="empty-card" style="padding:20px">No matches.</div>';return}
   const activeId=filtered[idx]?filtered[idx].id:null;
+  const showRecent=(filter==='Recent');
   list.innerHTML=rows.slice(0,300).map(l=>{
     const stKey=(l.status||'').replace(/\s/g,'');
     const pill=l.status?`<span class="st-pill">${esc(l.status)}</span>`:'';
@@ -1289,14 +1356,15 @@ function renderLeadList(){
     const today=!over&&isDueTodayRow(l);
     const rowFlag=over?' overdue-row':(today?' due-today-row':'');
     const fuBadge=over?'<span class="fu-badge overdue">OVERDUE</span>':(today?'<span class="fu-badge due">TODAY</span>':'');
-    return `<div class="lead-item s-${stKey}${dnc}${rowFlag} ${l.id===activeId?'active':''}" onclick="jumpTo(${l.id})"><span class="r">R${l.row}</span><span class="biz">${esc(l.business)}</span><span class="meta">${fuBadge}<span class="att">${l.attempts||0}</span>${pill}</span></div>`;
+    const recentChip=showRecent?`<span class="recent-chip">${esc(relTime(latestNoteTs(l)))}</span>`:'';
+    return `<div class="lead-item s-${stKey}${dnc}${rowFlag} ${l.id===activeId?'active':''}" onclick="jumpTo(${l.id})"><span class="r">R${l.row}</span>${recentChip}<span class="biz">${esc(l.business)}</span><span class="meta">${fuBadge}<span class="att">${l.attempts||0}</span>${pill}</span></div>`;
   }).join('')+(rows.length>300?`<div class="empty-card" style="padding:10px;font-size:11px">+ ${rows.length-300} more (refine search)</div>`:'');
 }
 
 // ===== Leads modal =====
 function openLeads(){renderFilterBar();renderLeadList();document.getElementById('leads-modal').style.display='flex';setTimeout(()=>document.getElementById('lead-search').focus(),100)}
 function closeLeads(){document.getElementById('leads-modal').style.display='none'}
-function jumpTo(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();idx=i;filtered=leads.slice();closeLeads();render();save();window.scrollTo({top:0,behavior:'smooth'})}
+function jumpTo(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();justLoggedId=null;idx=i;filtered=leads.slice();closeLeads();render();save();window.scrollTo({top:0,behavior:'smooth'})}
 
 // ===== Field editing =====
 function editField(f,ev){
@@ -1765,9 +1833,10 @@ function pickDD(ev,f,v){
 document.addEventListener('click',e=>{if(!e.target.closest('.dd'))document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'))});
 
 // ===== CALL =====
-function tapCall(){
+function tapCall(which){
   const l=filtered[idx];if(!l)return;
-  const digits=(l.phone||'').replace(/\D/g,'');
+  const num=which==='secondary'?(l.phone2||''):(l.phone||'');
+  const digits=num.replace(/\D/g,'');
   if(!digits){alert('No phone number on this row');return}
   // Auto-capture call start time
   if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
@@ -1781,6 +1850,7 @@ function tapCall(){
   save();renderCard();
 }
 function copyPhone(){const l=filtered[idx];if(!l)return;const d=(l.phone||'').replace(/\D/g,'');if(!d)return;copyToClipboard(d);flashDot(true)}
+function copyPhone2(){const l=filtered[idx];if(!l)return;const d=(l.phone2||'').replace(/\D/g,'');if(!d)return;copyToClipboard(d);flashDot(true)}
 function copyBiz(){const l=filtered[idx];if(!l||!l.business)return;copyToClipboard(l.business);flashDot(true);showToast(`📋 Copied: ${l.business}`)}
 function copyToClipboard(txt){
   try{
@@ -1799,10 +1869,8 @@ function setOutcome(o){
   const l=filtered[idx];if(!l)return;
   if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
   l.pending.outcome=o;
-  // Auto-prefill structural hint in empty note
-  if(!l.pending.text.trim()){
-    // Empty — leave cursor-ready placeholder handled by textarea
-  }
+  // Picking a new outcome after just logging resets the just-logged state — button flips back to "Log →"
+  if(justLoggedId===l.id)justLoggedId=null;
   save();renderCard();
   setTimeout(()=>{const t=document.getElementById('new-note');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}},50);
 }
@@ -1850,14 +1918,26 @@ function commitPending(){
 function nav(dir){
   if(dir>0){
     const l=filtered[idx];
-    if(l&&l.pending&&l.pending.outcome&&!l.pending.text.trim()&&!(l.pending.outcome in AUTOFILL_OUTCOMES)){
-      alert('Note required before logging. Type the note or clear the outcome.');return;
+    // Two-tap separation: if there's a pending outcome to log, first tap commits + stays on row.
+    // Second tap (no pending, justLoggedId still set on this lead) advances.
+    if(l&&l.pending&&l.pending.outcome){
+      if(!l.pending.text.trim()&&!(l.pending.outcome in AUTOFILL_OUTCOMES)){
+        alert('Note required before logging. Type the note or clear the outcome.');return;
+      }
+      const lid=l.id;
+      if(!commitPending())return;
+      justLoggedId=lid;
+      render();
+      showToast('✅ Logged — tap Next to advance');
+      return; // do NOT advance on first tap
     }
-    if(!commitPending())return;
+    // No pending outcome → plain Next (advance regardless of justLogged state)
   } else {
     // Prev: commit if possible, don't block if not
     commitPending();
   }
+  // Leaving this row clears justLogged
+  justLoggedId=null;
   idx=Math.max(0,Math.min(filtered.length-1,idx+dir));
   render();window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -2048,7 +2128,10 @@ function exportCSV(){
       // Overwrite the 14 mapped fields with lead state
       if(mapping.priority)rowObj[mapping.priority]=l.priority||'';
       if(mapping.business)rowObj[mapping.business]=l.business||'';
-      if(mapping.phone)rowObj[mapping.phone]=l.phone||'';
+      if(mapping.phone){
+        // Two-number export: join primary + secondary with ' | ' if phone2 is set.
+        rowObj[mapping.phone]=l.phone2?`${l.phone||''} | ${l.phone2}`:(l.phone||'');
+      }
       if(mapping.website)rowObj[mapping.website]=l.website||'';
       if(mapping.status)rowObj[mapping.status]=l.status||'';
       if(mapping.stage)rowObj[mapping.stage]=l.stage||'';
