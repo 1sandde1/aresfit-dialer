@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AresFit">
+<meta name="theme-color" content="#08080d">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href='data:application/manifest+json,{"name":"AresFit Dialer","short_name":"AresFit","start_url":".","display":"standalone","background_color":"%2308080d","theme_color":"%2308080d","icons":[{"src":"data:image/svg%2Bxml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 rx=%2232%22 fill=%22%2308080d%22/><text x=%2296%22 y=%22130%22 font-size=%22110%22 text-anchor=%22middle%22>🏋️</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏋️</text></svg>'>
+<title>AresFit Dialer v51</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;touch-action:manipulation}
+html,body{overscroll-behavior:none;-webkit-text-size-adjust:100%}
+:root{--bg:#08080d;--panel:#0e0e16;--card:#131320;--border:#1c1c2e;--border2:#262640;--red:#ff3b5c;--red2:#ff5a7a;--green:#00e676;--amber:#ffab00;--blue:#448aff;--purple:#b388ff;--danger:#ff1744;--txt:#e4e4ec;--txt2:#8e8ea0;--txt3:#55556a;--font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+*::-webkit-scrollbar{width:8px;height:8px}
+*::-webkit-scrollbar-track{background:#0a0a14}
+*::-webkit-scrollbar-thumb{background:#252538;border-radius:4px}
+*::-webkit-scrollbar-thumb:hover{background:#363650}
+*{scrollbar-color:#252538 #0a0a14;scrollbar-width:thin}
+.app{display:grid;grid-template-columns:260px 1fr 380px;gap:10px;padding:10px;height:100vh;max-width:1720px;margin:0 auto}
+@media(max-width:1100px){.app{grid-template-columns:1fr;gap:8px;height:auto;min-height:100vh;overflow-y:auto}html,body{overflow:auto}.sidebar,.right-panel{display:none}.sidebar.open,.right-panel.open{display:flex;position:fixed;inset:0;z-index:100;background:var(--bg);padding:14px}}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;display:flex;flex-direction:column;overflow:hidden}
+.panel-body{flex:1;overflow-y:auto;padding:14px}
+.panel-head{padding:14px 14px 0;flex-shrink:0}
+.panel-foot{padding:0 14px 14px;flex-shrink:0}
+.logo{font-size:15px;font-weight:800;letter-spacing:.04em}
+.logo span{background:linear-gradient(135deg,var(--red),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3);margin-bottom:8px;font-weight:700}
+button{font-family:var(--font);cursor:pointer;border:none;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;transition:all .12s;color:var(--txt)}
+button:active{transform:scale(.96)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-red{background:linear-gradient(135deg,var(--red),#e8364f);color:#fff}
+.btn-ghost{background:var(--card);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border2);background:#181828}
+.btn-sm{padding:6px 10px;font-size:11px;border-radius:7px}
+input,textarea,select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--txt);font-family:var(--font);font-size:13px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red)}
+textarea{resize:vertical;min-height:80px}
+textarea.required-empty{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,59,92,.15)}
+.save-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--txt3);margin-left:6px;transition:background .3s,box-shadow .3s;vertical-align:middle}
+.save-dot.ok{background:var(--green);box-shadow:0 0 8px rgba(0,230,118,.6)}
+.save-dot.fail{background:var(--danger);box-shadow:0 0 8px rgba(255,23,68,.6)}
+.save-dot.pulse{animation:pulse .6s ease-out}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.stat{background:var(--card);padding:9px;border-radius:9px;border:1px solid var(--border)}
+.stat-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--red2)}
+.stat-lbl{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.filters{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.filters button{padding:5px 9px;font-size:11px;background:var(--card);border:1px solid var(--border);border-radius:7px}
+.filters button.active{background:var(--red);border-color:var(--red);color:#fff}
+.lead-list{display:flex;flex-direction:column;gap:4px}
+.lead-item{padding:9px;background:var(--card);border-left:3px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px;position:relative}
+.lead-item:hover{background:#16162a}
+.lead-item.active{background:#1a1a30;border-left-color:var(--red)}
+.lead-item .biz{font-weight:700;color:#fff;font-size:13px}
+.lead-item .meta{font-size:10px;color:var(--txt2);margin-top:2px}
+.lead-item.s-Contacted{border-left-color:var(--green)}
+.lead-item.s-Callback{border-left-color:var(--amber)}
+.lead-item.s-Interested{border-left-color:#ff4081}
+.lead-item.s-Quoted{border-left-color:var(--purple)}
+.lead-item.s-NoAnswer{border-left-color:var(--txt3)}
+.lead-item.s-Voicemail{border-left-color:var(--blue)}
+.lead-item.s-NotInterested{border-left-color:#444}
+.lead-item.due-now{background:#2a1a00!important;box-shadow:inset 0 0 0 1px rgba(255,171,0,.35)}
+.lead-item.overdue-pin{background:#2a0a0a!important;border-left-color:var(--danger)!important;box-shadow:inset 0 0 0 1px rgba(255,23,68,.4)}
+.pin-badge{display:inline-block;font-size:8px;font-weight:800;padding:2px 5px;border-radius:4px;letter-spacing:.05em;margin-left:4px;vertical-align:middle}
+.pin-badge.due{background:var(--amber);color:#000}
+.pin-badge.overdue{background:var(--danger);color:#fff}
+.biz-head{font-size:24px;font-weight:800;line-height:1.2}
+.sub{color:var(--txt2);font-size:13px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.field{background:var(--card);padding:9px;border-radius:8px;border:1px solid var(--border);cursor:pointer}
+.field:hover{border-color:var(--border2)}
+.field-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:2px;display:flex;justify-content:space-between}
+.field-lbl .edit{color:var(--txt3);font-size:9px}
+.field-val{font-size:13px;color:var(--txt);word-break:break-word;min-height:18px}
+.field-val.empty{color:var(--txt3);font-style:italic}
+.field input,.field select{padding:4px 6px;font-size:13px;background:transparent;border:none;border-bottom:1px solid var(--red);color:var(--txt);width:100%}
+.action-btn{display:block;width:100%;padding:18px;font-size:20px;font-weight:800;border-radius:14px;text-align:center;text-decoration:none;color:#fff;letter-spacing:.02em;margin:6px 0;border:none;cursor:pointer}
+.action-btn.call{background:linear-gradient(135deg,var(--green),#00c853);box-shadow:0 4px 24px rgba(0,230,118,.15)}
+.action-btn.email{background:linear-gradient(135deg,var(--blue),#2962ff);box-shadow:0 4px 24px rgba(68,138,255,.2)}
+.action-btn:active{transform:scale(.98)}
+.outcomes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.outcomes button{padding:12px 6px;font-size:12px;background:var(--card);border:1px solid var(--border);min-height:50px;line-height:1.3}
+.outcomes button.sel{background:var(--red);border-color:var(--red);color:#fff}
+.progress{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:6px}
+.progress button{flex:1}
+.notes-warning{font-size:11px;color:var(--red2);margin-top:4px;display:none}
+.notes-warning.show{display:block}
+.upload-screen{display:flex;align-items:center;justify-content:center;height:100vh;padding:20px}
+.upload-card{max-width:520px;width:100%;position:relative}
+.upload-zone{border:2px dashed var(--border2);border-radius:14px;padding:44px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--red);background:#181828;transform:scale(1.01)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:flex;align-items:center;justify-content:center;padding:14px}
+.modal-box{background:var(--panel);border-radius:16px;padding:18px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;border:1px solid var(--border);position:relative}
+.map-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.map-grid label{font-size:11px;color:var(--txt2);display:block;margin-bottom:3px}
+.import-stats{font-size:12px;color:var(--txt2);margin:10px 0;background:var(--card);padding:10px;border-radius:8px;border:1px solid var(--border);line-height:1.6}
+.import-stats strong{color:var(--green)}
+.import-stats .warn{color:var(--red2)}
+table{width:100%;font-size:10px;border-collapse:collapse;margin:8px 0}
+th,td{padding:5px;border:1px solid var(--border);text-align:left;color:var(--txt2)}
+th{background:var(--card);font-weight:600}
+.tab-bar{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap}
+.tab-bar button{flex:1;background:var(--card);padding:7px 4px;font-size:11px;border:1px solid var(--border);border-radius:8px;min-width:60px}
+.tab-bar button.active{background:var(--red);border-color:var(--red);color:#fff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.email-tpl{margin-bottom:12px;background:var(--card);border-radius:10px;padding:12px;border:1px solid var(--border)}
+.email-tpl h3{font-size:12px;color:var(--red2);margin-bottom:6px;text-transform:uppercase;font-weight:700}
+.email-tpl .subj{font-family:var(--mono);font-size:11px;color:var(--amber);margin-bottom:6px;word-break:break-word}
+.email-tpl .body{font-size:13px;line-height:1.55;color:var(--txt);white-space:pre-wrap;max-height:200px;overflow-y:auto}
+.email-tpl .gmail-btn{margin-top:8px;background:var(--blue);color:#fff;font-size:11px;padding:7px 12px;width:100%}
+.script-branch{margin-bottom:14px}
+.script-branch h3{font-size:12px;color:var(--red2);margin-bottom:5px;text-transform:uppercase;font-weight:700}
+.script-branch p{font-size:13px;line-height:1.55;color:var(--txt);background:var(--card);padding:10px;border-radius:8px;border-left:3px solid var(--red);white-space:pre-wrap}
+.ref-tbl{font-size:11px;margin:6px 0}
+.ref-tbl td{padding:4px 6px}
+.ref-tbl td:first-child{color:var(--txt2);font-weight:600}
+.safety{background:linear-gradient(135deg,#1f0a10,#180610);border:1px solid var(--danger);border-left:4px solid var(--danger);border-radius:10px;padding:12px;margin-bottom:14px}
+.safety h3{color:var(--danger);font-size:12px;text-transform:uppercase;font-weight:800;margin-bottom:8px;letter-spacing:.08em}
+.safety ul{list-style:none;padding:0}
+.safety li{padding:5px 0;font-size:12px;line-height:1.5;border-bottom:1px solid rgba(255,23,68,.15)}
+.safety li:last-child{border-bottom:none}
+.safety li::before{content:'✕ ';color:var(--danger);font-weight:bold}
+.safety .escape{margin-top:8px;padding:8px;background:rgba(255,171,0,.08);border-radius:6px;border-left:3px solid var(--amber);font-size:12px;color:var(--amber)}
+.safety .escape::before{content:'💬 If unsure: '}
+.safe-resp{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+.safe-resp h3{color:var(--green);font-size:12px;text-transform:uppercase;margin-bottom:6px;font-weight:700}
+.safe-resp p{font-size:12px;line-height:1.5;color:var(--txt);font-style:italic}
+.safe-resp .copy{margin-top:6px;background:var(--border2);font-size:10px;padding:5px 10px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.keypad button{background:var(--card);border:1px solid var(--border);padding:16px;font-size:18px;font-weight:700;font-family:var(--mono)}
+.keypad button:hover{border-color:var(--red)}
+.keypad-display{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:14px;font-family:var(--mono);font-size:22px;text-align:center;margin-bottom:8px;min-height:52px;color:var(--txt);letter-spacing:.05em}
+.site-frame{width:100%;height:calc(100vh - 200px);border:1px solid var(--border);border-radius:10px;background:#fff}
+.iframe-fallback{text-align:center;padding:30px;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.mob-toggle{display:none;gap:6px;margin-bottom:8px;flex-shrink:0}
+@media(max-width:1100px){.mob-toggle{display:flex}.mob-toggle button{flex:1}}
+.cog{position:absolute;top:10px;right:10px;background:none;color:var(--txt3);font-size:16px;padding:4px 8px;border-radius:6px}
+.cog:hover{color:var(--txt);background:var(--card)}
+.export-row{display:flex;gap:6px;margin-top:10px}
+.export-row button{flex:1;font-size:11px}
+.backup-btn{width:100%;margin-top:6px;background:var(--card);border:1px solid var(--blue);color:var(--blue);font-size:11px;padding:7px;border-radius:8px}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#0a0a14;border-top:1px solid var(--border);padding:8px 4px calc(14px + env(safe-area-inset-bottom));z-index:90;justify-content:space-around;align-items:center;backdrop-filter:blur(20px)}
+.bottom-nav button{flex:1;background:none;border:none;padding:6px 4px;color:var(--txt3);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.bottom-nav button .ico{width:22px;height:22px;line-height:1}
+.bottom-nav button.center .ico{width:26px;height:26px;color:#fff}
+.bottom-nav button.active{color:var(--red2)}
+.bottom-nav button.center{position:relative}
+.bottom-nav button.center .ico{background:linear-gradient(135deg,var(--red),var(--amber));width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 16px rgba(255,59,92,.3);margin-top:-6px}
+@media(max-width:1100px){.bottom-nav{display:flex}.app{padding-bottom:80px!important}.mob-toggle{display:none!important}}
+@media(max-width:1100px){.mob-section{display:none}.mob-section.active{display:flex;flex-direction:column;flex:1}.sidebar.mob-section,.right-panel.mob-section{position:static;animation:none}.sidebar.mob-section.active,.right-panel.mob-section.active{display:flex}}
+.dash-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.dash-card h3{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--txt3);margin-bottom:10px;font-weight:700}
+.recent-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:12px}
+.recent-row:last-child{border-bottom:none}
+.recent-row:hover{background:#16162a}
+.recent-row .time{font-family:var(--mono);color:var(--txt3);font-size:11px;min-width:42px}
+.recent-row .biz{flex:1;color:var(--txt);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recent-row .out{font-size:14px}
+.due-banner{background:linear-gradient(135deg,#3a1a00,#2a1500);border:1px solid var(--amber);border-left:4px solid var(--amber);border-radius:10px;padding:12px;margin-bottom:10px;display:none}
+.due-banner.show{display:block;animation:pulse-border 2s infinite}
+.due-banner.overdue{background:linear-gradient(135deg,#2a0505,#1a0303);border-color:var(--danger);border-left-color:var(--danger)}
+.due-banner.overdue h3{color:var(--danger)}
+.due-banner.overdue .jump-btn{background:var(--danger);color:#fff}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 0 rgba(255,171,0,0)}50%{box-shadow:0 0 16px rgba(255,171,0,.3)}}
+.due-banner h3{color:var(--amber);font-size:12px;text-transform:uppercase;font-weight:800;margin-bottom:4px}
+.due-banner .biz{font-size:18px;font-weight:800;color:#fff}
+.due-banner .banner-btns{display:flex;gap:6px;margin-top:8px}
+.due-banner .jump-btn{background:var(--amber);color:#000;flex:1;padding:10px;font-weight:700}
+.due-banner .dismiss-btn{background:transparent;color:var(--txt2);border:1px solid var(--border2);flex:0 0 auto;padding:10px 14px;font-size:11px}
+.cb-badge{background:var(--amber);color:#000;font-size:9px;padding:2px 6px;border-radius:10px;font-weight:700;font-family:var(--mono);margin-left:6px}
+.lead-item .cb-icon{display:inline-block;color:var(--amber);margin-left:4px}
+.recent-box{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px;margin-bottom:8px}
+.recent-box h3{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:6px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.recent-row{display:flex;align-items:center;gap:6px;padding:5px 4px;border-radius:5px;cursor:pointer;font-size:11px;border-left:2px solid var(--border)}
+.recent-row:hover{background:#181828}
+.recent-row .time{font-family:var(--mono);color:var(--txt3);font-size:10px;flex-shrink:0}
+.recent-row .name{color:var(--txt);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.recent-row .ico{font-size:11px;flex-shrink:0}
+.recent-row.s-Contacted{border-left-color:var(--green)}
+.recent-row.s-Voicemail{border-left-color:var(--blue)}
+.recent-row.s-NoAnswer{border-left-color:var(--txt3)}
+.recent-row.s-NotInterested{border-left-color:#444}
+.recent-row.s-Callback{border-left-color:var(--amber)}
+.recent-row.s-Interested{border-left-color:#ff4081}
+.recent-empty{font-size:10px;color:var(--txt3);font-style:italic;text-align:center;padding:6px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:9px;margin-bottom:8px}
+.toggle-row .lbl{font-size:12px;font-weight:600;color:var(--txt)}
+.toggle-row .desc{font-size:10px;color:var(--txt3);margin-top:2px;font-weight:400}
+.tgl{position:relative;width:40px;height:22px;background:var(--border2);border-radius:11px;cursor:pointer;transition:background .2s;flex-shrink:0;margin-left:10px}
+.tgl.on{background:var(--green)}
+.tgl::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s}
+.tgl.on::after{transform:translateX(18px)}
+</style>
+</head>
+<body>
+
+<!-- INSTALL HELP MODAL -->
+<div class="modal" id="help-modal" style="display:none">
+  <div class="modal-box" style="max-width:520px">
+    <button class="cog" style="font-size:22px" onclick="document.getElementById('help-modal').style.display='none'">✕</button>
+    <div class="logo" style="margin-bottom:10px">🏋️ <span>SETUP GUIDE</span></div>
+    <p class="sub" style="margin-bottom:14px">Get the most out of the dialer with 2 optional installs.</p>
+    <h2 style="margin-top:12px">1️⃣ CircleLoop Chrome Extension</h2>
+    <p class="sub" style="font-size:12px;margin-bottom:8px">Makes the CALL button fire straight into CircleLoop Desktop. No Windows defaults to mess with.</p>
+    <a href="https://chromewebstore.google.com/search/circleloop" target="_blank" class="btn-red" style="display:block;padding:10px;text-align:center;text-decoration:none;font-size:12px;margin-bottom:12px">🔗 Open Chrome Web Store → search "CircleLoop"</a>
+    <h2>2️⃣ Install as App (PWA)</h2>
+    <p class="sub" style="font-size:12px;margin-bottom:6px"><strong style="color:var(--green)">On PC (Chrome/Edge):</strong> click the install icon ⊕ in the address bar, or menu → Install AresFit Dialer</p>
+    <p class="sub" style="font-size:12px;margin-bottom:6px"><strong style="color:var(--green)">On Android:</strong> menu → Add to Home Screen</p>
+    <p class="sub" style="font-size:12px;margin-bottom:12px"><strong style="color:var(--green)">On iPhone (Safari):</strong> Share button → Add to Home Screen</p>
+    <p class="sub" style="font-size:11px;margin-bottom:12px;color:var(--amber)">⚠ On iPhone you MUST use Safari for Add to Home Screen. Chrome iOS doesn't support PWA install.</p>
+    <h2>3️⃣ Auto-backup to cloud (optional)</h2>
+    <p class="sub" style="font-size:12px;margin-bottom:12px">Install Google Drive desktop → set Downloads folder to sync. Every 25 calls auto-backs up to Drive.</p>
+    <button class="btn-ghost" style="width:100%;padding:10px" onclick="localStorage.setItem('aresfit_help_seen','1');document.getElementById('help-modal').style.display='none'">Got it, don't show again</button>
+  </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="modal" id="setup-modal" style="display:none">
+  <div class="modal-box" style="max-width:440px">
+    <button class="cog" style="font-size:22px" onclick="closeSetup()">✕</button>
+    <div class="logo" style="margin-bottom:12px">🏋️ <span>SETTINGS</span></div>
+    <p class="sub" style="margin-bottom:14px">Your name and email. Used for emails and scripts.</p>
+    <label style="font-size:11px;color:var(--txt2)">Your name</label>
+    <input type="text" id="setup-name" placeholder="e.g. Michael Davies" style="margin:4px 0 10px">
+    <label style="font-size:11px;color:var(--txt2)">Your email address</label>
+    <input type="email" id="setup-email" placeholder="e.g. michael@aresfit.co.uk" style="margin:4px 0 14px">
+    <button class="btn-red" style="width:100%;padding:12px" onclick="saveSetup()">Save →</button>
+    <button class="btn-ghost" style="width:100%;padding:10px;margin-top:8px;font-size:12px" onclick="uploadNew()">📂 Upload New CSV (keeps session)</button>
+  </div>
+</div>
+
+<!-- UPLOAD SCREEN -->
+<div id="upload-screen" class="upload-screen" style="display:none">
+  <div class="upload-card panel" style="padding:20px">
+    <button class="cog" onclick="openSetup()">⚙</button>
+    <div class="logo" style="font-size:18px;margin-bottom:4px">🏋️ <span>ARESFIT DIALER</span> <span style="font-size:10px;color:var(--txt3);font-weight:500">v51</span></div>
+    <p class="sub" style="margin-bottom:18px">Cold calling companion <span id="welcome-name" style="color:var(--red2)"></span></p>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('csv-in').click()">
+      <div style="font-size:42px">📂</div>
+      <div style="margin-top:8px;font-weight:800;font-size:16px">Drop your CSV here</div>
+      <div class="sub" style="margin-top:4px">or tap to browse</div>
+    </div>
+    <input type="file" id="csv-in" style="display:none" onchange="handleFile(event)">
+    <div id="resume-box" style="display:none;margin-top:14px">
+      <button class="btn-red" style="width:100%;padding:14px" onclick="loadSession()">↻ Resume Previous Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="app" style="display:none">
+  <div class="panel mob-section" id="dashboard-panel" style="display:none">
+    <div class="panel-body" id="dash-body"></div>
+  </div>
+  <div class="panel mob-section" id="more-panel" style="display:none">
+    <div class="panel-body" id="more-body"></div>
+  </div>
+  <div class="panel sidebar mob-section" id="sidebar">
+    <div class="panel-head">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="logo">🏋️ <span>ARESFIT</span><span class="save-dot" id="save-dot" title="Save status"></span></div>
+        <button class="cog" style="position:static" onclick="openSetup()">⚙</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-val" id="s-calls">0</div><div class="stat-lbl">Dialled</div></div>
+        <div class="stat"><div class="stat-val" id="s-rate">0%</div><div class="stat-lbl">Contact %</div></div>
+        <div class="stat"><div class="stat-val" id="s-cb">0</div><div class="stat-lbl">Callbacks</div></div>
+        <div class="stat"><div class="stat-val" id="s-hot">0</div><div class="stat-lbl">Hot</div></div>
+      </div>
+      <div class="recent-box">
+        <h3>📞 Today <span id="recent-count" style="color:var(--red2)">0</span></h3>
+        <div id="recent-list"></div>
+      </div>
+      <input type="text" id="lead-search" placeholder="🔍 Search name / town / DM / phone" oninput="searchLeads()" style="margin-bottom:8px;padding:8px 10px;font-size:12px">
+      <div class="filters" id="filter-bar">
+        <button class="active" onclick="setFilter('all',this)">All</button>
+        <button onclick="setFilter('Uncalled',this)">Uncalled</button>
+        <button onclick="setFilter('Callback',this)">Callbacks</button>
+        <button onclick="setFilter('Interested',this)">Hot</button>
+        <button onclick="setFilter('No Answer',this)">No Ans</button>
+        <button onclick="setFilter('Contacted',this)">Contacted</button>
+      </div>
+    </div>
+    <div class="panel-body"><div class="lead-list" id="lead-list"></div></div>
+    <div class="panel-foot">
+      <div class="export-row">
+        <button class="btn-ghost" onclick="exportCSV(false)">Export All</button>
+        <button class="btn-ghost" onclick="exportCSV(true)">Callbacks</button>
+      </div>
+      <button class="btn-ghost" style="width:100%;margin-top:6px;font-size:11px;padding:8px" onclick="exportCSV('today')">📅 Today's Calls CSV</button>
+      <button class="backup-btn" onclick="manualBackup()">💾 Backup Now</button>
+      <button class="btn-ghost" style="width:100%;margin-top:6px;font-size:11px;padding:7px" onclick="document.getElementById('help-modal').style.display='flex'">❓ Setup Help</button>
+      <button onclick="clearSession()" style="width:100%;margin-top:6px;background:#1a0f0f;color:var(--red2);font-size:11px;border-radius:8px;padding:7px">🗑 Clear Session</button>
+    </div>
+  </div>
+
+  <div class="panel mob-section active" id="call-panel">
+    <div class="panel-body">
+      <div class="mob-toggle">
+        <button class="btn-ghost" onclick="document.getElementById('sidebar').classList.toggle('open')">📋 Leads</button>
+        <button class="btn-ghost" onclick="document.getElementById('right-panel').classList.toggle('open')">📧 Panel</button>
+      </div>
+      <div class="due-banner" id="due-banner"></div>
+      <div id="card"></div>
+    </div>
+  </div>
+
+  <div class="panel right-panel mob-section" id="right-panel">
+    <div class="panel-head">
+      <div class="tab-bar">
+        <button class="active" onclick="setTab('email',this)">📧 Email</button>
+        <button onclick="setTab('script',this)">📜 Script</button>
+        <button onclick="setTab('ref',this)">📋 Safety</button>
+        <button onclick="setTab('keypad',this)">📞 Dial</button>
+        <button onclick="setTab('site',this)">🛠️ Tools</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="tab-content active" id="tab-email"></div>
+      <div class="tab-content" id="tab-script"></div>
+      <div class="tab-content" id="tab-ref"></div>
+      <div class="tab-content" id="tab-keypad"></div>
+      <div class="tab-content" id="tab-site"></div>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bnav">
+  <button data-sec="dashboard" onclick="showSec('dashboard',this)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10"/></svg>Home</button>
+  <button data-sec="leads" onclick="showSec('leads',this)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Leads</button>
+  <button class="center active" data-sec="call" onclick="showSec('call',this)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>Call</button>
+  <button data-sec="tools" onclick="showSec('tools',this)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Tools</button>
+  <button data-sec="more" onclick="showSec('more',this)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>More</button>
+</nav>
+
+<div class="modal" id="map-modal" style="display:none">
+  <div class="modal-box">
+    <div class="logo" style="margin-bottom:8px">🏋️ <span>MAP COLUMNS</span></div>
+    <p class="sub">Auto-detected. Just confirm and import.</p>
+    <div class="map-grid" id="map-grid"></div>
+    <div id="import-info"></div>
+    <h2 style="margin-top:14px">Preview (first 5 rows)</h2>
+    <div style="overflow-x:auto"><table id="preview-tbl"></table></div>
+    <button class="btn-red" style="width:100%;margin-top:12px;padding:14px;font-size:15px" onclick="confirmImport()">Import Leads →</button>
+  </div>
+</div>
+
+<script>
+const FIELDS=['business','segment','town','phone','email','leadId','status','dm','notes','followUp','lastContact'];
+const LABELS={business:'Business Name',segment:'Segment',town:'Town',phone:'Phone',email:'Email',leadId:'Lead ID',status:'Status',dm:'Decision Maker',notes:'Notes',followUp:'Follow-Up',lastContact:'Last Contact'};
+const COL_MAP={'Business Name':'business','Segment':'segment','Town':'town','Phone':'phone','Email':'email','Lead_ID':'leadId','Status':'status','Decision Maker':'dm','Notes':'notes','Follow-Up':'followUp','Last Contact':'lastContact'};
+const SAVE_KEY='aresfit_dialer_v4';
+const SETUP_KEY='aresfit_dialer_user';
+const PREFS_KEY='aresfit_dialer_prefs';
+const IDB_NAME='aresfit_dialer';
+const PURGE=['DNC','Dead'];
+const NEEDS_EMAIL=['Voicemail','Interested','Callback'];
+const STATUS_OPTS=['','Uncalled','Contacted','Callback','Interested','No Answer','Voicemail','Not Interested','Quoted','Email Sent'];
+const NOTE_PROMPTS={Contacted:'Spoke to who? Role? What said? Next step?',Voicemail:'Left VM at HH:MM. Email follow-up needed.',Callback:'Spoke to who? When to call back? Time of day?','No Answer':'No answer. Retry tomorrow?',Interested:'🔥 Who? Equipment interest? Budget? Next step?','Not Interested':'Reason? Polite or hostile? Future opportunity?'};
+const BACKUP_INTERVAL=25;
+const DUE_WINDOW_MS=5*60*1000; // ±5 minutes
+
+let raw=[],headers=[],mapping={},leads=[],idx=0,filter='all',filtered=[],user={name:'',email:''},outcomesSinceBackup=0,keypadNum='',idb=null,searchTerm='';
+let prefs={autoQueue:true,dismissedOverdue:[]};
+let _lastSwapPromptId=null;
+
+function searchLeads(){searchTerm=document.getElementById('lead-search').value.trim().toLowerCase();idx=0;render()}
+
+// ========== Prefs ==========
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY));if(p)prefs={...prefs,...p}}catch(e){}}
+function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs))}catch(e){}}
+function toggleAutoQueue(){prefs.autoQueue=!prefs.autoQueue;savePrefs();renderMore();checkDueBanner();render()}
+function dismissOverdue(id){if(!prefs.dismissedOverdue.includes(id))prefs.dismissedOverdue.push(id);savePrefs();checkDueBanner();render()}
+
+// ========== IndexedDB ==========
+function openIDB(){return new Promise((res,rej)=>{const r=indexedDB.open(IDB_NAME,1);r.onerror=()=>rej(r.error);r.onsuccess=()=>res(r.result);r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('state'))db.createObjectStore('state')}})}
+async function idbSave(data){try{if(!idb)idb=await openIDB();return new Promise((res,rej)=>{const tx=idb.transaction('state','readwrite');tx.objectStore('state').put(data,'main');tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error)})}catch(e){return false}}
+async function idbLoad(){try{if(!idb)idb=await openIDB();return new Promise((res,rej)=>{const tx=idb.transaction('state','readonly');const req=tx.objectStore('state').get('main');req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error)})}catch(e){return null}}
+
+// ========== Save ==========
+function flashDot(ok){const d=document.getElementById('save-dot');if(!d)return;d.classList.remove('ok','fail','pulse');void d.offsetWidth;d.classList.add(ok?'ok':'fail','pulse')}
+function save(){
+  const data={raw,headers,mapping,leads,idx,filter,ts:Date.now()};
+  let ok=false;
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(data));ok=true}catch(e){console.warn('LS save failed',e)}
+  idbSave(data).catch(()=>{});
+  flashDot(ok);
+  return ok;
+}
+function hasSession(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));return d&&d.leads&&d.leads.length>0}catch(e){return false}}
+async function loadSession(){
+  let data=null;
+  try{const ls=JSON.parse(localStorage.getItem(SAVE_KEY));if(ls)data=ls}catch(e){}
+  try{const id=await idbLoad();if(id&&(!data||id.ts>data.ts))data=id}catch(e){}
+  if(!data||!data.leads)return;
+  raw=data.raw||[];headers=data.headers||[];mapping=data.mapping||{};leads=data.leads;idx=data.idx||0;filter=data.filter||'all';
+  showApp();render();flashDot(true);
+}
+function clearSession(){if(confirm('Clear all progress? Backup first.'))return localStorage.removeItem(SAVE_KEY),idbSave(null),location.reload()}
+function showApp(){document.getElementById('upload-screen').style.display='none';document.getElementById('main-app').style.display='grid'}
+
+// ========== Backup ==========
+function autoBackup(){if(!leads.length)return;const ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);exportCSV('all',`aresfit-backup-${ts}.csv`,true)}
+function manualBackup(){const ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);exportCSV('all',`aresfit-manual-${ts}.csv`,false);flashDot(true)}
+
+// ========== Setup ==========
+function loadUser(){try{const u=JSON.parse(localStorage.getItem(SETUP_KEY));if(u&&u.name&&u.email){user=u;return true}}catch(e){}return false}
+function saveSetup(){
+  const n=document.getElementById('setup-name').value.trim();
+  const e=document.getElementById('setup-email').value.trim();
+  if(!n||!e){alert('Both fields required');return}
+  const wasNewUser=!user.name;
+  user={name:n,email:e};
+  localStorage.setItem(SETUP_KEY,JSON.stringify(user));
+  document.getElementById('setup-modal').style.display='none';
+  document.getElementById('welcome-name').textContent='· '+n.split(' ')[0];
+  if(wasNewUser&&!leads.length){
+    document.getElementById('upload-screen').style.display='flex';
+    if(hasSession())document.getElementById('resume-box').style.display='block';
+    if(!localStorage.getItem('aresfit_help_seen'))setTimeout(()=>document.getElementById('help-modal').style.display='flex',400);
+  }
+  if(leads.length)render();
+}
+function closeSetup(){if(!user.name||!user.email){alert('Setup required first');return}document.getElementById('setup-modal').style.display='none'}
+function uploadNew(){document.getElementById('setup-modal').style.display='none';document.getElementById('csv-in').value='';document.getElementById('csv-in').click()}
+function openSetup(){document.getElementById('setup-name').value=user.name||'';document.getElementById('setup-email').value=user.email||'';document.getElementById('setup-modal').style.display='flex'}
+
+// ========== Init ==========
+loadPrefs();
+openIDB().catch(()=>{});
+if(loadUser()){
+  document.getElementById('welcome-name').textContent='· '+user.name.split(' ')[0];
+  document.getElementById('upload-screen').style.display='flex';
+  if(hasSession())document.getElementById('resume-box').style.display='block';
+}else{
+  document.getElementById('setup-modal').style.display='flex';
+}
+
+const uz=document.getElementById('upload-zone');
+['dragover','dragenter'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.classList.add('drag')}));
+['dragleave','drop'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.classList.remove('drag')}));
+uz.addEventListener('drop',ev=>{const f=ev.dataTransfer.files[0];if(f){const r=new FileReader();r.onload=e=>{parseCSV(e.target.result);showMapping()};r.readAsText(f)}});
+
+// ========== CSV Parse ==========
+function handleFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{parseCSV(ev.target.result);showMapping()};r.readAsText(f)}
+function parseCSV(t){
+  const lines=t.split(/\r?\n/).filter(l=>l.trim());
+  const parse=l=>{const r=[];let c='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){if(q&&l[i+1]==='"'){c+='"';i++}else q=!q}else if(ch===','&&!q){r.push(c);c=''}else c+=ch}r.push(c);return r};
+  let hIdx=0;
+  for(let i=0;i<Math.min(5,lines.length);i++){const cols=parse(lines[i]);if(cols.some(c=>c.trim()==='Business Name'||c.trim()==='Phone'||c.trim()==='Status')){hIdx=i;break}}
+  headers=parse(lines[hIdx]).map(h=>h.trim().replace(/^\ufeff/,''));
+  raw=lines.slice(hIdx+1).map(l=>{const v=parse(l);const o={};headers.forEach((h,i)=>o[h]=(v[i]||'').trim());return o}).filter(r=>Object.values(r).some(v=>v));
+}
+function showMapping(){
+  mapping={};headers.forEach(h=>{if(COL_MAP[h])mapping[COL_MAP[h]]=h});
+  document.getElementById('map-grid').innerHTML=FIELDS.map(f=>`<div><label>${LABELS[f]}</label><select id="map-${f}">${['',...headers].map(h=>`<option value="${esc(h)}"${mapping[f]===h?' selected':''}>${esc(h)||'— skip —'}</option>`).join('')}</select></div>`).join('');
+  document.getElementById('preview-tbl').innerHTML=`<tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`+raw.slice(0,5).map(r=>`<tr>${headers.map(h=>`<td>${esc(r[h]||'')}</td>`).join('')}</tr>`).join('');
+  let dnc=0,dead=0,noP=0,noN=0;
+  const sH=mapping.status,pH=mapping.phone,nH=mapping.business;
+  raw.forEach(r=>{const st=(r[sH]||'').trim();if(st==='DNC')dnc++;else if(st==='Dead')dead++;if(!(r[pH]||'').replace(/\D/g,''))noP++;if(!(r[nH]||'').trim())noN++});
+  document.getElementById('import-info').innerHTML=`<div class="import-stats"><strong>${raw.length}</strong> total rows<br><span class="warn">${dnc} DNC + ${dead} Dead</span> auto-deleted<br><span class="warn">${noP} no phone + ${noN} no name</span> skipped<br><strong>~${raw.length-dnc-dead-noP-noN} clean leads</strong> ready to dial</div>`;
+  document.getElementById('map-modal').style.display='flex';
+}
+function confirmImport(){
+  FIELDS.forEach(f=>mapping[f]=document.getElementById('map-'+f).value);
+  leads=[];idx=0;filter='all';
+  raw.forEach((r,i)=>{
+    const st=mapping.status?r[mapping.status]||'':'';
+    if(PURGE.includes(st))return;
+    const ph=mapping.phone?(r[mapping.phone]||'').replace(/\D/g,''):'';
+    const nm=mapping.business?(r[mapping.business]||'').trim():'';
+    if(!ph||!nm)return;
+    const o={id:i,rawIdx:i,dialled:false,callOutcome:'',callNotes:'',cbDate:'',cbSetAt:0,edited:{}};
+    FIELDS.forEach(f=>o[f]=mapping[f]?r[mapping[f]]||'':'');
+    leads.push(o);
+  });
+  document.getElementById('map-modal').style.display='none';
+  document.querySelectorAll('#filter-bar button').forEach((b,i)=>b.classList.toggle('active',i===0));
+  showApp();save();render();
+}
+
+// ========== Filters ==========
+function setFilter(f,b){filter=f;document.querySelectorAll('#filter-bar button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');idx=0;render()}
+function applyFilter(){
+  let r;
+  if(filter==='all')r=leads;
+  else if(filter==='Uncalled')r=leads.filter(l=>!l.dialled&&(!(l.status||'').trim()||(l.status||'').trim().toLowerCase()==='uncalled'));
+  else r=leads.filter(l=>(l.callOutcome||l.status||'').trim()===filter);
+  if(searchTerm){const s=searchTerm;r=r.filter(l=>(l.business||'').toLowerCase().includes(s)||(l.town||'').toLowerCase().includes(s)||(l.dm||'').toLowerCase().includes(s)||(l.phone||'').toLowerCase().includes(s))}
+  return r;
+}
+
+// ========== Auto-queue pool ==========
+// Returns {due:[], overdue:[]} — each sorted by cbSetAt DESC (last modified wins tiebreaker)
+// Only includes leads with callOutcome='Callback' (active scheduled callbacks) OR leads with cbDate but not yet called
+function getDuePool(){
+  if(!prefs.autoQueue)return {due:[],overdue:[]};
+  const now=Date.now();
+  const pool={due:[],overdue:[]};
+  leads.forEach(l=>{
+    if(!l.cbDate)return;
+    // Exclude leads that have been called with a final outcome (not Callback) since the cbDate was set
+    // i.e. if it was called after cbSetAt and outcome isn't Callback, it's "done"
+    if(l.dialled&&l.callOutcome&&l.callOutcome!=='Callback'){
+      // Only skip if call happened after the callback was set (otherwise an old stale cbDate counts)
+      const callTs=l.callStartTs||0;
+      if(callTs>=(l.cbSetAt||0))return;
+    }
+    const cbTs=new Date(l.cbDate).getTime();
+    if(isNaN(cbTs))return;
+    const diff=now-cbTs; // positive = overdue
+    if(diff>DUE_WINDOW_MS){
+      // Overdue — past the +5min window
+      if(!prefs.dismissedOverdue.includes(l.id))pool.overdue.push(l);
+    }else if(diff>=-DUE_WINDOW_MS){
+      // Within ±5 min window = due now
+      pool.due.push(l);
+    }
+  });
+  // Sort by cbSetAt DESC — last modified wins
+  const byLastModified=(a,b)=>(b.cbSetAt||0)-(a.cbSetAt||0);
+  pool.overdue.sort(byLastModified);
+  pool.due.sort(byLastModified);
+  return pool;
+}
+function getNextAutoQueueLead(){
+  const p=getDuePool();
+  if(p.overdue.length)return p.overdue[0];
+  if(p.due.length)return p.due[0];
+  return null;
+}
+function isInPool(leadId){
+  const p=getDuePool();
+  return p.overdue.some(l=>l.id===leadId)||p.due.some(l=>l.id===leadId);
+}
+function poolStatus(leadId){
+  const p=getDuePool();
+  if(p.overdue.some(l=>l.id===leadId))return 'overdue';
+  if(p.due.some(l=>l.id===leadId))return 'due';
+  return null;
+}
+
+// ========== Render ==========
+function render(){filtered=applyFilter();if(idx>=filtered.length)idx=Math.max(0,filtered.length-1);renderList();renderCard();renderStats();renderEmail();renderScript();renderRef();renderKeypad();renderSite();renderRecent();checkDueBanner()}
+
+function isToday(iso){if(!iso)return false;const d=new Date(iso);const n=new Date();return d.getDate()===n.getDate()&&d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear()}
+function renderRecent(){
+  const today=leads.filter(leadCalledToday).sort((a,b)=>{const ta=a.callStart?new Date(a.callStart).getTime():0;const tb=b.callStart?new Date(b.callStart).getTime():0;return tb-ta});
+  const box=document.getElementById('recent-list');const cnt=document.getElementById('recent-count');
+  if(!box||!cnt)return;
+  cnt.textContent=today.length;
+  if(!today.length){box.innerHTML='<div class="recent-empty">No calls yet today</div>';return}
+  const icons={Contacted:'✅',Voicemail:'📱','No Answer':'❌','Not Interested':'🚫',Callback:'📅',Interested:'🔥'};
+  box.innerHTML=today.slice(0,8).map(l=>{
+    let hm='--:--';
+    if(l.callStart){const t=new Date(l.callStart);hm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')}
+    else if(l.callStartDisplay){const m=l.callStartDisplay.match(/(\d{2}):(\d{2})/);if(m)hm=m[1]+':'+m[2]}
+    const o=l.callOutcome||'';const s=o.replace(/\s/g,'');
+    return `<div class="recent-row s-${s}" onclick="jumpToLead(${l.id})"><span class="time">${hm}</span><span class="name">${esc(l.business)}</span><span class="ico">${icons[o]||'·'}</span></div>`
+  }).join('');
+  if(today.length>8)box.innerHTML+=`<div class="recent-empty">+ ${today.length-8} more</div>`;
+}
+function jumpToLead(leadId){const l=leads.find(x=>x.id===leadId);if(!l)return;filter='all';document.querySelectorAll('#filter-bar button').forEach(b=>b.classList.remove('active'));document.querySelector('#filter-bar button')?.classList.add('active');filtered=leads;idx=filtered.findIndex(x=>x.id===leadId);render()}
+function renderList(){
+  const pool=getDuePool();
+  const overdueIds=new Set(pool.overdue.map(l=>l.id));
+  const dueIds=new Set(pool.due.map(l=>l.id));
+  // Pin overdue leads to top of filtered list (non-destructive — only affects render order)
+  let display=filtered.slice();
+  if(overdueIds.size){
+    const pinned=display.filter(l=>overdueIds.has(l.id));
+    const rest=display.filter(l=>!overdueIds.has(l.id));
+    display=[...pinned,...rest];
+  }
+  document.getElementById('lead-list').innerHTML=display.map((l,i)=>{
+    const s=(l.callOutcome||l.status||'').replace(/\s/g,'');
+    const cb=l.cbDate&&l.callOutcome==='Callback'?`<span class="cb-icon">⏰ ${formatCbTime(l.cbDate)}</span>`:'';
+    const poolCls=overdueIds.has(l.id)?'overdue-pin':(dueIds.has(l.id)?'due-now':'');
+    const badge=overdueIds.has(l.id)?'<span class="pin-badge overdue">OVERDUE</span>':(dueIds.has(l.id)?'<span class="pin-badge due">DUE</span>':'');
+    const realIdx=filtered.findIndex(x=>x.id===l.id);
+    return `<div class="lead-item s-${s} ${poolCls} ${realIdx===idx?'active':''}" onclick="jump(${realIdx})"><div class="biz">${esc(l.business)}${cb}${badge}</div><div class="meta">${esc(l.town||'')} ${(l.callOutcome||l.status)?'· '+(l.callOutcome||l.status):''}</div></div>`;
+  }).join('');
+}
+function jump(i){idx=i;renderCard();renderList();renderEmail();renderScript();renderRef();renderSite()}
+
+function showSec(sec,btn){
+  document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.querySelectorAll('.mob-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('dashboard-panel').style.display='none';
+  document.getElementById('more-panel').style.display='none';
+  if(sec==='dashboard'){const dp=document.getElementById('dashboard-panel');dp.style.display='flex';dp.classList.add('active');renderDashboard()}
+  else if(sec==='leads')document.getElementById('sidebar').classList.add('active');
+  else if(sec==='call')document.getElementById('call-panel').classList.add('active');
+  else if(sec==='tools'){document.getElementById('right-panel').classList.add('active');const fb=document.querySelector('.tab-bar button');if(fb&&!document.querySelector('.tab-bar button.active'))setTab('email',fb)}
+  else if(sec==='more'){const mp=document.getElementById('more-panel');mp.style.display='flex';mp.classList.add('active');renderMore()}
+}
+
+function renderMore(){
+  const m=document.getElementById('more-body');if(!m)return;
+  const sessionAge=leads.length?'Active session · '+leads.length+' leads loaded':'No session active';
+  const pool=getDuePool();
+  m.innerHTML=`<div class="logo" style="margin-bottom:14px">🏋️ <span>SETTINGS & DATA</span></div>
+    <div class="dash-card"><h3>⏰ Auto-Queue</h3>
+      <div class="toggle-row"><div><div class="lbl">Scheduled callbacks</div><div class="desc">Auto-surface leads in their ±5min window. Overdue pinned to top.</div></div><div class="tgl ${prefs.autoQueue?'on':''}" onclick="toggleAutoQueue()"></div></div>
+      ${prefs.autoQueue?`<p class="sub" style="font-size:11px;margin-top:6px">Currently: <strong style="color:var(--amber)">${pool.due.length}</strong> due · <strong style="color:var(--danger)">${pool.overdue.length}</strong> overdue</p>`:'<p class="sub" style="font-size:11px;margin-top:6px;color:var(--txt3)">Disabled — callbacks will not auto-surface.</p>'}
+      ${prefs.dismissedOverdue.length?`<button class="btn-ghost" style="width:100%;margin-top:8px;font-size:11px;padding:7px" onclick="prefs.dismissedOverdue=[];savePrefs();renderMore();render()">♻ Restore ${prefs.dismissedOverdue.length} dismissed</button>`:''}
+    </div>
+    <div class="dash-card"><h3>👤 Sender</h3>
+      <p style="font-size:13px;color:var(--txt);margin-bottom:4px"><strong>${esc(user.name||'Not set')}</strong></p>
+      <p style="font-size:12px;color:var(--txt2);margin-bottom:10px">${esc(user.email||'Not set')}</p>
+      <button class="btn-ghost" style="width:100%" onclick="openSetup()">Edit sender details</button>
+    </div>
+    <div class="dash-card"><h3>📂 Data</h3>
+      <p style="font-size:12px;color:var(--txt2);margin-bottom:10px">${sessionAge}</p>
+      <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="document.getElementById('csv-in').click()">📂 Upload new CSV</button>
+      <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportCSV(false)">📥 Export all leads</button>
+      <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportCSV(true)">📅 Export callbacks only</button>
+      <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportToday()">📞 Export today's calls</button>
+      <button class="btn-ghost" style="width:100%" onclick="manualBackup()">💾 Backup now</button>
+    </div>
+    <div class="dash-card"><h3>📞 CircleLoop Setup</h3>
+      <p style="font-size:12px;color:var(--txt2);margin-bottom:10px">Test if CircleLoop opens when you tap CALL.</p>
+      <a href="tel:03338806486" class="btn-ghost" style="width:100%;display:block;text-align:center;text-decoration:none;padding:10px;margin-bottom:10px">🧪 Test dial AresFit (0333 880 6486)</a>
+      <details style="font-size:12px;color:var(--txt2);line-height:1.5"><summary style="cursor:pointer;color:var(--blue);margin-bottom:6px">Setup guide ↓</summary>
+        <p style="margin:6px 0"><strong style="color:var(--txt)">Windows PC:</strong></p>
+        <p>1. Settings → Apps → Default Apps</p>
+        <p>2. Scroll to "Choose defaults by link type"</p>
+        <p>3. Find <code style="background:var(--card);padding:1px 4px">TEL</code> → set to CircleLoop</p>
+        <p>4. Make sure CircleLoop Desktop is running</p>
+        <p style="margin:8px 0 4px"><strong style="color:var(--txt)">iPhone (iOS 18.2+):</strong></p>
+        <p>Settings → Apps → Default Apps → Phone → CircleLoop</p>
+        <p style="margin:8px 0 4px"><strong style="color:var(--txt)">Android:</strong></p>
+        <p>Settings → Apps → Default Apps → Phone app → CircleLoop</p>
+      </details>
+    </div>
+    <div class="dash-card" style="border-color:#3a1010"><h3 style="color:var(--red2)">⚠ Danger zone</h3>
+      <button onclick="clearSession()" style="width:100%;background:#1a0f0f;color:var(--red2);font-size:12px;border-radius:8px;padding:10px;border:1px solid var(--red);font-weight:600">🗑 Clear all session data</button>
+    </div>
+    <p class="sub" style="text-align:center;font-size:10px;margin-top:14px;color:var(--txt3)">AresFit Dialer v51</p>`;
+}
+
+// ========== Dashboard ==========
+function outIcon(o){return {Contacted:'✅',Voicemail:'📱','No Answer':'❌','Not Interested':'🚫',Callback:'📅',Interested:'🔥'}[o]||''}
+function formatTs(ts){if(!ts)return '—';const d=new Date(ts);return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function formatCbTime(s){if(!s)return '';const d=new Date(s);return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function getUpcomingCallbacks(){const now=Date.now();return leads.filter(l=>l.cbDate&&new Date(l.cbDate).getTime()>now+DUE_WINDOW_MS&&l.callOutcome==='Callback').sort((a,b)=>new Date(a.cbDate)-new Date(b.cbDate))}
+function renderDashboard(){
+  const today=new Date().toDateString();
+  const todayCalls=leads.filter(l=>l.callStartTs&&new Date(l.callStartTs).toDateString()===today).sort((a,b)=>b.callStartTs-a.callStartTs);
+  const pool=getDuePool();const upcoming=getUpcomingCallbacks();
+  const dialled=leads.filter(l=>l.dialled).length;
+  const contacted=leads.filter(l=>['Contacted','Interested','Callback','Quoted'].includes(l.callOutcome)).length;
+  const d=document.getElementById('dash-body');if(!d)return;
+  d.innerHTML=`<div class="logo" style="margin-bottom:14px">🏋️ <span>DASHBOARD</span></div>
+    ${pool.overdue.length?`<div class="dash-card" style="border-color:var(--danger);background:#1a0505"><h3 style="color:var(--danger)">⚠ OVERDUE (${pool.overdue.length})</h3>${pool.overdue.map(l=>`<div class="recent-row" onclick="goLead(${l.id})"><div class="time">${formatCbTime(l.cbDate)}</div><div class="biz">${esc(l.business)}</div><div class="out">⚠</div></div>`).join('')}</div>`:''}
+    ${pool.due.length?`<div class="dash-card" style="border-color:var(--amber);background:#1a1100"><h3 style="color:var(--amber)">⏰ DUE NOW (${pool.due.length})</h3>${pool.due.map(l=>`<div class="recent-row" onclick="goLead(${l.id})"><div class="time">${formatCbTime(l.cbDate)}</div><div class="biz">${esc(l.business)}</div><div class="out">⏰</div></div>`).join('')}</div>`:''}
+    <div class="stats"><div class="stat"><div class="stat-val">${todayCalls.length}</div><div class="stat-lbl">Today</div></div><div class="stat"><div class="stat-val">${leads.filter(l=>l.callOutcome==='Interested').length}</div><div class="stat-lbl">Hot</div></div><div class="stat"><div class="stat-val">${leads.filter(l=>l.callOutcome==='Callback').length}</div><div class="stat-lbl">Callbacks</div></div><div class="stat"><div class="stat-val">${dialled?Math.round(contacted/dialled*100):0}%</div><div class="stat-lbl">Contact %</div></div></div>
+    ${upcoming.length?`<div class="dash-card"><h3>📅 Upcoming Callbacks</h3>${upcoming.slice(0,5).map(l=>`<div class="recent-row" onclick="goLead(${l.id})"><div class="time">${formatCbTime(l.cbDate)}</div><div class="biz">${esc(l.business)}</div></div>`).join('')}</div>`:''}
+    <div class="dash-card"><h3>📞 Today's Calls (${todayCalls.length})</h3>${todayCalls.length?todayCalls.map((l,i)=>`<div class="recent-row" onclick="toggleTodayDetail(${l.id})" style="flex-wrap:wrap;align-items:flex-start"><div class="time">${formatTs(l.callStartTs)}</div><div class="biz">${esc(l.business)}</div><div class="out">${outIcon(l.callOutcome)}</div><div id="td-${l.id}" style="width:100%;display:none;margin-top:8px;padding:10px;background:#0a0a14;border-radius:8px;border-left:3px solid var(--red);font-size:12px;line-height:1.5"></div></div>`).join(''):'<p class="sub" style="font-size:12px">No calls yet today. Tap CALL on a lead, finish notes + outcome, then Next to log.</p>'}</div>
+    <div class="export-row"><button class="btn-ghost" onclick="exportToday()">📥 Today's CSV</button><button class="btn-ghost" onclick="exportCSV(false)">All CSV</button></div>`;
+}
+function goLead(id){const i=filtered.findIndex(l=>l.id===id);if(i>=0){idx=i;render()}else{filter='all';filtered=leads;idx=leads.findIndex(l=>l.id===id);render()}const cb=document.querySelector('[data-sec=call]');if(cb)showSec('call',cb)}
+function toggleTodayDetail(id){
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  const el=document.getElementById('td-'+id);if(!el)return;
+  if(el.style.display==='none'||!el.style.display){
+    el.innerHTML=`<div style="color:var(--txt2);font-size:10px;text-transform:uppercase;margin-bottom:4px">Notes · ${l.callOutcome||'no outcome'}</div><div style="white-space:pre-wrap;color:var(--txt)">${esc(l.callNotes||'(no notes)')}</div>${l.cbDate?`<div style="margin-top:6px;color:var(--amber);font-size:11px">📅 Callback: ${esc(l.cbDate)}</div>`:''}<button onclick="event.stopPropagation();goLead(${l.id})" style="margin-top:8px;background:var(--card);border:1px solid var(--border);font-size:11px;padding:6px 10px;border-radius:6px;color:var(--txt)">Open lead →</button>`;
+    el.style.display='block';
+  }else{el.style.display='none'}
+}
+// Banner: shows overdue first, then due
+function checkDueBanner(){
+  const b=document.getElementById('due-banner');if(!b)return;
+  if(!prefs.autoQueue){b.classList.remove('show');return}
+  const pool=getDuePool();
+  const target=pool.overdue[0]||pool.due[0];
+  if(!target){b.classList.remove('show','overdue');return}
+  const isOverdue=pool.overdue.length>0;
+  b.classList.toggle('overdue',isOverdue);
+  const label=isOverdue?`⚠ OVERDUE — scheduled ${formatCbTime(target.cbDate)}`:`⏰ DUE NOW — scheduled ${formatCbTime(target.cbDate)}`;
+  const extra=pool.overdue.length+pool.due.length>1?` <span style="color:var(--txt2);font-size:11px;font-weight:500">(+${pool.overdue.length+pool.due.length-1} more)</span>`:'';
+  b.innerHTML=`<h3>${label}${extra}</h3><div class="biz">${esc(target.business)} ${target.town?'· '+esc(target.town):''}</div><div class="banner-btns"><button class="jump-btn" onclick="goLead(${target.id})">Jump to lead →</button>${isOverdue?`<button class="dismiss-btn" onclick="dismissOverdue(${target.id})">Dismiss</button>`:''}</div>`;
+  b.classList.add('show');
+}
+setInterval(()=>{if(leads.length){checkDueBanner();renderList()}},30000);
+
+function exportToday(){
+  const today=new Date().toDateString();
+  const tl=leads.filter(l=>l.callStartTs&&new Date(l.callStartTs).toDateString()===today);
+  if(!tl.length){alert("No calls today");return}
+  const cols=[...headers,'Call Outcome','Call Notes','Callback Date','Called At'];
+  const escC=v=>{v=String(v||'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const csv=[cols.join(','),...tl.map(l=>{const r={...raw[l.rawIdx]};Object.keys(l.edited||{}).forEach(f=>{if(mapping[f])r[mapping[f]]=l[f]});return [...headers.map(h=>escC(r[h])),escC(l.callOutcome),escC(l.callNotes),escC(l.cbDate),escC(l.callStartTs?new Date(l.callStartTs).toISOString():'')].join(',')})].join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`aresfit-today-${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+function renderCard(){
+  const l=filtered[idx];
+  if(!l){document.getElementById('card').innerHTML='<p class="sub">No leads in this filter.</p>';return}
+  const ph=(l.phone||'').replace(/[^\d+]/g,'');
+  const needsEmail=NEEDS_EMAIL.includes(l.callOutcome);
+  const notesEmpty=!l.callNotes.trim();
+  const showEmailBtn=needsEmail&&l.email;
+  const blockNext=l.callOutcome&&notesEmpty;
+  const tappedNotice=l.callTapped?`<div class="sub" style="font-size:11px;color:var(--amber);margin-bottom:6px;padding:8px;background:rgba(255,171,0,.08);border-radius:6px;border-left:3px solid var(--amber)">📞 Tapped at ${formatTs(l.callTapped)} — number copied. Paste into CircleLoop and dial.</div>`:'';
+  const callButtons=showEmailBtn?`<button class="action-btn email" onclick="openGmail()">📧 EMAIL ${esc(l.business).toUpperCase()} NOW</button>`:`<div style="display:flex;gap:8px;margin:6px 0"><button class="action-btn call" style="flex:1;margin:0" onclick="tapCall()">📞 CALL ${esc(l.phone||'')}</button><button onclick="copyPhone()" style="flex:0 0 56px;background:var(--card);border:1px solid var(--border);font-size:18px;border-radius:14px" title="Copy">📋</button></div>`+tappedNotice;
+  const poolFlag=poolStatus(l.id);
+  const poolNote=poolFlag==='overdue'?`<div style="padding:8px 10px;background:rgba(255,23,68,.1);border-left:3px solid var(--danger);border-radius:6px;margin-bottom:8px;font-size:12px;color:var(--danger);font-weight:700">⚠ OVERDUE — scheduled for ${formatCbTime(l.cbDate)}</div>`:(poolFlag==='due'?`<div style="padding:8px 10px;background:rgba(255,171,0,.1);border-left:3px solid var(--amber);border-radius:6px;margin-bottom:8px;font-size:12px;color:var(--amber);font-weight:700">⏰ DUE NOW — scheduled for ${formatCbTime(l.cbDate)}</div>`:'');
+  document.getElementById('card').innerHTML=`
+    ${poolNote}
+    <div><div class="biz-head">${esc(l.business)}</div>
+    <div class="sub">${esc(l.town||'')} ${l.segment?'· '+esc(l.segment):''} ${l.leadId?'· '+esc(l.leadId):''}</div></div>
+    <div class="fields">
+      <div class="field" onclick="if(!this.querySelector('input,select'))editField('dm',event)"><div class="field-lbl">Decision Maker <span class="edit">tap</span></div><div class="field-val ${l.dm?'':'empty'}" id="fv-dm">${l.dm?esc(l.dm):'+ add name'}</div></div>
+      <div class="field" onclick="if(!this.querySelector('input,select'))editField('phone',event)"><div class="field-lbl">Phone <span class="edit">tap</span></div><div class="field-val ${l.phone?'':'empty'}" id="fv-phone" style="font-family:var(--mono)">${l.phone?esc(l.phone):'+ add'}</div></div>
+      <div class="field" onclick="if(!this.querySelector('input,select'))editField('email',event)"><div class="field-lbl">Email <span class="edit">tap</span></div><div class="field-val ${l.email?'':'empty'}" id="fv-email">${l.email?esc(l.email):'+ add email'}</div></div>
+      <div class="field" onclick="if(!this.querySelector('input,select'))editField('status',event)"><div class="field-lbl">Sheet Status <span class="edit">tap</span></div><div class="field-val ${l.status?'':'empty'}" id="fv-status">${l.status?esc(l.status):'—'}</div></div>
+    </div>
+    ${l.notes?`<div class="field" style="margin-bottom:8px;cursor:default"><div class="field-lbl">Sheet Notes</div><div class="field-val" style="font-size:12px;max-height:120px;overflow-y:auto">${esc(l.notes)}</div></div>`:''}
+    ${callButtons}
+    <div class="outcomes">
+      <button class="${l.callOutcome==='Contacted'?'sel':''}" onclick="setOutcome('Contacted')">✅ Contacted</button>
+      <button class="${l.callOutcome==='Voicemail'?'sel':''}" onclick="setOutcome('Voicemail')">📱 VM</button>
+      <button class="${l.callOutcome==='No Answer'?'sel':''}" onclick="setOutcome('No Answer')">❌ NA</button>
+      <button class="${l.callOutcome==='Not Interested'?'sel':''}" onclick="setOutcome('Not Interested')">🚫 Not Int.</button>
+      <button class="${l.callOutcome==='Callback'?'sel':''}" onclick="setOutcome('Callback')">📅 Callback</button>
+      <button class="${l.callOutcome==='Interested'?'sel':''}" onclick="setOutcome('Interested')">🔥 HOT</button>
+    </div>
+    <div style="margin-top:10px"><div class="field-lbl" style="margin-bottom:3px">Call Notes ${l.callOutcome?'<span style="color:var(--red2)">· REQUIRED</span>':''}</div>
+    <textarea id="notes-in" class="${blockNext?'required-empty':''}" placeholder="${l.callOutcome?(NOTE_PROMPTS[l.callOutcome]||'Notes...'):'Pick an outcome above first'}" oninput="updateNotes()">${esc(l.callNotes)}</textarea>
+    <div class="notes-warning ${blockNext?'show':''}">⚠ Fill in notes before moving to next lead</div></div>
+    <div style="margin-top:6px"><div class="field-lbl" style="margin-bottom:3px">Callback date/time</div>
+    <input type="datetime-local" id="cb-in" value="${l.cbDate}" onchange="updateCb()"></div>
+    <div class="progress"><button class="btn-ghost" onclick="nav(-1)">← Prev</button><span class="sub" style="font-family:var(--mono);align-self:center">${filtered.length?idx+1:0} / ${filtered.length}</span><button class="btn-ghost" onclick="nav(1)" ${blockNext?'disabled':''}>Next →</button></div>`;
+}
+function editField(f,ev){
+  if(ev){ev.stopPropagation();ev.preventDefault()}
+  const l=filtered[idx];if(!l)return;
+  const el=document.getElementById('fv-'+f);
+  if(!el||el.querySelector('input,select'))return;
+  const cur=l[f]||'';
+  let editor;
+  if(f==='status'){
+    el.innerHTML=`<select onchange="commitEdit('${f}',this.value,event)" onblur="commitEdit('${f}',this.value,event)" onclick="event.stopPropagation()">${STATUS_OPTS.map(s=>`<option value="${s}"${s===cur?' selected':''}>${s||'—'}</option>`).join('')}</select>`;
+    editor=el.querySelector('select');
+  }else{
+    const inputType=f==='email'?'email':f==='phone'?'tel':'text';
+    el.innerHTML=`<input type="${inputType}" value="${esc(cur)}" onblur="commitEdit('${f}',this.value,event)" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}else if(event.key==='Escape'){this.value='${esc(cur).replace(/'/g,"\\'")}';this.blur()}">`;
+    editor=el.querySelector('input');
+  }
+  if(editor){setTimeout(()=>{editor.focus();if(editor.select)editor.select()},10)}
+}
+function commitEdit(f,v,ev){
+  if(ev)ev.stopPropagation();
+  const l=filtered[idx];if(!l)return;
+  const newVal=v.trim();
+  if(l[f]===newVal){
+    const el=document.getElementById('fv-'+f);
+    if(el){el.innerHTML=newVal?esc(newVal):(f==='dm'?'+ add name':f==='email'?'+ add email':f==='phone'?'+ add':'—');el.className='field-val'+(newVal?'':' empty')}
+    return;
+  }
+  l[f]=newVal;
+  if(!l.edited)l.edited={};
+  l.edited[f]=true;
+  save();
+  const el=document.getElementById('fv-'+f);
+  if(el){el.innerHTML=newVal?esc(newVal):(f==='dm'?'+ add name':f==='email'?'+ add email':f==='phone'?'+ add':'—');el.className='field-val'+(newVal?'':' empty')}
+  renderEmail();renderList();
+}
+function nav(d){
+  const l=filtered[idx];
+  if(d>0&&l&&l.callOutcome&&!l.callNotes.trim()){const t=document.getElementById('notes-in');if(t){t.classList.add('required-empty');t.focus()}return}
+  // Commit call
+  if(d>0&&l&&l.callTapped&&l.callOutcome&&l.callNotes.trim()&&!l.dialled){
+    l.dialled=true;
+    l.callStartTs=l.callTapped;
+    l.callStart=new Date(l.callTapped).toISOString();
+    l.callCount=(l.callCount||0)+1;
+    // If user completed the call with non-Callback outcome, clear any prior dismiss state so the pool is clean
+    if(l.callOutcome!=='Callback'&&prefs.dismissedOverdue.includes(l.id)){
+      prefs.dismissedOverdue=prefs.dismissedOverdue.filter(x=>x!==l.id);savePrefs();
+    }
+    save();
+  }
+  // Auto-queue: check for due/overdue lead and offer swap
+  if(d>0){
+    const target=getNextAutoQueueLead();
+    if(target&&target.id!==(l&&l.id)&&target.id!==_lastSwapPromptId){
+      const isOverdue=poolStatus(target.id)==='overdue';
+      const label=isOverdue?'⚠ OVERDUE CALLBACK':'⏰ SCHEDULED CALLBACK DUE';
+      const msg=`${label}\n\n${target.business}${target.town?' · '+target.town:''}\nScheduled: ${formatCbTime(target.cbDate)}\n\nJump to this lead now?`;
+      _lastSwapPromptId=target.id;
+      if(confirm(msg)){goLead(target.id);return}
+      // If they cancel, don't nag again for this same lead on next Next tap (reset when target changes)
+    }
+  }
+  idx=Math.max(0,Math.min(filtered.length-1,idx+d));
+  renderCard();renderList();renderEmail();renderScript();renderSite();
+}
+function tapCall(){
+  const l=filtered[idx];if(!l)return;
+  const now=Date.now();
+  if(l._lastTap&&now-l._lastTap<1500)return;
+  l._lastTap=now;
+  l.callTapped=now;
+  const num=(l.phone||'').replace(/[^\d+]/g,'');
+  if(l.phone)navigator.clipboard.writeText(l.phone).then(()=>{flashDot(true)}).catch(()=>{});
+  save();renderCard();
+  try{const iframe=document.createElement('iframe');iframe.style.display='none';iframe.src='circleloop://call/'+num;document.body.appendChild(iframe);setTimeout(()=>iframe.remove(),100)}catch(e){}
+  setTimeout(()=>{window.location.href='circleloop://call/'+num},250);
+}
+function copyPhone(){const l=filtered[idx];if(!l||!l.phone)return;navigator.clipboard.writeText(l.phone).then(()=>{flashDot(true);const btn=event.target;const orig=btn.textContent;btn.textContent='✓';setTimeout(()=>btn.textContent=orig,800)})}
+function markDialled(){}
+function ts(){const d=new Date();return `[${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}]`}
+function setOutcome(o){const l=filtered[idx];if(!l)return;l.callOutcome=o;const now=new Date();l.outcomeAt=now.toISOString();outcomesSinceBackup++;if(outcomesSinceBackup>=BACKUP_INTERVAL){autoBackup();outcomesSinceBackup=0}save();render()}
+function updateNotes(){const l=filtered[idx];if(l){l.callNotes=document.getElementById('notes-in').value;save();const t=document.getElementById('notes-in');if(t&&l.callNotes.trim()){t.classList.remove('required-empty');document.querySelector('.notes-warning')?.classList.remove('show');document.querySelector('.progress button:last-child')?.removeAttribute('disabled')}}}
+function updateCb(){
+  const l=filtered[idx];if(!l)return;
+  const newVal=document.getElementById('cb-in').value;
+  if(newVal!==l.cbDate){
+    l.cbDate=newVal;
+    l.cbSetAt=Date.now(); // Track last modification for tiebreaker
+    // If the lead was previously dismissed as overdue, clear dismissal — fresh schedule
+    if(prefs.dismissedOverdue.includes(l.id)){prefs.dismissedOverdue=prefs.dismissedOverdue.filter(x=>x!==l.id);savePrefs()}
+    _lastSwapPromptId=null; // Reset so new schedule can trigger prompt
+  }
+  save();checkDueBanner();renderList();
+}
+function renderStats(){const d=leads.filter(l=>l.dialled).length;const c=leads.filter(l=>['Contacted','Interested','Callback','Quoted'].includes(l.callOutcome)).length;document.getElementById('s-calls').textContent=d;document.getElementById('s-rate').textContent=d?Math.round(c/d*100)+'%':'0%';document.getElementById('s-cb').textContent=leads.filter(l=>l.callOutcome==='Callback').length;document.getElementById('s-hot').textContent=leads.filter(l=>l.callOutcome==='Interested').length}
+
+function setTab(t,btn){document.querySelectorAll('.tab-bar button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active')}
+
+function buildEmails(l){
+  const b=l.business||'[Business]',t=l.town||'your area',dm=l.dm||'',firstName=user.name.split(' ')[0]||'';
+  const greet=dm?`Hi ${dm},`:'Hi,';
+  return [
+    {id:'vm',title:'📱 Voicemail / No Answer',subj:`Quick intro - gym equipment for ${b}`,body:`${greet}\n\nI tried calling earlier but couldn't get through. I'm ${firstName} from AresFit - we supply commercial gym equipment from Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness, available on finance through our partner (business customers subject to status).\n\nIf you've got anything coming up equipment-wise - replacements, additions or a refurb - happy to confirm current lead times and delivery for your site.\n\nBest regards,`},
+    {id:'cold',title:'❄️ Cold Intro',subj:`AresFit intro - Gym equipment for ${b}`,body:`${greet}\n\nI recently got in contact with ${b}${t!=='your area'?` in ${t}`:''} and was passed this email to get in contact.\n\nI'm ${firstName} from AresFit - we supply Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness to commercial gyms across the UK.\n\nIf anything's needed or you've got any questions, you're welcome to contact me via the contact info below — happy to talk through the range, lead times, or anything specific you're after.\n\nFinance is available for business customers subject to status (AresFit acts as an introducer, finance provided by our partner). If you share any SKUs or requirements plus a delivery postcode, just let me know.\n\nThe website's also linked below if you want to have a look yourself.`},
+    {id:'chase',title:'📅 Callback Chase',subj:`Following up - ${b}`,body:`${greet}\n\nJust following up on our conversation - wanted to check if you'd had a chance to think things over. Happy to put together a proper quote with confirmed spec and lead time if it would help, even just for future reference.\n\nBest regards,`},
+    {id:'quote',title:'💷 Quote Follow-Up',subj:`Your quote - ${b}`,body:`${greet}\n\nJust checking in on the quote I sent over. Let me know if you've got any questions or if you'd like me to adjust anything. Finance is available for business customers subject to status through our partner if that helps with budgeting.\n\nBest regards,`}
+  ];
+}
+function renderEmail(){
+  const l=filtered[idx];if(!l){document.getElementById('tab-email').innerHTML='<p class="sub">Select a lead</p>';return}
+  if(!l.email){document.getElementById('tab-email').innerHTML='<div class="email-tpl"><p class="sub">No email address. Tap the email field on the card to add one.</p></div>';return}
+  const emails=buildEmails(l);
+  document.getElementById('tab-email').innerHTML=emails.map(e=>`<div class="email-tpl"><h3>${e.title}</h3><div class="subj">Subject: ${esc(e.subj)}</div><div class="body">${esc(e.body)}</div><button class="gmail-btn" onclick="openGmailWith('${e.id}')">📧 Open in Gmail</button></div>`).join('');
+}
+function openBlankGmail(){
+  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile){
+    const webUrl='https://mail.google.com/mail/u/0/?view=cm&fs=1';
+    let opened=false;
+    const fallback=setTimeout(()=>{if(!opened)window.location.href=webUrl},800);
+    const visHandler=()=>{if(document.hidden){opened=true;clearTimeout(fallback);document.removeEventListener('visibilitychange',visHandler)}};
+    document.addEventListener('visibilitychange',visHandler);
+    window.location.href='googlegmail://co';
+  }else{
+    window.open('https://mail.google.com/mail/u/0/?view=cm&fs=1','_blank');
+  }
+}
+function openGmail(){const l=filtered[idx];if(!l||!l.email)return;const o=l.callOutcome;let id='cold';if(o==='Voicemail')id='vm';else if(o==='Callback')id='chase';else if(o==='Interested')id='quote';openGmailWith(id)}
+function openGmailWith(id){
+  const l=filtered[idx];if(!l||!l.email)return;
+  const e=buildEmails(l).find(x=>x.id===id);if(!e)return;
+  const to=encodeURIComponent(l.email),su=encodeURIComponent(e.subj),bd=encodeURIComponent(e.body);
+  const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if(isMobile){
+    // Try Gmail app deep link first (iOS Gmail app registers googlegmail://, Android Gmail handles it too)
+    const appUrl=`googlegmail://co?to=${to}&subject=${su}&body=${bd}`;
+    const webUrl=`https://mail.google.com/mail/u/0/?view=cm&fs=1&to=${to}&su=${su}&body=${bd}`;
+    let opened=false;
+    const fallback=setTimeout(()=>{if(!opened)window.location.href=webUrl},800);
+    // Detect if the page got hidden (app opened successfully)
+    const visHandler=()=>{if(document.hidden){opened=true;clearTimeout(fallback);document.removeEventListener('visibilitychange',visHandler)}};
+    document.addEventListener('visibilitychange',visHandler);
+    window.location.href=appUrl;
+  }else{
+    // Desktop — /u/0/ forces signed-in account slot so it skips the sign-in bounce
+    const webUrl=`https://mail.google.com/mail/u/0/?view=cm&fs=1&to=${to}&su=${su}&body=${bd}`;
+    window.open(webUrl,'_blank');
+  }
+}
+
+function renderScript(){
+  const l=filtered[idx]||{};
+  const b=esc(l.business||'[Business]'),t=esc(l.town||'your area'),dm=esc(l.dm||''),firstName=user.name.split(' ')[0]||'';
+  document.getElementById('tab-script').innerHTML=`
+  <div class="script-branch"><h3>🛡️ Gatekeeper</h3><p>Hi, it's ${firstName} from AresFit - could you put me through to whoever handles equipment purchasing at ${b}? I'm calling about commercial gym kit that a few places in ${t} have taken up recently.</p></div>
+  <div class="script-branch"><h3>🎯 Decision Maker</h3><p>Hi${dm?' '+dm:''}, ${firstName} from AresFit. Quick one - we supply Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness to commercial gyms, with finance available for business customers subject to status.\n\nReason for the call - I noticed ${b}${t!=='your area'?' in '+t:''} and wanted to see if you've got any kit coming up for replacement or any gaps on the floor this year - cardio, strength, functional, anything?\n\n[LISTEN]\n\nBased on what you've said, I can put together a proper quote once I've confirmed lead times and delivery for your postcode. Worth me emailing that over?</p></div>
+  <div class="script-branch"><h3>📱 Voicemail</h3><p>Hi, this is ${firstName} from AresFit. We supply commercial gym equipment with finance available for business customers. Calling for ${b}. I'll try you again, or drop me an email at ${esc(user.email)}. Cheers.</p></div>
+  <div class="script-branch"><h3>🔥 "We use Technogym/Life Fitness"</h3><p>Yeah loads of places do - we're not trying to replace everything, but a lot of gyms use us to fill gaps or rotate pieces in. StairMaster and Jordan functional kit sit alongside any brand. Worth having options for when stuff comes up for renewal?</p></div>
+  <div class="script-branch"><h3>💰 "No budget"</h3><p>Finance is available for business customers subject to status through our partner. Operating expense not capital. Even if it's something for later in the year, I can get figures together now so you've got them ready.</p></div>
+  <div class="script-branch"><h3>📦 "How long's delivery?"</h3><p>Lead times vary by product and stock position. If you let me know the model and your delivery postcode, I'll come straight back with the exact timing and the right delivery method for your site.</p></div>
+  <div class="script-branch"><h3>🛡️ "What's the warranty?"</h3><p>Warranty is manufacturer-backed and varies by product. I'll confirm the exact terms for whatever you're interested in and include them with the quote.</p></div>`;
+}
+
+function renderRef(){
+  document.getElementById('tab-ref').innerHTML=`
+  <div class="safety">
+    <h3>⚠ Never Say / Never Guess</h3>
+    <ul>
+      <li>Exact stock status or delivery dates unless confirmed for that SKU</li>
+      <li>Specific lead times without checking with suppliers first</li>
+      <li>Warranty lengths unless you have the product policy open</li>
+      <li>Installation availability without confirmation</li>
+      <li>Supplier or distributor names - ever</li>
+      <li>Internal pricing logic, costs, margins or targets</li>
+      <li>Discounts or price matches without approval</li>
+      <li>"Direct from manufacturer" - AresFit works through distributors</li>
+      <li>Invented APRs, deposits, or "no money down" finance claims</li>
+      <li>Card details in chat - ever</li>
+    </ul>
+    <div class="escape">"I'll confirm and come straight back with the exact details."</div>
+  </div>
+  <h2>💰 Finance Compliance (MUST include when mentioned)</h2>
+  <div class="safe-resp"><p>"Finance available for business customers subject to status. AresFit acts as an introducer; finance is provided by our partner."</p><button class="copy btn-ghost" onclick="copyText('Finance available for business customers subject to status. AresFit acts as an introducer; finance is provided by our partner.')">Copy</button></div>
+  <h2 style="margin-top:14px">📋 Safe Responses (copy/paste)</h2>
+  <div class="safe-resp"><h3>Lead Time Question</h3><p>"Lead times vary by product and stock position. If you share the model/SKU and delivery postcode, I'll confirm the current lead time and come straight back with the exact details."</p><button class="copy btn-ghost" onclick="copyText(this.previousElementSibling.innerText)">Copy</button></div>
+  <div class="safe-resp"><h3>Pallet / Kerbside Delivery</h3><p>"For heavier items we often ship palletised. Standard pallet delivery is typically kerbside - delivery is to the entrance and you handle moving it inside unless you add a 2-man or installation option. Share your postcode and access notes and I'll confirm the best delivery option."</p><button class="copy btn-ghost" onclick="copyText(this.previousElementSibling.innerText)">Copy</button></div>
+  <div class="safe-resp"><h3>Installation</h3><p>"We can often arrange delivery only or delivery plus installation depending on the item and site access. Share your postcode and any access constraints (stairs/lift/door widths) and I'll confirm what's available and quote accordingly."</p><button class="copy btn-ghost" onclick="copyText(this.previousElementSibling.innerText)">Copy</button></div>
+  <div class="safe-resp"><h3>Quote Request</h3><p>"Happy to quote. Please send: model/SKU + quantity, delivery postcode, any access constraints (stairs/lift/loading bay), and your ideal delivery window. If you want installation or finance, mention that too."</p><button class="copy btn-ghost" onclick="copyText(this.previousElementSibling.innerText)">Copy</button></div>
+  <h2 style="margin-top:14px">📦 Access Checklist (for hot leads)</h2>
+  <div class="safe-resp"><p>• Delivery postcode + site contact number<br>• Stairs, narrow doors, lifts, corridors?<br>• Parking / loading bay available?<br>• Delivery time restrictions?<br>• Install needed → photos/measurements</p></div>
+  <h2 style="margin-top:14px">🔄 Competitor Swap</h2>
+  <table class="ref-tbl"><tr><td>Life Fitness</td><td>→ Star Trac, Nautilus</td></tr><tr><td>Hammer Strength</td><td>→ Nautilus plate-loaded</td></tr><tr><td>Precor</td><td>→ Star Trac, Nautilus</td></tr><tr><td>Technogym</td><td>→ Star Trac, Nautilus</td></tr><tr><td>Matrix</td><td>→ Star Trac, Nautilus</td></tr><tr><td>Watson</td><td>→ Jordan Fitness</td></tr><tr><td>Gym80</td><td>→ Nautilus</td></tr></table>
+  <h2 style="margin-top:14px">🏷️ Shorthand</h2>
+  <table class="ref-tbl"><tr><td>VM</td><td>Voicemail</td></tr><tr><td>NA</td><td>No answer</td></tr><tr><td>DM</td><td>Decision maker</td></tr><tr><td>HOT LEAD</td><td>Strong interest</td></tr></table>`;
+}
+function copyText(t){navigator.clipboard.writeText(t).then(()=>{flashDot(true)})}
+
+function renderKeypad(){
+  const dials=JSON.parse(localStorage.getItem('aresfit_manual_dials')||'[]');
+  const todayDials=dials.filter(d=>isToday(d.ts));
+  document.getElementById('tab-keypad').innerHTML=`
+  <h2>📞 Keypad</h2>
+  <p class="sub" style="margin-bottom:8px;font-size:11px">Type any number → logs here + opens CircleLoop</p>
+  <div class="keypad-display" id="kp-display">${keypadNum||'—'}</div>
+  <div class="keypad">
+    ${['1','2','3','4','5','6','7','8','9','*','0','#'].map(k=>`<button onclick="kpPress('${k}')">${k}</button>`).join('')}
+  </div>
+  <div style="display:flex;gap:6px;margin-top:8px">
+    <button class="btn-ghost" style="flex:1" onclick="kpClear()">Clear</button>
+    <button class="btn-ghost" style="flex:1" onclick="kpBack()">⌫</button>
+  </div>
+  <a class="action-btn call" style="margin-top:10px;${keypadNum?'':'opacity:.4;pointer-events:none'}" href="tel:${keypadNum}" onmousedown="kpLogDial()" ontouchstart="kpLogDial()" onclick="kpLogDial()">📞 DIAL ${keypadNum||''}</a>
+  <h2 style="margin-top:16px">📜 Manual Dials Today · ${todayDials.length}</h2>
+  ${todayDials.length?todayDials.slice().reverse().slice(0,10).map(d=>{const t=new Date(d.ts);const hm=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');return `<div class="recent-row" style="margin-bottom:4px" onclick="kpRedial('${d.num}')"><span class="time">${hm}</span><span class="name" style="font-family:var(--mono)">${esc(d.num)}</span><span class="ico">📞</span></div>`}).join(''):'<div class="recent-empty">No manual dials yet today</div>'}`;
+}
+function kpPress(k){keypadNum+=k;renderKeypad()}
+function kpClear(){keypadNum='';renderKeypad()}
+function kpBack(){keypadNum=keypadNum.slice(0,-1);renderKeypad()}
+function kpLogDial(){
+  if(!keypadNum)return;
+  const now=Date.now();
+  if(window._lastKpDial&&now-window._lastKpDial<1000)return;
+  window._lastKpDial=now;
+  navigator.clipboard.writeText(keypadNum).then(()=>{flashDot(true)});
+  setTimeout(()=>{window.location.href='circleloop://call/'+keypadNum},100);
+}
+function kpRedial(num){keypadNum=num;renderKeypad();window.open('tel:'+num,'_self')}
+
+function renderSite(){
+  const l=filtered[idx]||{};
+  const bq=encodeURIComponent((l.business||'')+(l.town?' '+l.town:''));
+  const bName=esc(l.business||'');
+  const googleURL=l.business?`https://www.google.com/search?q=${bq}`:'https://www.google.com';
+  const chURL=l.business?`https://find-and-update.company-information.service.gov.uk/search/companies?q=${bq}`:'https://find-and-update.company-information.service.gov.uk/';
+  const fbURL=l.business?`https://www.facebook.com/search/top?q=${bq}`:'https://www.facebook.com';
+  const mapsURL=l.business?`https://www.google.com/maps/search/${bq}`:'https://maps.google.com';
+  document.getElementById('tab-site').innerHTML=`
+  <h2>🔍 Research ${bName?'· '+bName:''}</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+    <a href="${googleURL}" target="_blank" class="btn-ghost" style="padding:10px;text-align:center;text-decoration:none;font-size:12px">🔎 Google</a>
+    <a href="${chURL}" target="_blank" class="btn-ghost" style="padding:10px;text-align:center;text-decoration:none;font-size:12px">🏛️ Companies House</a>
+    <a href="${fbURL}" target="_blank" class="btn-ghost" style="padding:10px;text-align:center;text-decoration:none;font-size:12px">📘 Facebook</a>
+    <a href="${mapsURL}" target="_blank" class="btn-ghost" style="padding:10px;text-align:center;text-decoration:none;font-size:12px">📍 Maps</a>
+  </div>
+  <p class="sub" style="font-size:10px;margin-bottom:14px;color:var(--txt3)">${l.business?'Buttons search for this lead':'Pick a lead to enable lead-specific search'}</p>
+
+  <h2>💷 Finance</h2>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px">
+    <p class="sub" style="font-size:11px;margin-bottom:10px;line-height:1.5">Shire Leasing rates are proprietary and depend on term, credit, and asset type. Always use the real calculator — never quote estimates.</p>
+    <a href="https://aresfit.co.uk/pages/finance" target="_blank" class="btn-red" style="display:block;padding:10px;text-align:center;text-decoration:none;margin-bottom:6px">💷 Open AresFit Finance Calculator ↗</a>
+    <a href="https://shireleasing.co.uk" target="_blank" class="btn-ghost" style="display:block;padding:8px;text-align:center;text-decoration:none;font-size:11px">🏦 Shire Leasing (supplier portal) ↗</a>
+    <p class="sub" style="font-size:10px;margin-top:8px;color:var(--amber)">⚠ Finance available for business customers subject to status. AresFit acts as an introducer.</p>
+  </div>
+
+  <h2>✉️ Quick Gmail</h2>
+  <button class="btn-ghost" style="width:100%;padding:10px;margin-bottom:14px" onclick="openBlankGmail()">📧 Open blank Gmail draft</button>
+
+  <h2>🌐 AresFit</h2>
+  <a href="https://aresfit.co.uk" target="_blank" class="btn-ghost" style="display:block;padding:12px;text-align:center;text-decoration:none;margin-bottom:6px">🏋️ Open aresfit.co.uk ↗</a>
+  <a href="https://admin.shopify.com" target="_blank" class="btn-ghost" style="display:block;padding:12px;text-align:center;text-decoration:none;margin-bottom:6px">🛍️ Shopify Admin ↗</a>
+  <a href="https://app.circleloop.com" target="_blank" class="btn-ghost" style="display:block;padding:12px;text-align:center;text-decoration:none">📞 CircleLoop Web ↗</a>`;
+}
+
+function todayTag(){const d=new Date();return `[${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`}
+function leadCalledToday(l){
+  if(l.callStart&&isToday(l.callStart))return true;
+  const tag=todayTag();
+  if(l.callStartDisplay&&l.callStartDisplay.startsWith(tag))return true;
+  if(l.callNotes&&l.callNotes.includes(tag))return true;
+  return false;
+}
+function exportCSV(mode,fname,silent){
+  let rows,defaultName;
+  const dateStr=new Date().toISOString().slice(0,10);
+  if(mode==='today'){rows=leads.filter(leadCalledToday);defaultName=`aresfit-today-${dateStr}.csv`}
+  else if(mode===true){rows=leads.filter(l=>l.callOutcome==='Callback');defaultName=`aresfit-callbacks-${dateStr}.csv`}
+  else{rows=leads;defaultName=`aresfit-all-${dateStr}.csv`}
+  if(!rows.length){if(!silent)alert('Nothing to export for "'+mode+'"\n\nLeads counted today: '+leads.filter(leadCalledToday).length);return}
+  let name=fname;
+  if(!name&&!silent){
+    name=prompt(`Save ${rows.length} leads as:`,defaultName);
+    if(!name)return;
+    if(!name.endsWith('.csv'))name+='.csv';
+  }
+  if(!name)name=defaultName;
+  const cols=[...headers,'Call Outcome','Called At','Call Count','Call Notes','Callback Date'];
+  const escC=v=>{v=String(v||'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const fmt=iso=>{if(!iso)return '';const d=new Date(iso);return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`};
+  const csv=[cols.join(','),...rows.map(l=>{
+    let r;
+    if(l.rawIdx>=0&&raw[l.rawIdx]){r={...raw[l.rawIdx]};Object.keys(l.edited||{}).forEach(f=>{if(mapping[f])r[mapping[f]]=l[f]})}
+    else{
+      r={};
+      headers.forEach(h=>{const field=COL_MAP[h];if(field&&l[field]!==undefined)r[h]=l[field];else r[h]=''});
+      if(!Object.values(r).some(v=>v)){r[headers[0]||'Business']=l.business;if(headers[1])r[headers[1]]=l.phone}
+    }
+    return [...headers.map(h=>escC(r[h])),escC(l.callOutcome),escC(fmt(l.callStart)||l.callStartDisplay||''),escC(l.callCount||''),escC(l.callNotes),escC(l.cbDate)].join(',');
+  })].join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&leads.length)render()});
+window.addEventListener('focus',()=>{if(leads.length)render()});
+window.addEventListener('pageshow',()=>{if(leads.length)render()});
+</script>
+</body>
+</html>
