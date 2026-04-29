@@ -264,6 +264,9 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3
 .lead-item.s-AwaitingCallback{border-left:3px dashed var(--amber)}
 .lead-item.s-AwaitingCallback .st-pill{background:rgba(255,171,0,.12);color:var(--amber);border:1px dashed var(--amber)}
 .recent-chip{font-size:10px;color:var(--txt3);font-family:var(--mono);margin-left:6px;white-space:nowrap}
+.notes-hist .entry.manual{border-left:3px solid var(--blue);padding-left:8px;font-style:italic;background:rgba(64,156,255,.04)}
+.notes-hist .entry.manual .oc{color:var(--blue)}
+.manual-note-panel{margin-top:8px;padding:10px;border:1px dashed var(--blue);border-radius:8px;background:rgba(64,156,255,.03)}
 .lead-item.s-HotLead{border-left-color:#ff4081}
 .lead-item.s-HotLead .st-pill{background:rgba(255,64,129,.2);color:#ff4081}
 .lead-item.s-Quoted{border-left-color:var(--purple)}
@@ -600,12 +603,13 @@ const HEADER_MAP = {'FINAL PRIORITY':'priority','Business Name':'business','Phon
 
 const STATUS_OPTS = ['','Callback','Quoted','No Answer','Awaiting Callback','Not Interested','Hot Lead','DO NOT CALL','Emailed','Awaiting Pass-Through'];
 const STAGE_OPTS  = ['','Intro','Contacted','Quoted','Lost','Closed'];
-const OUTCOMES = ['Contacted','VM','NA','Awaiting Callback','Dead Air','Provider Reject','Not Int.','Callback','HOT'];
+const OUTCOMES = ['Contacted','VM','NA','Emailed','Awaiting Callback','Dead Air','Provider Reject','Not Int.','Callback','HOT'];
 const ATTEMPT_OUTCOMES = new Set(['VM','NA','Dead Air']); // increment attempts on these
 // Outcomes that auto-fill a default note if user leaves the note blank — removes friction on the low-info outcomes
 const AUTOFILL_OUTCOMES = {
   'VM':'VM - no message left',
   'NA':'NA - no answer',
+  'Emailed':'Gatekeeper said to email - DM not available',
   'Awaiting Callback':'Reception/staff took details, expecting callback (no time given)',
   'Dead Air':'Dead air - picked up silent or dropped',
   'Provider Reject':'Provider reject - dead number',
@@ -747,6 +751,10 @@ const OUTCOME_AUTO_SET = {
     {field:'status',value:'Awaiting Callback',safe:['','Uncalled','No Answer','Voicemail']},
     {field:'stage',value:'Contacted',safe:['','Intro']}
   ],
+  'Emailed':[
+    // Sets Status=Emailed but deliberately does NOT touch Stage — DM hasn't responded yet, so Funnel Stage stays at Intro
+    {field:'status',value:'Emailed',safe:['','Uncalled','No Answer','Voicemail','Awaiting Callback']}
+  ],
   'Not Int.':[
     {field:'status',value:'Not Interested',safe:['','Uncalled','No Answer','Voicemail','Emailed','Callback','Hot Lead','Awaiting Pass-Through']},
     {field:'stage',value:'Lost',safe:['','Intro','Contacted']}
@@ -759,6 +767,8 @@ const OUTCOME_AUTO_SET = {
 // ===== State =====
 let raw=[], headers=[], mapping={}, leads=[], idx=0, filter='All', filtered=[], searchTerm='';
 let justLoggedId=null; // tracks lead.id that just had an outcome logged — flips Log/Next button to Next on second tap
+let manualNoteOpen=false; // toggles inline manual-note editor on the call card
+let manualNoteText='';    // draft text for the manual-note editor
 let user={name:'Sandde', email:'info@aresfit.co.uk'};
 let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null};
 let idb=null;
@@ -1125,7 +1135,8 @@ function renderStats(){
   let todayDials=0, todayContactedDials=0;
   leads.forEach(l=>{
     l.notes.forEach(n=>{
-      if(isTodayNote(n)){
+      // Manual admin notes don't count as dials — they're not call activity
+      if(isTodayNote(n)&&!n.manual){
         todayDials++;
         if(['Contacted','HOT','Callback'].includes(n.outcome))todayContactedDials++;
       }
@@ -1302,6 +1313,17 @@ function renderCard(){
         ${l.cbDate&&pending.outcome!=='Callback'?`<div style="margin-top:8px;font-size:11px;color:var(--amber);cursor:pointer;padding:6px 8px;border:1px dashed var(--amber);border-radius:6px" onclick="openCbEdit()" title="Tap to edit or clear">📅 Scheduled callback: ${esc(l.cbDate.replace('T',' '))}${l.cbEndTime?` → ${esc(l.cbEndTime)}`:''} <span style="float:right;font-size:10px">✏ edit</span></div>`:''}
       </div>
 
+      ${manualNoteOpen?`
+      <div class="manual-note-panel">
+        <div class="field-lbl" style="margin-bottom:4px">📝 Manual note <span style="color:var(--txt3);font-weight:400">· not tied to a call · doesn't count toward attempts</span></div>
+        <textarea id="manual-note-text" placeholder="Admin entry — e.g. '21d silent, parked', 'stale follow-up cleared', 'added to suppression list'" oninput="updateManualNoteText(this.value)" style="width:100%;min-height:60px;padding:8px;background:var(--card);border:1px solid var(--blue);border-radius:8px;color:var(--txt);font-size:13px">${esc(manualNoteText)}</textarea>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn-ghost" onclick="cancelManualNote()" style="flex:1">Cancel</button>
+          <button class="btn-red" onclick="saveManualNote()" style="flex:2">📝 Save note</button>
+        </div>
+      </div>
+      `:`<button class="btn-ghost" onclick="openManualNote()" style="width:100%;font-size:12px;margin-top:6px">📝 Add manual note</button>`}
+
       <div class="nav-row">
         <button class="btn-ghost" onclick="nav(-1)">← Prev</button>
         <div class="pos">${filtered.length?idx+1:0} / ${filtered.length}</div>
@@ -1313,18 +1335,36 @@ function renderCard(){
   // Dead Air 2x toast (once per render if >3s since last)
   if(dACount>=2&&Date.now()-lastToastTs>5000){showToast('🔇 2× Dead Air on this row — treat as VM, send email instead of redialling','danger')}
 }
-function outcomeLabel(o){return {'Contacted':'✅ Contacted','VM':'📱 Voicemail','NA':'❌ No Answer','Awaiting Callback':'🔔 Awaiting Callback','Dead Air':'🔇 Dead Air','Provider Reject':'⛔ Provider Reject','Not Int.':'🚫 Not Interested','Callback':'📅 Callback','HOT':'🔥 Hot Lead'}[o]||o}
+function outcomeLabel(o){return {'Contacted':'✅ Contacted','VM':'📱 Voicemail','NA':'❌ No Answer','Emailed':'📧 Emailed','Awaiting Callback':'🔔 Awaiting Callback','Dead Air':'🔇 Dead Air','Provider Reject':'⛔ Provider Reject','Not Int.':'🚫 Not Interested','Callback':'📅 Callback','HOT':'🔥 Hot Lead'}[o]||o}
 function renderNotesHist(l){
   if(!l.notes.length)return '';
   return l.notes.map(n=>{
     const tapAttr=`onclick="openNoteEdit('${esc(l.id)}','${esc(n.id)}')" style="cursor:pointer" title="Tap to edit or delete"`;
     if(n.legacy)return `<div class="entry legacy" ${tapAttr}>${esc(n.text)} <span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
     const time=(n.dmy||n.hm)?`<span class="ts">${esc(n.dmy)}${n.hm?' '+esc(n.hm):''}</span>`:'';
+    if(n.manual){
+      // Manual admin notes — distinct from call outcomes, render in italic with blue marker
+      return `<div class="entry manual" ${tapAttr}>${time} <span class="oc">📝 Note</span> — ${esc(n.text)} <span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
+    }
     const oc=n.outcome?` <span class="oc">${esc(n.outcome)}</span>`:'';
     const dir=n.direction?` <span style="font-size:9px;font-weight:700;letter-spacing:.05em;color:${n.direction==='in'?'var(--amber)':'var(--blue)'}">[${n.direction==='in'?'📥 IN':'📤 OUT'}]</span>`:'';
     const rng=n.cbEndTime?` <span style="color:var(--amber);font-family:var(--mono);font-size:11px">→ ${esc(n.cbEndTime)}</span>`:'';
     return `<div class="entry" ${tapAttr}>${time}${oc}${dir}${rng} — ${esc(n.text)} <span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
   }).join('');
+}
+// ===== Manual notes (admin entries not tied to a call outcome) =====
+function openManualNote(){manualNoteOpen=true;manualNoteText='';renderCard();setTimeout(()=>{const t=document.getElementById('manual-note-text');if(t)t.focus()},50)}
+function cancelManualNote(){manualNoteOpen=false;manualNoteText='';renderCard()}
+function updateManualNoteText(v){manualNoteText=v}
+function saveManualNote(){
+  const l=filtered[idx];if(!l)return;
+  const text=(manualNoteText||'').trim();
+  if(!text){alert('Note text required');return}
+  const ts=Date.now();
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'Note',text,manual:true});
+  manualNoteOpen=false;manualNoteText='';
+  save();renderCard();renderLeadList();
+  showToast('📝 Manual note added');
 }
 function renderFilterBar(){
   const bar=document.getElementById('filter-bar');
@@ -1372,7 +1412,14 @@ function editField(f,ev){
   const l=filtered[idx];if(!l)return;
   const el=document.getElementById('fv-'+f);if(!el)return;
   const cur=l[f]||'';
-  el.innerHTML=`<input type="text" id="ei-${f}" value="${esc(cur)}" style="width:100%;padding:3px 0">`;
+  // iOS AutoFill suppression for the email field — type=text + inputmode=email keeps the email keyboard
+  // but stops AutoFill Contact overlay hijacking the long-press paste menu.
+  // autocomplete=off, data-form-type=other, autocapitalize/autocorrect/spellcheck off = belt-and-braces.
+  const isEmail=(f==='email');
+  const inputMode=isEmail?'inputmode="email" ':'';
+  const phoneMode=(f==='phone'||f==='phone2')?'inputmode="tel" ':'';
+  const safeAttrs='autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-form-type="other" data-lpignore="true"';
+  el.innerHTML=`<input type="text" id="ei-${f}" value="${esc(cur)}" ${inputMode}${phoneMode}${safeAttrs} style="width:100%;padding:3px 0">`;
   const ip=document.getElementById('ei-'+f);ip.focus();ip.select();
   const finish=()=>{const v=ip.value.trim();l[f]=v;save();renderCard();renderLeadList()};
   ip.addEventListener('blur',finish,{once:true});
@@ -1538,7 +1585,11 @@ function resolveTokens(tmpl,l,opts){
     .replace(/\{STAFF_NAME\}/g,(opts.staffName||'').trim()||'reception')
     .replace(/\{SCHED_PAST\}/g,schedule.past)
     .replace(/\{SCHED_FOLLOWUP_PERIOD\}/g,schedule.period)
-    .replace(/\{SIGNATURE\}/g,prefs.signature||DEFAULT_SIGNATURE);
+    // Sig is no longer embedded — Gmail auto-appends the account-level signature on send.
+    // Embedding caused double-ups. Token resolves to empty string + trailing blank lines stripped.
+    .replace(/\{SIGNATURE\}/g,'')
+    .replace(/\n{3,}/g,'\n\n')
+    .replace(/\s+$/,'');
 }
 function getTemplate(key){return (prefs.emailTemplates&&prefs.emailTemplates[key])||DEFAULT_TEMPLATES[key]||DEFAULT_TEMPLATES.cold}
 function buildBodyForComposer(){
@@ -1550,10 +1601,9 @@ function buildBodyForComposer(){
   const pitch=!!(pitchBox&&pitchBox.checked);
   let body=resolveTokens(getTemplate(reality),l,{schedule,staffName});
   if(pitch&&canPitch(l)){
+    // Sig no longer in body — append pitch addendum at end. Gmail will auto-append its own sig on send.
     const addn=resolveTokens(PITCH_ADDENDUM,l,{schedule,staffName});
-    const sig=prefs.signature||DEFAULT_SIGNATURE;
-    if(body.includes(sig))body=body.replace(sig,addn+'\n\n'+sig);
-    else body=body+'\n\n'+addn;
+    body=(body.replace(/\s+$/,''))+'\n\n'+addn;
   }
   return body;
 }
@@ -1963,7 +2013,7 @@ function openNoteEdit(leadId,noteId){
   noteEditContext={leadId:String(leadId),noteId:String(noteId)};
   document.getElementById('ne-header').textContent=`R${l.row} · ${l.business}`;
   const sel=document.getElementById('ne-outcome');
-  const opts=n.legacy?['legacy',...OUTCOMES,'EMAIL']:[...OUTCOMES,'EMAIL'];
+  const opts=n.legacy?['legacy',...OUTCOMES,'EMAIL','Note']:[...OUTCOMES,'EMAIL','Note'];
   sel.innerHTML=opts.map(o=>`<option value="${esc(o)}"${n.outcome===o?' selected':''}>${esc(o)}</option>`).join('');
   sel.onchange=renderNeCbFields;
   document.getElementById('ne-date').value=n.dmy||'';
@@ -2009,6 +2059,7 @@ function saveNoteEdit(){
   n.hm=parsedTime;
   n.text=newText;
   if(newOutcome==='legacy')n.legacy=true;else delete n.legacy;
+  if(newOutcome==='Note')n.manual=true;else delete n.manual;
   // Callback-specific fields
   if(newOutcome==='Callback'){
     const dir=document.getElementById('ne-dir-in').dataset.sel==='1'?'in':'out';
