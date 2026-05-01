@@ -247,8 +247,8 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3
 
 /* Leads modal */
 .search-row{margin-bottom:8px}
-.filter-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
-.filter-bar button{padding:6px 10px;font-size:11px;background:var(--card);border:1px solid var(--border);border-radius:7px}
+.filter-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:10px}
+.filter-bar button{padding:6px 4px;font-size:11px;background:var(--card);border:1px solid var(--border);border-radius:7px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .filter-bar button.active{background:#fff;border-color:#fff;color:#000}
 .lead-list{display:flex;flex-direction:column;gap:3px;max-height:60vh;overflow-y:auto}
 .lead-item{padding:9px 10px;background:var(--card);border-left:3px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px}
@@ -326,11 +326,11 @@ th{background:var(--card);font-weight:600}
   <div class="modal-box">
     <div class="logo" style="margin-bottom:8px"><span>CONFIRM IMPORT</span></div>
     <p class="sub" style="margin-bottom:10px">Auto-detected column mapping. Legacy columns (last 8) preserved round-trip.</p>
+    <button class="btn-red" style="width:100%;margin-bottom:12px;padding:13px" onclick="confirmImport()">Import leads →</button>
     <div class="map-grid" id="map-grid"></div>
     <div id="import-info"></div>
     <h2 style="margin-top:12px">Preview (first 3 rows)</h2>
     <div class="tbl-wrap"><table id="preview-tbl"></table></div>
-    <button class="btn-red" style="width:100%;margin-top:12px;padding:13px" onclick="confirmImport()">Import leads →</button>
   </div>
 </div>
 
@@ -1193,7 +1193,7 @@ function renderCard(){
 
   // Due banner (P3) — when this lead IS the due/overdue one
   const dueWhen=l.cbDate?esc((l.cbDate||'').replace('T',' ')):(l.followUp?esc(l.followUp):'today');
-  const dueBanner=poolFlag?`<div class="due-banner ${poolFlag==='overdue'?'overdue':''}"><h3>${poolFlag==='overdue'?'⚠ OVERDUE':'⏰ DUE NOW'} — ${dueWhen}</h3><div class="biz">Tap CALL when ready</div><div class="due-banner-btns"><button class="dismiss" onclick="dismissForToday(${l.id})">Dismiss today</button></div></div>`:'';
+  const dueBanner=poolFlag?`<div class="due-banner ${poolFlag==='overdue'?'overdue':''}"><h3>${poolFlag==='overdue'?'⚠ OVERDUE':'⏰ DUE NOW'} — ${dueWhen}</h3><div class="biz">Tap CALL when ready</div><div class="due-banner-btns"><button class="dismiss" onclick="dismissForToday(${l.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${l.id})">🗑 Clear callback</button></div></div>`:'';
 
   // Gates
   const mobileGate=is07?`<div class="gate mobile"><h4>📱 Mobile number on sheet</h4>
@@ -1451,6 +1451,15 @@ function clearCbEdit(){
   save();closeCbEdit();renderCard();renderLeadList();renderDueQueueBanner();
   showToast('🗑 Callback cleared');
 }
+// Clear-callback from a due banner (card or top-of-screen) without opening the edit modal first.
+// Mirrors clearCbEdit but accepts a lead id so it works from any banner instance.
+function clearCbFromBanner(id){
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  if(!confirm('Clear this callback permanently? (Also clears Follow-up Date. Notes history untouched.)'))return;
+  l.cbDate='';l.cbEndTime='';l.cbSetAt=0;l.followUp='';
+  save();renderCard();renderLeadList();renderDueQueueBanner();
+  showToast('🗑 Callback cleared');
+}
 function setCbDirection(d){const l=filtered[idx];if(!l)return;if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:'',direction:'out'};l.pending.direction=d;save();renderCard()}
 
 // ===== P1: Gates =====
@@ -1541,7 +1550,7 @@ function renderDueQueueBanner(){
     return;
   }
   const whenLabel=target.cbDate?esc((target.cbDate||'').replace('T',' ')):(target.followUp?esc(target.followUp):'today');
-  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} — ${whenLabel}${total>1?` <span style="color:var(--txt2);font-size:10px">(+${total-1} more)</span>`:''}<button onclick="toggleQueueBanner()" title="Hide" style="float:right;background:transparent;border:none;color:var(--txt2);font-size:12px;cursor:pointer;padding:0 4px;line-height:1">▲</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div><div class="due-banner-btns"><button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button><button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button></div></div>`;
+  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} — ${whenLabel}${total>1?` <span style="color:var(--txt2);font-size:10px">(+${total-1} more)</span>`:''}<button onclick="toggleQueueBanner()" title="Hide" style="float:right;background:transparent;border:none;color:var(--txt2);font-size:12px;cursor:pointer;padding:0 4px;line-height:1">▲</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div><div class="due-banner-btns"><button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button><button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${target.id})">🗑 Clear callback</button></div></div>`;
 }
 function toggleQueueBanner(){prefs.queueBannerCollapsed=!prefs.queueBannerCollapsed;savePrefs();renderDueQueueBanner()}
 function jumpToDue(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();idx=i;filtered=leads.slice();render();window.scrollTo({top:0,behavior:'smooth'})}
