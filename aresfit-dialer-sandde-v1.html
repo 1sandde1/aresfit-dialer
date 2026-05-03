@@ -2357,17 +2357,44 @@ function exportCSV(){
 }
 function autoBackup(){if(!leads.length)return;exportCSV()}
 function manualBackup(){exportCSV()}
-// CircleLoop contacts export — minimal CSV (Name, Phone Number) for one-time import
-// into CircleLoop so business names auto-show on every dial. Different filename + 2 cols
-// to keep distinct from the daily 22-col sheet export.
+// CircleLoop contacts export — matches their exact CSV format from the Example Import CSV:
+//   global,companyName,fullName,firstName,lastName,email,jobTitle,phoneNumber,phoneNumberLabel,
+//   phoneNumber1,phoneNumberLabel1,phoneNumber2,phoneNumberLabel2,phoneNumber3,phoneNumberLabel3
+// One row per lead. phone goes in phoneNumber (work), phone2 in phoneNumber1 (mobile).
 function exportCircleLoopContacts(){
   if(!leads.length){alert('No leads to export');return}
-  const lines=['Name,Phone Number'];
+  const headers=['global','companyName','fullName','firstName','lastName','email','jobTitle','phoneNumber','phoneNumberLabel','phoneNumber1','phoneNumberLabel1','phoneNumber2','phoneNumberLabel2','phoneNumber3','phoneNumberLabel3'];
+  const lines=[headers.join(',')];
   let count=0;
   leads.forEach(l=>{
-    if(!l.business)return;
-    if(l.phone){lines.push([csvEscape(l.business),csvEscape(l.phone)].join(','));count++}
-    if(l.phone2){lines.push([csvEscape(l.business+' (alt)'),csvEscape(l.phone2)].join(','));count++}
+    if(!l.business||!l.phone)return;
+    // Name handling: PSC field can be messy ("Mrs Katherine Jane Ritchie", "(Sav) Savvas Kyriacou - Founder/Owner",
+    // "Peter Birch (actual DM - ...)") so we keep fullName intact and only split firstName/lastName when clean.
+    const dm=(l.dm||'').trim();
+    let fullName=dm||l.business;
+    let firstName='', lastName='';
+    if(dm && !dm.includes('(') && !dm.includes(' - ')){
+      const parts=dm.split(/\s+/);
+      if(parts.length===1){firstName=parts[0]}
+      else if(parts.length===2){firstName=parts[0];lastName=parts[1]}
+      // 3+ words: leave first/last blank so CircleLoop relies on fullName
+    }
+    const row=[
+      'false',
+      csvEscape(l.business),
+      csvEscape(fullName),
+      csvEscape(firstName),
+      csvEscape(lastName),
+      csvEscape(l.email||''),
+      csvEscape(dm?'Decision Maker':''),
+      csvEscape(l.phone),
+      'work',
+      csvEscape(l.phone2||''),
+      l.phone2?'mobile':'',
+      '','','',''
+    ];
+    lines.push(row.join(','));
+    count++;
   });
   if(count===0){alert('No contacts with a phone number to export');return}
   const csv=lines.join('\n');
