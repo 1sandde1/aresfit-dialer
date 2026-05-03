@@ -19,6 +19,8 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 html,body{-webkit-text-size-adjust:100%;overscroll-behavior:none}
 :root{--bg:#000;--panel:#0a0a0a;--card:#111;--border:#222;--border2:#2e2e2e;--red:#ff3355;--red2:#ff5577;--green:#3ddc84;--amber:#ffb020;--blue:#5a9cff;--purple:#b388ff;--danger:#ff2e4d;--txt:#fafafa;--txt2:#8a8a8a;--txt3:#505050;--font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace}
+/* Light theme — toggled via body.light-mode. Inverts surfaces, keeps semantic colours. */
+body.light-mode{--bg:#fafafa;--panel:#ffffff;--card:#f0f0f0;--border:#d8d8d8;--border2:#bbbbbb;--txt:#0a0a0a;--txt2:#5a5a5a;--txt3:#9a9a9a;--red:#d50000;--red2:#b71c1c;--green:#1b8a3d;--amber:#c77800;--blue:#0066cc;--purple:#6a3ec7;--danger:#cc0033}
 body{font-family:var(--font);background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);min-height:100vh}
 *::-webkit-scrollbar{width:6px;height:6px}
 *::-webkit-scrollbar-track{background:#0a0a14}
@@ -43,7 +45,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--txt);font-size:14p
 .stat-lbl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
 
 /* Call block banner */
-.block-banner{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:12px;font-weight:600;border-left:4px solid;display:flex;align-items:center;gap:8px}
+.block-banner{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:12px;font-weight:600;border:2px solid;display:flex;align-items:center;gap:8px}
 .block-banner .ico{font-size:16px}
 .block-banner .msg{flex:1}
 .block-banner.prime{background:rgba(0,230,118,.08);border-color:var(--green);color:var(--green)}
@@ -103,9 +105,10 @@ option{background:#131320;color:#e4e4ec;padding:6px}
 @keyframes fadein{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
 
 /* Due banner (P3) */
-.due-banner{background:linear-gradient(135deg,#3a1a00,#2a1500);border:1px solid var(--amber);border-left:4px solid var(--amber);border-radius:10px;padding:10px 12px;margin-bottom:10px;animation:pulse-border 2s infinite}
-.due-banner.overdue{background:linear-gradient(135deg,#2a0505,#1a0303);border-color:var(--danger);border-left-color:var(--danger)}
-@keyframes pulse-border{0%,100%{box-shadow:0 0 0 rgba(255,171,0,0)}50%{box-shadow:0 0 16px rgba(255,171,0,.3)}}
+.due-banner{background:linear-gradient(135deg,#3a1a00,#2a1500);border:2px solid var(--amber);border-radius:10px;padding:10px 12px;margin-bottom:10px;animation:pulse-border-amber 2s infinite}
+.due-banner.overdue{background:linear-gradient(135deg,#2a0505,#1a0303);border-color:var(--danger);animation:pulse-border-red 2s infinite}
+@keyframes pulse-border-amber{0%,100%{box-shadow:0 0 0 rgba(255,171,0,0)}50%{box-shadow:0 0 16px rgba(255,171,0,.4)}}
+@keyframes pulse-border-red{0%,100%{box-shadow:0 0 0 rgba(255,46,77,0)}50%{box-shadow:0 0 16px rgba(255,46,77,.45)}}
 .due-banner h3{font-size:11px;text-transform:uppercase;font-weight:800;color:var(--amber);margin-bottom:4px}
 .due-banner.overdue h3{color:var(--danger)}
 .due-banner .biz{font-size:14px;font-weight:700;color:#fff}
@@ -115,8 +118,8 @@ option{background:#131320;color:#e4e4ec;padding:6px}
 .due-banner .dismiss{background:transparent;color:var(--txt2);border:1px solid var(--border2);padding:8px 12px;font-size:11px;border-radius:8px;cursor:pointer}
 
 /* Email button (P3) */
-.email-btn{width:100%;background:transparent;color:var(--txt);padding:12px;font-size:14px;font-weight:700;border-radius:12px;margin-top:10px;border:1px solid var(--txt);cursor:pointer}
-.email-btn:hover{background:var(--txt);color:#000}
+.email-btn{width:100%;background:transparent;color:var(--txt);padding:14px 16px;font-size:14px;font-weight:700;line-height:1.4;border-radius:12px;margin:10px 0 14px;border:2px solid #fff;cursor:pointer;text-align:center;word-break:break-word}
+.email-btn:hover{background:#fff;color:#000}
 .email-btn:active{transform:scale(.98)}
 
 /* Toast (P1/P3) */
@@ -264,6 +267,13 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--txt3
 .lead-item.s-AwaitingCallback{border-left:3px dashed var(--amber)}
 .lead-item.s-AwaitingCallback .st-pill{background:rgba(255,171,0,.12);color:var(--amber);border:1px dashed var(--amber)}
 .recent-chip{font-size:10px;color:var(--txt3);font-family:var(--mono);margin-left:6px;white-space:nowrap}
+.ctx-strip{font-size:11px;color:var(--txt2);margin:4px 0 8px;line-height:1.4;font-family:var(--mono)}
+.ctx-strip strong{color:var(--txt);font-weight:600}
+.notes-hist .entry{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);line-height:1.5}
+.notes-hist .entry:last-child{border-bottom:none;margin-bottom:0}
+.notes-hist .entry-head{margin-bottom:6px;font-size:11px;color:var(--txt3)}
+.notes-hist .note-bullet{position:relative;padding-left:14px;margin:3px 0;line-height:1.45}
+.notes-hist .note-bullet::before{content:'•';position:absolute;left:2px;top:0;color:var(--txt3);font-weight:700}
 .notes-hist .entry.manual{border-left:3px solid var(--blue);padding-left:8px;font-style:italic;background:rgba(64,156,255,.04)}
 .notes-hist .entry.manual .oc{color:var(--blue)}
 .manual-note-panel{margin-top:8px;padding:10px;border:1px dashed var(--blue);border-radius:8px;background:rgba(64,156,255,.03)}
@@ -371,6 +381,8 @@ th{background:var(--card);font-weight:600}
   <div class="modal-box" style="max-width:420px">
     <button class="x-btn" onclick="closeSettings()">✕</button>
     <div class="logo" style="margin-bottom:10px"><span>SETTINGS</span></div>
+    <h2>Appearance</h2>
+    <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="toggleTheme()" id="theme-toggle-btn">🌙 Switch to light mode</button>
     <h2>Sender</h2>
     <p style="font-size:12px;margin-bottom:8px;color:var(--txt2)"><strong style="color:var(--txt)" id="st-name"></strong><br><span id="st-email"></span></p>
     <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="openSetup()">Edit sender</button>
@@ -382,6 +394,9 @@ th{background:var(--card);font-weight:600}
     <h2>Email subjects</h2>
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="closeSettings();openSubjectEditor()">✉ Edit subject rotation pool</button>
     <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="closeSettings();openTemplatesEditor()">📝 Edit signature + email templates</button>
+    <h2>CircleLoop setup</h2>
+    <p class="sub" style="font-size:11px;margin-bottom:6px">One-time: import these contacts into CircleLoop so business names auto-show on every dial. Re-export only when you add new leads.</p>
+    <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="exportCircleLoopContacts()">📇 Export contacts for CircleLoop</button>
     <h2>CircleLoop scheme (iOS)</h2>
     <p class="sub" style="font-size:11px;margin-bottom:6px">Test which scheme auto-populates the keypad.</p>
     <select id="cl-scheme-sel" onchange="saveClScheme(this.value)" style="margin-bottom:14px"></select>
@@ -766,6 +781,7 @@ const OUTCOME_AUTO_SET = {
 
 // ===== State =====
 let raw=[], headers=[], mapping={}, leads=[], idx=0, filter='All', filtered=[], searchTerm='';
+let activeFilters=['All']; // multi-filter: tap to toggle, intersection logic. 'All' = no constraints.
 let justLoggedId=null; // tracks lead.id that just had an outcome logged — flips Log/Next button to Next on second tap
 let manualNoteOpen=false; // toggles inline manual-note editor on the call card
 let manualNoteText='';    // draft text for the manual-note editor
@@ -934,6 +950,7 @@ async function loadSession(){
   try{const id=await idbLoad();if(id&&(!data||(id.ts||0)>(data.ts||0)))data=id}catch(e){}
   if(!data||!data.leads)return;
   raw=data.raw||[];headers=data.headers||[];mapping=data.mapping||{};leads=data.leads;idx=data.idx||0;filter=data.filter||'All';
+  activeFilters=Array.isArray(data.activeFilters)&&data.activeFilters.length?data.activeFilters:[filter||'All'];
   // Back-compat: ensure per-lead fields exist
   leads.forEach(l=>{
     if(!Array.isArray(l.notes))l.notes=[];
@@ -945,11 +962,21 @@ async function loadSession(){
     if(!('providerReject' in l))l.providerReject=false;
     if(!('phone2' in l))l.phone2='';
     if(l.status)l.status=normStatus(l.status);
-    // Back-compat: split pipe-separated phone if migrating from older sessions
-    if(l.phone&&l.phone.includes('|')&&!l.phone2){
-      const parts=l.phone.split('|').map(s=>s.trim()).filter(Boolean);
-      l.phone=parts[0]||'';
-      l.phone2=parts[1]||'';
+    // Back-compat: detect multi-number phone cells in existing sessions (covers any separator
+    // and the no-separator concatenation case). Mirrors confirmImport logic.
+    if(l.phone&&!l.phone2){
+      let parts=String(l.phone)
+        .split(/[|,;/\n\r]|\s+(?:and|or|alt|mobile|landline)\s+/i)
+        .map(s=>s.trim())
+        .filter(s=>s.replace(/\D/g,'').length>=10);
+      if(parts.length>=2){
+        l.phone=parts[0];l.phone2=parts[1];
+      } else {
+        const digits=String(l.phone).replace(/\D/g,'');
+        if(digits.length===22){l.phone=digits.slice(0,11);l.phone2=digits.slice(11)}
+        else if(digits.length===21){const at=digits.indexOf('07',10);if(at>0){l.phone=digits.slice(0,at);l.phone2=digits.slice(at)}}
+        else if(digits.length>=20){const a=digits.slice(0,11),b=digits.slice(11);if(/^0\d/.test(a)&&/^0\d/.test(b)){l.phone=a;l.phone2=b}}
+      }
     }
     // Back-compat: hydrate cbDate from followUp if it has a time and cbDate is empty
     if(!l.cbDate&&l.followUp){
@@ -990,9 +1017,17 @@ function openSettings(){
   document.getElementById('st-email').textContent=user.email||'';
   const sel=document.getElementById('cl-scheme-sel');
   if(sel)sel.innerHTML=CL_SCHEME_OPTIONS.map(o=>`<option value="${esc(o.value)}"${(prefs.clScheme||CL_SCHEME_DEFAULT)===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
+  applyTheme(); // refresh theme button label
   document.getElementById('settings-modal').style.display='flex';
 }
 function saveClScheme(v){prefs.clScheme=v;savePrefs();showToast('CircleLoop scheme set → '+v)}
+function applyTheme(){
+  const light=(prefs.theme==='light');
+  document.body.classList.toggle('light-mode',light);
+  const btn=document.getElementById('theme-toggle-btn');
+  if(btn)btn.textContent=light?'☀ Switch to dark mode':'🌙 Switch to light mode';
+}
+function toggleTheme(){prefs.theme=(prefs.theme==='light')?'dark':'light';savePrefs();applyTheme();showToast(prefs.theme==='light'?'☀ Light mode':'🌙 Dark mode')}
 function closeSettings(){document.getElementById('settings-modal').style.display='none'}
 
 // ===== CSV import =====
@@ -1023,7 +1058,7 @@ function showMapping(){
 }
 function confirmImport(){
   FIELDS.forEach(f=>{mapping[f]=document.getElementById('map-'+f).value});
-  leads=[];idx=0;filter='All';
+  leads=[];idx=0;filter='All';activeFilters=['All'];
   raw.forEach((r,i)=>{
     const rowN=i+1;
     const nm=mapping.business?(r[mapping.business]||'').trim():'';
@@ -1036,12 +1071,38 @@ function confirmImport(){
       pending:{outcome:'',text:'',callStartTs:0,editedHm:''}
     };
     FIELDS.forEach(f=>o[f]=mapping[f]?(r[mapping[f]]||''):'');
-    // Two-number support: sheet stores both numbers pipe-separated in single Phone column.
-    // Split on '|' — first part = primary phone, second part (if any) = phone2.
-    if(o.phone&&o.phone.includes('|')){
-      const parts=o.phone.split('|').map(s=>s.trim()).filter(Boolean);
-      o.phone=parts[0]||'';
-      o.phone2=parts[1]||'';
+    // Two-number support: detect when a single Phone cell contains multiple numbers.
+    // Real sheets use various separators: pipe, comma, slash, semicolon, " and ", line-break.
+    // Also handle the "no separator" case where two 11-digit UK numbers are smashed together.
+    if(o.phone){
+      let parts=String(o.phone)
+        .split(/[|,;/\n\r]|\s+(?:and|or|alt|mobile|landline)\s+/i)
+        .map(s=>s.trim())
+        .filter(s=>s.replace(/\D/g,'').length>=10);
+      if(parts.length>=2){
+        o.phone=parts[0];
+        o.phone2=parts[1];
+      } else {
+        // No separator. Fall back to digit-count split.
+        const digits=String(o.phone).replace(/\D/g,'');
+        if(digits.length===22){
+          // Two complete 11-digit UK numbers concatenated — split at position 11.
+          o.phone=digits.slice(0,11);
+          o.phone2=digits.slice(11);
+        } else if(digits.length===21){
+          // 10+11 or 11+10. Look for '07' boundary mid-string.
+          const at=digits.indexOf('07',10);
+          if(at>0){o.phone=digits.slice(0,at);o.phone2=digits.slice(at)}
+          else {o.phone=(parts[0]||o.phone).trim()}
+        } else if(digits.length>=20){
+          // Try midpoint split if both halves look like UK numbers
+          const a=digits.slice(0,11),b=digits.slice(11);
+          if(/^0\d/.test(a)&&/^0\d/.test(b)){o.phone=a;o.phone2=b}
+          else {o.phone=(parts[0]||o.phone).trim()}
+        } else {
+          o.phone=(parts[0]||o.phone).trim();
+        }
+      }
     }
     // Normalise Status case variants to match dropdown values
     if(o.status)o.status=normStatus(o.status);
@@ -1071,26 +1132,39 @@ function confirmImport(){
 function showApp(){document.getElementById('upload-screen').style.display='none';document.getElementById('main-app').style.display='block'}
 
 // ===== Filters / search =====
+// Predicate per filter — used for multi-filter intersection logic.
+const FILTER_PREDICATES = {
+  All: () => true,
+  Recent: () => true, // sort handled below; everything passes
+  Uncalled: l => !l.notes.length && !(l.status||'').trim(),
+  Callback: l => {
+    if((l.status||'').trim()==='DO NOT CALL')return false;
+    if((l.status||'').trim()==='Callback')return true;
+    const fu=parseFollowUp(l.followUp);
+    if(fu&&fu.ts<=endOfToday())return true;
+    return false;
+  },
+  'Awaiting CB': l => (l.status||'').trim()==='Awaiting Callback',
+  Quoted: l => (l.status||'').trim()==='Quoted'||(l.stage||'').trim()==='Quoted',
+  Hot: l => {const lp=((raw[l.rawIdx]||{})['Lead Priority']||'').toLowerCase();return (l.status||'').trim()==='Hot Lead'||l.notes.some(n=>n.outcome==='HOT')||lp==='hot'},
+  NA: l => (l.status||'').trim()==='No Answer',
+  Contacted: l => (l.stage||'').trim()==='Contacted',
+  Reached: l => l.notes.length>0||((l.status||'').trim()!==''),
+  DNC: l => (l.status||'').trim()==='DO NOT CALL',
+};
 function applyFilter(){
   let r=leads.slice();
-  const f=filter;
-  if(f==='Recent'){
-    // Most recent activity first. Excludes DNC. Caps at top 50 for mobile snappiness.
-    r=r.filter(l=>(l.status||'').trim()!=='DO NOT CALL');
+  const active=(activeFilters||['All']).filter(f=>f!=='All');
+  // Intersection: row must satisfy every active filter predicate
+  if(active.length){
+    r=r.filter(l => active.every(f => (FILTER_PREDICATES[f]||(()=>true))(l)));
+  }
+  // Sort logic — applied in priority order, first matching filter wins
+  if(active.includes('Recent')){
+    if(!active.includes('DNC'))r=r.filter(l=>(l.status||'').trim()!=='DO NOT CALL');
     r.sort((a,b)=>latestNoteTs(b)-latestNoteTs(a));
     r=r.slice(0,50);
-  }
-  else if(f==='Uncalled') r=r.filter(l=>!l.notes.length&&!(l.status||'').trim());
-  else if(f==='Callback'){
-    const eot=endOfToday();
-    r=r.filter(l=>{
-      if((l.status||'').trim()==='DO NOT CALL')return false;
-      if((l.status||'').trim()==='Callback')return true;
-      const fu=parseFollowUp(l.followUp);
-      if(fu&&fu.ts<=eot)return true;
-      return false;
-    });
-    // Sort: by prefs.callbackSort ('date' = urgency, 'row' = R-number)
+  } else if(active.includes('Callback')){
     if((prefs.callbackSort||'date')==='row'){
       r.sort((a,b)=>(a.row||0)-(b.row||0));
     } else {
@@ -1103,24 +1177,31 @@ function applyFilter(){
         return (a.row||0)-(b.row||0);
       });
     }
-  }
-  else if(f==='Awaiting CB') r=r.filter(l=>(l.status||'').trim()==='Awaiting Callback');
-  else if(f==='Quoted') r=r.filter(l=>(l.status||'').trim()==='Quoted'||(l.stage||'').trim()==='Quoted');
-  else if(f==='Hot') r=r.filter(l=>{const lp=((raw[l.rawIdx]||{})['Lead Priority']||'').toLowerCase();return (l.status||'').trim()==='Hot Lead'||l.notes.some(n=>n.outcome==='HOT')||lp==='hot'});
-  else if(f==='NA') r=r.filter(l=>(l.status||'').trim()==='No Answer');
-  else if(f==='Contacted') r=r.filter(l=>(l.stage||'').trim()==='Contacted');
-  else if(f==='Reached'){
-    // Any row with any notes (legacy or app) OR any status set = touched at some point
-    r=r.filter(l=>l.notes.length>0||((l.status||'').trim()!==''));
+  } else if(active.includes('Reached')){
     const latestTs=l=>{const nl=l.notes.filter(n=>!n.legacy);return nl.length?Math.max.apply(null,nl.map(n=>n.ts||0)):0};
     if((prefs.reachedSort||'date')==='row') r.sort((a,b)=>(a.row||0)-(b.row||0));
     else r.sort((a,b)=>latestTs(b)-latestTs(a));
   }
-  else if(f==='DNC') r=r.filter(l=>(l.status||'').trim()==='DO NOT CALL');
-  if(searchTerm){const s=searchTerm;r=r.filter(l=>(l.business||'').toLowerCase().includes(s)||(l.dm||'').toLowerCase().includes(s)||(l.phone||'').toLowerCase().includes(s)||(l.phone2||'').toLowerCase().includes(s)||('r'+l.row).includes(s)||String(l.row).includes(s))}
+  if(searchTerm){const s=searchTerm;r=r.filter(l=>(l.business||'').toLowerCase().includes(s)||(l.dm||'').toLowerCase().includes(s)||(l.phone||'').toLowerCase().includes(s)||(l.phone2||'').toLowerCase().includes(s)||('r'+l.row).includes(s)||String(l.row).includes(s)||(l.email||'').toLowerCase().includes(s)||l.notes.some(n=>(n.text||'').toLowerCase().includes(s)))}
   return r;
 }
-function setFilter(f){filter=f;idx=0;renderFilterBar();renderLeadList();save()}
+// Multi-filter toggle: tap a filter to add/remove. 'All' clears everything.
+// Empty selection auto-resets to 'All'. Intersection logic in applyFilter.
+function setFilter(f){
+  if(f==='All'){
+    activeFilters=['All'];
+  } else {
+    activeFilters=activeFilters.filter(x=>x!=='All');
+    if(activeFilters.includes(f)){
+      activeFilters=activeFilters.filter(x=>x!==f);
+      if(!activeFilters.length)activeFilters=['All'];
+    } else {
+      activeFilters.push(f);
+    }
+  }
+  filter=activeFilters[0]||'All';
+  idx=0;renderFilterBar();renderLeadList();save();
+}
 function onSearch(){searchTerm=document.getElementById('lead-search').value.trim().toLowerCase();renderLeadList()}
 
 // ===== Render =====
@@ -1151,23 +1232,26 @@ function renderStats(){
   document.getElementById('s-hot').textContent=hotLeads;
 }
 function renderBlockBanner(){
+  // Two-tier model based on 1,457-dial analysis (Sandde + Michael, 18/03-01/05).
+  // No meaningful dead zones during working hours (49-61% connect band 09:00-16:59).
+  // 17:00 dips to 46% but still viable. 18:00+ and pre-09:00 = venues unstaffed.
+  // Friday is highest connect day (64%) — old Friday PM penalty removed.
   const h=new Date().getHours();
   const dow=new Date().getDay();
+  const isWeekend=(dow===0||dow===6);
+  const inHours=(h>=9&&h<18);
   let kind,ico,msg;
-  if(h>=13&&h<16){kind='prime';ico='🟢';msg='PRIME BLOCK 13:00-15:59 · fresh / hot / important'}
-  else if(h>=10&&h<12){kind='secondary';ico='🟡';msg='SECONDARY 10:00-11:59 · volume / fresh leads'}
-  else if(h===9){kind='secondary';ico='🟡';msg='OPTIONAL 09:00-09:59 · middle tier'}
-  else if(h===12){kind='dead';ico='🔴';msg='DEAD ZONE 12:00-12:59 · lunch gatekeeping. Use for emails/admin'}
-  else if(h>=16){kind='dead';ico='🔴';msg='DEAD ZONE 16:00+ · DMs winding down'}
-  else if(h<9){kind='dead';ico='🔴';msg='DEAD ZONE · venues not staffed before 09:00'}
-  if(dow===5&&h>=12){kind='dead';ico='🔴';msg='FRIDAY PM · weekend drift'}
+  if(inHours&&!isWeekend){kind='prime';ico='🟢';msg='CALL · venues staffed, dial freely'}
+  else if(isWeekend){kind='dead';ico='🔴';msg=`DON'T CALL · weekend, venues closed`}
+  else if(h<9){kind='dead';ico='🔴';msg=`DON'T CALL · before 09:00, venues not staffed`}
+  else {kind='dead';ico='🔴';msg=`DON'T CALL · after 18:00, venues winding down`}
   const tappable=kind!=='dead';
-  const hint=kind==='prime'?' · tap → callbacks & hot':(kind==='secondary'?' · tap → uncalled':'');
+  const hint=tappable?' · tap → callbacks':'';
   document.getElementById('block-banner-slot').innerHTML=`<div class="block-banner ${kind}" ${tappable?`onclick="tapBlockBanner('${kind}')" style="cursor:pointer"`:''}><span class="ico">${ico}</span><span class="msg">${msg}${hint}</span></div>`;
 }
 function tapBlockBanner(kind){
+  // Single tap action during work hours: jump to callbacks (highest-value default).
   if(kind==='prime'){setFilter('Callback');openLeads()}
-  else if(kind==='secondary'){setFilter('Uncalled');openLeads()}
 }
 function renderCard(){
   const slot=document.getElementById('card-slot');
@@ -1228,7 +1312,30 @@ function renderCard(){
         ${l.priority?`<span class="pri ${priClass}">${esc(l.priority)}</span>`:''}
         <span class="att" title="Attempts">${l.attempts||0} attempts</span>
       </div>
-      <div class="biz-head" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${esc(l.business)}<button class="btn-sm btn-ghost" style="font-size:11px;padding:3px 8px;font-weight:500" onclick="copyBiz()" title="Copy business name">📋</button></div>
+      <div class="biz-head" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${esc(l.business)}<button class="btn-sm btn-ghost" style="font-size:1em;padding:6px 10px;font-weight:500;line-height:1;align-self:center" onclick="copyBiz()" title="Copy business name">📋</button></div>
+      ${(()=>{
+        // Top-line context strip — at-a-glance summary so you know where you left off without scrolling notes
+        const lastTs=latestNoteTs(l);
+        const lastDated=l.notes.filter(n=>!n.legacy&&n.ts).sort((a,b)=>(b.ts||0)-(a.ts||0))[0];
+        const parts=[];
+        if(lastDated){
+          const days=Math.floor((Date.now()-lastDated.ts)/86400000);
+          const ago=days===0?'today':(days===1?'yesterday':`${days}d ago`);
+          parts.push(`Last: <strong>${esc(lastDated.outcome||'note')}</strong> ${ago}`);
+        } else if(l.notes.some(n=>n.legacy)){
+          parts.push('Legacy notes only');
+        } else {
+          parts.push('Never called');
+        }
+        if((l.attempts||0)>0)parts.push(`${l.attempts} ${l.attempts===1?'attempt':'attempts'}`);
+        if((l.status||'').trim()==='Hot Lead'){
+          // Find first HOT note for "Hot since" date
+          const hotNote=l.notes.filter(n=>n.outcome==='HOT'&&n.ts).sort((a,b)=>(a.ts||0)-(b.ts||0))[0];
+          if(hotNote){const days=Math.floor((Date.now()-hotNote.ts)/86400000);parts.push(`<span style="color:#ff4081">Hot ${days===0?'today':days+'d'}</span>`)}
+        }
+        if((l.status||'').trim()==='Quoted'){parts.push(`<span style="color:var(--purple)">Quoted</span>`)}
+        return `<div class="ctx-strip">${parts.join(' · ')}</div>`;
+      })()}
       ${l.website?`<div class="sub"><a href="${esc(l.website)}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">${esc(l.website)} ↗</a></div>`:''}
 
       <div class="fields">
@@ -1336,20 +1443,34 @@ function renderCard(){
   if(dACount>=2&&Date.now()-lastToastTs>5000){showToast('🔇 2× Dead Air on this row — treat as VM, send email instead of redialling','danger')}
 }
 function outcomeLabel(o){return {'Contacted':'✅ Contacted','VM':'📱 Voicemail','NA':'❌ No Answer','Emailed':'📧 Emailed','Awaiting Callback':'🔔 Awaiting Callback','Dead Air':'🔇 Dead Air','Provider Reject':'⛔ Provider Reject','Not Int.':'🚫 Not Interested','Callback':'📅 Callback','HOT':'🔥 Hot Lead'}[o]||o}
+// Smart display-time formatting for note text. Splits on ' - ' and sentence boundaries,
+// renders each chunk as a bulleted line. Storage stays raw, so CSV round-trip is unchanged.
+// Sandde keeps typing in his usual jumble — readability happens at render.
+function formatNoteText(text){
+  if(!text)return '';
+  const raw=String(text).trim();
+  // Split on:
+  //   - explicit newline (Sandde hits Enter mid-typing for an explicit bullet)
+  //   - ' - ' (space hyphen space — common in legacy CSV imports)
+  //   - sentence end (. or ! or ? followed by space + capital letter)
+  const chunks=raw.split(/[\r\n]+|\s+-\s+|(?<=[.!?])\s+(?=[A-Z0-9])/g).map(s=>s.trim()).filter(Boolean);
+  if(chunks.length<=1)return esc(raw);
+  return chunks.map(c=>`<div class="note-bullet">${esc(c)}</div>`).join('');
+}
 function renderNotesHist(l){
   if(!l.notes.length)return '';
   return l.notes.map(n=>{
     const tapAttr=`onclick="openNoteEdit('${esc(l.id)}','${esc(n.id)}')" style="cursor:pointer" title="Tap to edit or delete"`;
-    if(n.legacy)return `<div class="entry legacy" ${tapAttr}>${esc(n.text)} <span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
+    if(n.legacy)return `<div class="entry legacy" ${tapAttr}>${formatNoteText(n.text)} <span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
     const time=(n.dmy||n.hm)?`<span class="ts">${esc(n.dmy)}${n.hm?' '+esc(n.hm):''}</span>`:'';
     if(n.manual){
       // Manual admin notes — distinct from call outcomes, render in italic with blue marker
-      return `<div class="entry manual" ${tapAttr}>${time} <span class="oc">📝 Note</span> — ${esc(n.text)} <span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
+      return `<div class="entry manual" ${tapAttr}><div class="entry-head">${time} <span class="oc">📝 Note</span></div>${formatNoteText(n.text)}<span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
     }
     const oc=n.outcome?` <span class="oc">${esc(n.outcome)}</span>`:'';
     const dir=n.direction?` <span style="font-size:9px;font-weight:700;letter-spacing:.05em;color:${n.direction==='in'?'var(--amber)':'var(--blue)'}">[${n.direction==='in'?'📥 IN':'📤 OUT'}]</span>`:'';
     const rng=n.cbEndTime?` <span style="color:var(--amber);font-family:var(--mono);font-size:11px">→ ${esc(n.cbEndTime)}</span>`:'';
-    return `<div class="entry" ${tapAttr}>${time}${oc}${dir}${rng} — ${esc(n.text)} <span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
+    return `<div class="entry" ${tapAttr}><div class="entry-head">${time}${oc}${dir}${rng}</div>${formatNoteText(n.text)}<span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
   }).join('');
 }
 // ===== Manual notes (admin entries not tied to a call outcome) =====
@@ -1368,12 +1489,12 @@ function saveManualNote(){
 }
 function renderFilterBar(){
   const bar=document.getElementById('filter-bar');
-  let html=FILTERS.map(f=>`<button class="${filter===f?'active':''}" onclick="setFilter('${f}')">${f}</button>`).join('');
-  if(filter==='Callback'){
+  let html=FILTERS.map(f=>`<button class="${activeFilters.includes(f)?'active':''}" onclick="setFilter('${f}')">${f}</button>`).join('');
+  if(activeFilters.includes('Callback')){
     const s=prefs.callbackSort||'date';
     html+=`<div style="flex-basis:100%;height:0"></div><div style="display:flex;gap:4px;align-items:center;margin-top:6px"><span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">Sort:</span><button class="${s==='date'?'active':''}" onclick="setCallbackSort('date')">Date</button><button class="${s==='row'?'active':''}" onclick="setCallbackSort('row')">Row</button></div>`;
   }
-  if(filter==='Reached'){
+  if(activeFilters.includes('Reached')){
     const s=prefs.reachedSort||'date';
     html+=`<div style="flex-basis:100%;height:0"></div><div style="display:flex;gap:4px;align-items:center;margin-top:6px"><span style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em">Sort:</span><button class="${s==='date'?'active':''}" onclick="setReachedSort('date')">Most recent</button><button class="${s==='row'?'active':''}" onclick="setReachedSort('row')">Row</button></div>`;
   }
@@ -1387,7 +1508,7 @@ function renderLeadList(){
   const rows=applyFilter();
   if(!rows.length){list.innerHTML='<div class="empty-card" style="padding:20px">No matches.</div>';return}
   const activeId=filtered[idx]?filtered[idx].id:null;
-  const showRecent=(filter==='Recent');
+  const showRecent=activeFilters.includes('Recent');
   list.innerHTML=rows.slice(0,300).map(l=>{
     const stKey=(l.status||'').replace(/\s/g,'');
     const pill=l.status?`<span class="st-pill">${esc(l.status)}</span>`:'';
@@ -1542,15 +1663,22 @@ function renderDueQueueBanner(){
   const slot=document.getElementById('due-queue-slot');if(!slot)return;
   const pool=getDuePool();
   const target=pool.overdue[0]||pool.due[0];
-  if(!target||target.id===(filtered[idx]||{}).id){slot.innerHTML='';return}
+  if(!target){slot.innerHTML='';return}
   const isOver=pool.overdue.length>0;
   const total=pool.overdue.length+pool.due.length;
+  // Sticky overdue counter — always visible when there are due/overdue items, even if you're already on one.
+  // Collapsed pill shows both counts split (e.g. "⚠ 3 overdue · ⏰ 2 due today") so glance gives full picture.
   if(prefs.queueBannerCollapsed){
-    slot.innerHTML=`<div onclick="toggleQueueBanner()" style="cursor:pointer;padding:6px 12px;margin-bottom:10px;border-radius:8px;border:1px solid ${isOver?'var(--danger)':'var(--amber)'};background:${isOver?'rgba(255,23,68,.08)':'rgba(255,171,0,.08)'};color:${isOver?'var(--red2)':'var(--amber)'};font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center"><span>${isOver?'⚠':'⏰'} ${total} ${isOver?'overdue':'due'}</span><span style="font-size:10px;opacity:.7">tap to expand ▾</span></div>`;
+    const parts=[];
+    if(pool.overdue.length)parts.push(`⚠ ${pool.overdue.length} overdue`);
+    if(pool.due.length)parts.push(`⏰ ${pool.due.length} due today`);
+    slot.innerHTML=`<div onclick="toggleQueueBanner()" style="cursor:pointer;padding:8px 12px;margin-bottom:10px;border-radius:8px;border:2px solid ${isOver?'var(--danger)':'var(--amber)'};background:${isOver?'rgba(255,23,68,.08)':'rgba(255,171,0,.08)'};color:${isOver?'var(--red2)':'var(--amber)'};font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>${parts.join(' · ')}</span><span style="font-size:10px;opacity:.7;white-space:nowrap">tap to expand ▾</span></div>`;
     return;
   }
+  // Expanded form — hide the "jump to lead" CTA if you're already on that row, but keep the banner visible
+  const onTarget=(target.id===(filtered[idx]||{}).id);
   const whenLabel=target.cbDate?esc((target.cbDate||'').replace('T',' ')):(target.followUp?esc(target.followUp):'today');
-  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} — ${whenLabel}${total>1?` <span style="color:var(--txt2);font-size:10px">(+${total-1} more)</span>`:''}<button onclick="toggleQueueBanner()" title="Hide" style="float:right;background:transparent;border:none;color:var(--txt2);font-size:12px;cursor:pointer;padding:0 4px;line-height:1">▲</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div><div class="due-banner-btns"><button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button><button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${target.id})">🗑 Clear callback</button></div></div>`;
+  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} — ${whenLabel}${total>1?` <span style="color:var(--txt2);font-size:10px">(+${total-1} more)</span>`:''}<button onclick="toggleQueueBanner()" title="Hide" style="float:right;background:transparent;border:none;color:var(--txt2);font-size:12px;cursor:pointer;padding:0 4px;line-height:1">▲</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div><div class="due-banner-btns">${onTarget?'':`<button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button>`}<button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${target.id})">🗑 Clear callback</button></div></div>`;
 }
 function toggleQueueBanner(){prefs.queueBannerCollapsed=!prefs.queueBannerCollapsed;savePrefs();renderDueQueueBanner()}
 function jumpToDue(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();idx=i;filtered=leads.slice();render();window.scrollTo({top:0,behavior:'smooth'})}
@@ -2151,7 +2279,7 @@ function saveNewLead(){
   save();closeNewLead();
   // Jump to the new lead
   filtered=leads.slice();idx=filtered.findIndex(x=>x.id===o.id);
-  filter='All';closeLeads();render();
+  filter='All';activeFilters=['All'];closeLeads();render();
   showToast(`✅ Added R${o.row} ${biz}`);
 }
 function saveTime(){
@@ -2229,9 +2357,29 @@ function exportCSV(){
 }
 function autoBackup(){if(!leads.length)return;exportCSV()}
 function manualBackup(){exportCSV()}
+// CircleLoop contacts export — minimal CSV (Name, Phone Number) for one-time import
+// into CircleLoop so business names auto-show on every dial. Different filename + 2 cols
+// to keep distinct from the daily 22-col sheet export.
+function exportCircleLoopContacts(){
+  if(!leads.length){alert('No leads to export');return}
+  const lines=['Name,Phone Number'];
+  let count=0;
+  leads.forEach(l=>{
+    if(!l.business)return;
+    if(l.phone){lines.push([csvEscape(l.business),csvEscape(l.phone)].join(','));count++}
+    if(l.phone2){lines.push([csvEscape(l.business+' (alt)'),csvEscape(l.phone2)].join(','));count++}
+  });
+  if(count===0){alert('No contacts with a phone number to export');return}
+  const csv=lines.join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const ts=new Date();const fn=`CircleLoop_Contacts_${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fn;a.click();
+  showToast(`📇 Exported ${count} contacts for CircleLoop import`);
+}
 
 // ===== Init =====
 loadPrefs();
+applyTheme();
 openIDB().catch(()=>{});
 loadUser(); // Hydrate user defaults if previously saved; else keep hardcoded Sandde defaults
 document.getElementById('upload-screen').style.display='flex';
