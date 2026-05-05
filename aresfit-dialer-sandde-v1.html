@@ -438,7 +438,8 @@ th{background:var(--card);font-weight:600}
   <div class="modal-box" style="max-width:640px">
     <button class="x-btn" onclick="closeComposer()">✕</button>
     <div class="logo" style="margin-bottom:6px"><span>COMPOSE EMAIL</span></div>
-    <p class="sub" style="margin-bottom:10px" id="c-recipient">—</p>
+    <p class="sub" style="margin-bottom:6px" id="c-recipient">—</p>
+    <div id="c-recipient-picker" style="display:none;margin-bottom:10px"></div>
     <div class="composer-grid">
       <div>
         <div class="c-lbl">Call reality</div>
@@ -646,7 +647,7 @@ const AUTOFILL_OUTCOMES = {
   'Provider Reject':'Provider reject - dead number',
   'Not Int.':'Not interested - declined'
 };
-const FILTERS = ['All','Recent','Uncalled','Callback','Awaiting CB','Quoted','Hot','NA','Contacted','Reached','DNC'];
+const FILTERS = ['All','Recent','Uncalled','Callback','Awaiting CB','Quoted','Hot','VM','Contacted','Reached','DNC'];
 
 // Save keys
 const SAVE_KEY    = 'aresfit_sandde_state';
@@ -801,6 +802,7 @@ let activeFilters=['All']; // multi-filter: tap to toggle, intersection logic. '
 let justLoggedId=null; // tracks lead.id that just had an outcome logged — flips Log/Next button to Next on second tap
 let manualNoteOpen=false; // toggles inline manual-note editor on the call card
 let manualNoteText='';    // draft text for the manual-note editor
+let dueQueueIdx=0;        // index for cycling through overdue/due banner
 let user={name:'Sandde', email:'info@aresfit.co.uk'};
 let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null};
 let idb=null;
@@ -842,6 +844,17 @@ function latestNoteTs(l){
     if(t>max)max=t;
   }
   return max;
+}
+// Latest VM entry for a lead — only returns when the lead's MOST RECENT non-legacy note is VM.
+// (i.e. they're still awaiting your return call. If you Contacted them after the VM, this returns null.)
+function latestVmEntry(l){
+  if(!l||!l.notes||!l.notes.length)return null;
+  let latest=null;
+  for(const n of l.notes){
+    if(n.legacy)continue;
+    if(!latest||(n.ts||0)>(latest.ts||0))latest=n;
+  }
+  return (latest&&(latest.outcome||'').toUpperCase()==='VM')?latest:null;
 }
 // Parse Follow-up Date column — handles ISO date, ISO datetime, UK date, UK date+time range, datetime-local
 function parseFollowUp(s){
@@ -977,6 +990,12 @@ async function loadSession(){
     if(!('michaelAlsoCalled' in l))l.michaelAlsoCalled=false;
     if(!('providerReject' in l))l.providerReject=false;
     if(!('phone2' in l))l.phone2='';
+    if(!('email2' in l))l.email2='';
+    // Back-compat: split pipe/comma/semicolon in email cell from older sessions
+    if(l.email&&!l.email2&&/[|,;]/.test(l.email)){
+      const parts=String(l.email).split(/[|,;]+/).map(s=>s.trim()).filter(s=>s.includes('@'));
+      l.email=parts[0]||'';l.email2=parts[1]||'';
+    }
     if(l.status)l.status=normStatus(l.status);
     // Back-compat: detect multi-number phone cells in existing sessions (covers any separator
     // and the no-separator concatenation case). Mirrors confirmImport logic.
@@ -1082,11 +1101,17 @@ function confirmImport(){
     if(!nm||!ph)return;
     const o={
       id:i, row:rowN, rawIdx:i,
-      attempts:0, notes:[], cbDate:'', cbSetAt:0, phone2:'',
+      attempts:0, notes:[], cbDate:'', cbSetAt:0, phone2:'', email2:'',
       preflightPassed:false, mobileVerified:false, michaelAlsoCalled:false, providerReject:false,
       pending:{outcome:'',text:'',callStartTs:0,editedHm:''}
     };
     FIELDS.forEach(f=>o[f]=mapping[f]?(r[mapping[f]]||''):'');
+    // Two-email support: split on pipe/comma/semicolon. First = primary, second = email2.
+    if(o.email&&/[|,;]/.test(o.email)){
+      const parts=String(o.email).split(/[|,;]+/).map(s=>s.trim()).filter(s=>s.includes('@'));
+      o.email=parts[0]||'';
+      o.email2=parts[1]||'';
+    }
     // Two-number support: detect when a single Phone cell contains multiple numbers.
     // Real sheets use various separators: pipe, comma, slash, semicolon, " and ", line-break.
     // Also handle the "no separator" case where two 11-digit UK numbers are smashed together.
@@ -1163,7 +1188,7 @@ const FILTER_PREDICATES = {
   'Awaiting CB': l => (l.status||'').trim()==='Awaiting Callback',
   Quoted: l => (l.status||'').trim()==='Quoted'||(l.stage||'').trim()==='Quoted',
   Hot: l => {const lp=((raw[l.rawIdx]||{})['Lead Priority']||'').toLowerCase();return (l.status||'').trim()==='Hot Lead'||l.notes.some(n=>n.outcome==='HOT')||lp==='hot'},
-  NA: l => (l.status||'').trim()==='No Answer',
+  'VM': l => !!latestVmEntry(l),
   Contacted: l => (l.stage||'').trim()==='Contacted',
   Reached: l => l.notes.length>0||((l.status||'').trim()!==''),
   DNC: l => (l.status||'').trim()==='DO NOT CALL',
@@ -1197,8 +1222,14 @@ function applyFilter(){
     const latestTs=l=>{const nl=l.notes.filter(n=>!n.legacy);return nl.length?Math.max.apply(null,nl.map(n=>n.ts||0)):0};
     if((prefs.reachedSort||'date')==='row') r.sort((a,b)=>(a.row||0)-(b.row||0));
     else r.sort((a,b)=>latestTs(b)-latestTs(a));
+  } else if(active.includes('VM')){
+    // Oldest VM/NA first — longest-waiting leads bubble to top so callbacks happen first
+    r.sort((a,b)=>{
+      const ea=latestVmEntry(a),eb=latestVmEntry(b);
+      return (ea?ea.ts:0)-(eb?eb.ts:0);
+    });
   }
-  if(searchTerm){const s=searchTerm;r=r.filter(l=>(l.business||'').toLowerCase().includes(s)||(l.dm||'').toLowerCase().includes(s)||(l.phone||'').toLowerCase().includes(s)||(l.phone2||'').toLowerCase().includes(s)||('r'+l.row).includes(s)||String(l.row).includes(s)||(l.email||'').toLowerCase().includes(s)||l.notes.some(n=>(n.text||'').toLowerCase().includes(s)))}
+  if(searchTerm){const s=searchTerm;r=r.filter(l=>(l.business||'').toLowerCase().includes(s)||(l.dm||'').toLowerCase().includes(s)||(l.phone||'').toLowerCase().includes(s)||(l.phone2||'').toLowerCase().includes(s)||('r'+l.row).includes(s)||String(l.row).includes(s)||(l.email||'').toLowerCase().includes(s)||(l.email2||'').toLowerCase().includes(s)||l.notes.some(n=>(n.text||'').toLowerCase().includes(s)))}
   return r;
 }
 // Multi-filter toggle: tap a filter to add/remove. 'All' clears everything.
@@ -1286,8 +1317,11 @@ function renderCard(){
   // P1: Virgin row check + gates
   const virgin=!l.notes.some(n=>!n.legacy);
   const digits=(l.phone||'').replace(/\D/g,'');
-  const is07=digits.startsWith('07');
-  const gatesPassed=canCall(l);
+  const digits2=(l.phone2||'').replace(/\D/g,'');
+  // is07 fires the mobile gate UI when EITHER number is mobile (single tickbox covers both)
+  const is07=digits.startsWith('07')||digits2.startsWith('07');
+  const gatesPassed=canCall(l,'primary');
+  const gatesPassed2=canCall(l,'secondary');
   const dACount=deadAirCount(l);
   const poolFlag=poolStatus(l.id);
 
@@ -1371,6 +1405,10 @@ function renderCard(){
           <div class="field-lbl">Email <span class="edit">tap</span></div>
           <div class="field-val ${l.email?'':'empty'}" id="fv-email">${l.email?esc(l.email):'+ add email'}</div>
         </div>
+        <div class="field full" onclick="editField('email2',event)">
+          <div class="field-lbl">Secondary email <span class="edit">tap</span></div>
+          <div class="field-val ${l.email2?'':'empty'}" id="fv-email2">${l.email2?esc(l.email2):'+ add secondary email'}</div>
+        </div>
         <div class="field" onclick="event.stopPropagation()">
           <div class="field-lbl">Next Action</div>
           <div class="dd" id="dd-status" onclick="toggleDD('status',event)">
@@ -1397,7 +1435,11 @@ function renderCard(){
       ${l.callAngle?`<details class="reveal" open><summary>Call angle</summary><div>${esc(l.callAngle)}</div></details>`:''}
       ${l.aresBrands?`<div style="margin:6px 0"><span class="ref-chip"><strong style="color:var(--txt)">AresFit:</strong> ${esc(l.aresBrands)}</span></div>`:''}
       ${l.research?`<details class="reveal"><summary>Research notes</summary><div>${esc(l.research)}</div></details>`:''}
-      ${(()=>{const bq=encodeURIComponent(l.business||'');const s='padding:9px;text-align:center;text-decoration:none;font-size:12px;color:var(--txt)';return `<details class="reveal"><summary>🔍 Research this lead</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"><a href="https://www.google.com/search?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">🔎 Google</a><a href="https://find-and-update.company-information.service.gov.uk/search/companies?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">🏛 Companies House</a><a href="https://www.facebook.com/search/top?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">📘 Facebook</a><a href="https://www.google.com/maps/search/${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">📍 Maps</a></div></details>`})()}
+      ${(()=>{const bq=encodeURIComponent(l.business||'');const s='padding:9px;text-align:center;text-decoration:none;font-size:12px;color:var(--txt)';
+        // 🔎 Safari uses x-web-search:// on iOS — invokes the user's default search engine in Safari.
+        // Falls back to Google search URL on desktop / non-iOS where the scheme isn't supported.
+        const safariClick=`if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.location.href='x-web-search://?'+'${bq}';return false}`;
+        return `<details class="reveal"><summary>🔍 Research this lead</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"><a href="https://www.google.com/search?q=${bq}" onclick="${safariClick}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">🔎 Safari</a><a href="https://find-and-update.company-information.service.gov.uk/search/companies?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">🏛 Companies House</a><a href="https://www.facebook.com/search/top?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">📘 Facebook</a><a href="https://www.google.com/maps/search/${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">📍 Maps</a></div></details>`})()}
 
       ${mobileGate}
 
@@ -1407,7 +1449,7 @@ function renderCard(){
         <button class="copy-btn" onclick="copyPhone()" title="Copy number">📋</button>
       </div>
       ${l.phone2?`<div class="call-row" style="margin-top:6px">
-        <button class="call-btn" onclick="tapCall('secondary')" style="font-size:13px;padding:10px">📞 CALL (alt)<span class="n">${phone2Fmt}</span></button>
+        <button class="call-btn" onclick="tapCall('secondary')" ${gatesPassed2?'':'disabled'} style="${gatesPassed2?'':'opacity:.4;cursor:not-allowed;'}font-size:13px;padding:10px">📞 CALL (alt)<span class="n">${phone2Fmt}</span></button>
         <button class="copy-btn" onclick="copyPhone2()" title="Copy alt number">📋</button>
       </div>`:''}
       ${emailBtn}
@@ -1525,6 +1567,7 @@ function renderLeadList(){
   if(!rows.length){list.innerHTML='<div class="empty-card" style="padding:20px">No matches.</div>';return}
   const activeId=filtered[idx]?filtered[idx].id:null;
   const showRecent=activeFilters.includes('Recent');
+  const showVmNa=activeFilters.includes('VM');
   list.innerHTML=rows.slice(0,300).map(l=>{
     const stKey=(l.status||'').replace(/\s/g,'');
     const pill=l.status?`<span class="st-pill">${esc(l.status)}</span>`:'';
@@ -1533,8 +1576,10 @@ function renderLeadList(){
     const today=!over&&isDueTodayRow(l);
     const rowFlag=over?' overdue-row':(today?' due-today-row':'');
     const fuBadge=over?'<span class="fu-badge overdue">OVERDUE</span>':(today?'<span class="fu-badge due">TODAY</span>':'');
-    const recentChip=showRecent?`<span class="recent-chip">${esc(relTime(latestNoteTs(l)))}</span>`:'';
-    return `<div class="lead-item s-${stKey}${dnc}${rowFlag} ${l.id===activeId?'active':''}" onclick="jumpTo(${l.id})"><span class="r">R${l.row}</span>${recentChip}<span class="biz">${esc(l.business)}</span><span class="meta">${fuBadge}<span class="att">${l.attempts||0}</span>${pill}</span></div>`;
+    let chip='';
+    if(showRecent)chip=`<span class="recent-chip">${esc(relTime(latestNoteTs(l)))}</span>`;
+    else if(showVmNa){const e=latestVmEntry(l);if(e)chip=`<span class="recent-chip">${esc(e.outcome)} ${esc(relTime(e.ts))}</span>`}
+    return `<div class="lead-item s-${stKey}${dnc}${rowFlag} ${l.id===activeId?'active':''}" onclick="jumpTo(${l.id})"><span class="r">R${l.row}</span>${chip}<span class="biz">${esc(l.business)}</span><span class="meta">${fuBadge}<span class="att">${l.attempts||0}</span>${pill}</span></div>`;
   }).join('')+(rows.length>300?`<div class="empty-card" style="padding:10px;font-size:11px">+ ${rows.length-300} more (refine search)</div>`:'');
 }
 
@@ -1600,9 +1645,11 @@ function clearCbFromBanner(id){
 function setCbDirection(d){const l=filtered[idx];if(!l)return;if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:'',direction:'out'};l.pending.direction=d;save();renderCard()}
 
 // ===== P1: Gates =====
-function canCall(l){
+// Now takes which='primary'|'secondary' so the mobile-verified rule applies to phone2 too.
+function canCall(l,which){
   if(!l)return false;
-  const digits=(l.phone||'').replace(/\D/g,'');
+  const num=which==='secondary'?(l.phone2||''):(l.phone||'');
+  const digits=num.replace(/\D/g,'');
   if(!digits)return false;
   if(digits.startsWith('07')&&!l.mobileVerified)return false;
   return true;
@@ -1678,23 +1725,37 @@ function poolStatus(leadId){const p=getDuePool();if(p.overdue.some(l=>l.id===lea
 function renderDueQueueBanner(){
   const slot=document.getElementById('due-queue-slot');if(!slot)return;
   const pool=getDuePool();
-  const target=pool.overdue[0]||pool.due[0];
-  if(!target){slot.innerHTML='';return}
-  const isOver=pool.overdue.length>0;
-  const total=pool.overdue.length+pool.due.length;
+  // Combine overdue (priority) + due-today into one list to cycle through
+  const list=pool.overdue.concat(pool.due);
+  if(!list.length){slot.innerHTML='';return}
+  // Clamp index in case the list shrunk (item dismissed/cleared)
+  if(dueQueueIdx>=list.length)dueQueueIdx=0;
+  if(dueQueueIdx<0)dueQueueIdx=list.length-1;
+  const target=list[dueQueueIdx];
+  const isOver=dueQueueIdx<pool.overdue.length;
+  const total=list.length;
   // Sticky overdue counter — always visible when there are due/overdue items, even if you're already on one.
   // Collapsed pill shows both counts split (e.g. "⚠ 3 overdue · ⏰ 2 due today") so glance gives full picture.
   if(prefs.queueBannerCollapsed){
     const parts=[];
     if(pool.overdue.length)parts.push(`⚠ ${pool.overdue.length} overdue`);
     if(pool.due.length)parts.push(`⏰ ${pool.due.length} due today`);
-    slot.innerHTML=`<div onclick="toggleQueueBanner()" style="cursor:pointer;padding:8px 12px;margin-bottom:10px;border-radius:8px;border:2px solid ${isOver?'var(--danger)':'var(--amber)'};background:${isOver?'rgba(255,23,68,.08)':'rgba(255,171,0,.08)'};color:${isOver?'var(--red2)':'var(--amber)'};font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>${parts.join(' · ')}</span><span style="font-size:10px;opacity:.7;white-space:nowrap">tap to expand ▾</span></div>`;
+    slot.innerHTML=`<div onclick="toggleQueueBanner()" style="cursor:pointer;padding:8px 12px;margin-bottom:10px;border-radius:8px;border:2px solid ${pool.overdue.length?'var(--danger)':'var(--amber)'};background:${pool.overdue.length?'rgba(255,23,68,.08)':'rgba(255,171,0,.08)'};color:${pool.overdue.length?'var(--red2)':'var(--amber)'};font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>${parts.join(' · ')}</span><span style="font-size:10px;opacity:.7;white-space:nowrap">tap to expand ▾</span></div>`;
     return;
   }
   // Expanded form — hide the "jump to lead" CTA if you're already on that row, but keep the banner visible
   const onTarget=(target.id===(filtered[idx]||{}).id);
   const whenLabel=target.cbDate?esc((target.cbDate||'').replace('T',' ')):(target.followUp?esc(target.followUp):'today');
-  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} — ${whenLabel}${total>1?` <span style="color:var(--txt2);font-size:10px">(+${total-1} more)</span>`:''}<button onclick="toggleQueueBanner()" title="Hide" style="float:right;background:transparent;border:none;color:var(--txt2);font-size:12px;cursor:pointer;padding:0 4px;line-height:1">▲</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div><div class="due-banner-btns">${onTarget?'':`<button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button>`}<button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${target.id})">🗑 Clear callback</button></div></div>`;
+  // Cycle controls: only render when there's more than one to flip through
+  const cycleControls=total>1?`<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0;font-size:11px;color:var(--txt2)"><button onclick="cycleDueQueue(-1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1">‹</button><span>${dueQueueIdx+1} of ${total}</span><button onclick="cycleDueQueue(1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1">›</button></div>`:'';
+  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} — ${whenLabel}<button onclick="toggleQueueBanner()" title="Hide" style="float:right;background:transparent;border:none;color:var(--txt2);font-size:12px;cursor:pointer;padding:0 4px;line-height:1">▲</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div>${cycleControls}<div class="due-banner-btns">${onTarget?'':`<button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button>`}<button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${target.id})">🗑 Clear callback</button></div></div>`;
+}
+function cycleDueQueue(dir){
+  const pool=getDuePool();
+  const total=pool.overdue.length+pool.due.length;
+  if(!total)return;
+  dueQueueIdx=((dueQueueIdx+dir)%total+total)%total;
+  renderDueQueueBanner();
 }
 function toggleQueueBanner(){prefs.queueBannerCollapsed=!prefs.queueBannerCollapsed;savePrefs();renderDueQueueBanner()}
 function jumpToDue(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();idx=i;filtered=leads.slice();render();window.scrollTo({top:0,behavior:'smooth'})}
@@ -1825,7 +1886,19 @@ function openEmailComposer(){
   const l=filtered[idx];if(!l)return;
   if(!l.email){showToast('No email on this row','danger');return}
   const modal=document.getElementById('composer-modal');if(!modal)return;
-  document.getElementById('c-recipient').innerHTML=`To: <strong style="color:var(--txt)">${esc(l.email)}</strong> · R${l.row} ${esc(l.business)}`;
+  document.getElementById('c-recipient').innerHTML=`R${l.row} ${esc(l.business)}`;
+  // Recipient picker: shows up only when email2 is set. Default = primary.
+  const picker=document.getElementById('c-recipient-picker');
+  if(l.email2){
+    picker.style.display='block';
+    picker.innerHTML=`<div class="field-lbl" style="margin-bottom:4px">Send to <span style="color:var(--amber)">· two emails on file</span></div>
+      <div style="display:flex;gap:4px"><label style="flex:1;cursor:pointer"><input type="radio" name="c-to" value="primary" checked style="margin-right:6px;width:auto">${esc(l.email)}</label></div>
+      <div style="display:flex;gap:4px;margin-top:4px"><label style="flex:1;cursor:pointer"><input type="radio" name="c-to" value="secondary" style="margin-right:6px;width:auto">${esc(l.email2)}</label></div>
+      <div style="display:flex;gap:4px;margin-top:4px"><label style="flex:1;cursor:pointer"><input type="radio" name="c-to" value="both" style="margin-right:6px;width:auto">Both</label></div>`;
+  } else {
+    picker.style.display='none';
+    picker.innerHTML='';
+  }
   const rSel=document.getElementById('c-reality');
   rSel.innerHTML=CALL_REALITY_OPTS.map(o=>`<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
   rSel.value=inferReality(l);
@@ -1847,6 +1920,11 @@ function launchFromComposer(){
   const schedule=document.getElementById('c-schedule').value;
   const pitchBox=document.getElementById('c-pitch');
   const pitch=!!(pitchBox&&pitchBox.checked);
+  // Recipient pick — when email2 exists, honour the radio. Default = primary.
+  let toAddr=l.email;
+  const picked=(document.querySelector('input[name="c-to"]:checked')||{}).value;
+  if(l.email2&&picked==='secondary')toAddr=l.email2;
+  else if(l.email2&&picked==='both')toAddr=`${l.email},${l.email2}`;
   // Final domain mismatch confirm (redundant w/ inline warning but blocks accidental sends)
   const emailDom=(l.email.split('@')[1]||'').toLowerCase().trim();
   const siteRaw=(l.website||'').toLowerCase().trim();
@@ -1858,7 +1936,7 @@ function launchFromComposer(){
       if(!confirm(`⚠ Email domain doesn't match website — could be third-party sharing the space (renter, contractor). Proceed?`))return;
     }
   }
-  _launchGmail(l.email,subject,body);
+  _launchGmail(toAddr,subject,body);
   // Track subject rotation (daily)
   const k=todayKey();
   if(!prefs.usedSubjects[k])prefs.usedSubjects[k]=[];
@@ -1874,7 +1952,7 @@ function launchFromComposer(){
   const ts=Date.now();
   const tmplLabel=(CALL_REALITY_OPTS.find(r=>r.value===reality)||{}).label||reality;
   const mode=pitch?'pitch':'generic';
-  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:`Sent to ${l.email} · subject: "${subject}" · template: ${tmplLabel} · mode: ${mode} · send: ${schedule}`});
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:`Sent to ${toAddr} · subject: "${subject}" · template: ${tmplLabel} · mode: ${mode} · send: ${schedule}`});
   // Status auto-set (safe overwrite only)
   if(STATUS_SAFE_OVERWRITE.includes((l.status||'').trim()))l.status='Emailed';
   save();closeComposer();renderCard();renderLeadList();renderStats();
@@ -2041,6 +2119,8 @@ function tapCall(which){
   const num=which==='secondary'?(l.phone2||''):(l.phone||'');
   const digits=num.replace(/\D/g,'');
   if(!digits){alert('No phone number on this row');return}
+  // Mobile gate now applies to phone2 too — was only enforced on primary before.
+  if(digits.startsWith('07')&&!l.mobileVerified){alert('Mobile number — tick "verified on website" before dialling.');return}
   // Auto-capture call start time
   if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
   l.pending.callStartTs=Date.now();
@@ -2353,7 +2433,10 @@ function exportCSV(){
       if(mapping.equipBrands)rowObj[mapping.equipBrands]=l.equipBrands||'';
       if(mapping.aresBrands)rowObj[mapping.aresBrands]=l.aresBrands||'';
       if(mapping.dm)rowObj[mapping.dm]=l.dm||'';
-      if(mapping.email)rowObj[mapping.email]=l.email||'';
+      if(mapping.email){
+        // Two-email export: join with ' | ' if email2 set, else just primary.
+        rowObj[mapping.email]=l.email2?`${l.email||''} | ${l.email2}`:(l.email||'');
+      }
       if(mapping.callAngle)rowObj[mapping.callAngle]=l.callAngle||'';
       if(mapping.research)rowObj[mapping.research]=l.research||'';
       // Notes = join array with ' | '
