@@ -305,6 +305,14 @@ th{background:var(--card);font-weight:600}
     <button class="x-btn" onclick="closeSetup()">✕</button>
     <div class="logo" style="margin-bottom:10px"><span>ARESFIT</span></div>
     <p class="sub" style="margin-bottom:14px">Your name and email - used for export filenames and email signatures.</p>
+    <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Preset</label>
+    <select id="setup-preset" onchange="applySetupPreset()" style="margin:4px 0 10px">
+      <option value="">Select rep...</option>
+      <option value="Sandde|info@aresfit.co.uk">Sandde</option>
+      <option value="Ioan|ioan@aresfit.co.uk">Ioan</option>
+      <option value="Michael|michael@aresfit.co.uk">Michael</option>
+      <option value="custom">Custom</option>
+    </select>
     <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Name</label>
     <input type="text" id="setup-name" style="margin:4px 0 10px">
     <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Email</label>
@@ -1047,8 +1055,20 @@ function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs))}c
 
 // ===== Setup / user =====
 function loadUser(){try{const u=JSON.parse(localStorage.getItem(SETUP_KEY));if(u&&u.name){user=u;return true}}catch(e){}return false}
-function openSetup(){document.getElementById('setup-name').value=user.name||'';document.getElementById('setup-email').value=user.email||'';document.getElementById('setup-modal').style.display='flex'}
+function openSetup(){
+  document.getElementById('setup-preset').value='';
+  document.getElementById('setup-name').value=user.name||'';
+  document.getElementById('setup-email').value=user.email||'';
+  document.getElementById('setup-modal').style.display='flex';
+}
 function closeSetup(){document.getElementById('setup-modal').style.display='none'}
+function applySetupPreset(){
+  const v=document.getElementById('setup-preset').value;
+  if(!v||v==='custom')return;
+  const parts=v.split('|');
+  document.getElementById('setup-name').value=parts[0]||'';
+  document.getElementById('setup-email').value=parts[1]||'';
+}
 function saveSetup(){
   const n=document.getElementById('setup-name').value.trim();
   if(!n){alert('Rep name required');return}
