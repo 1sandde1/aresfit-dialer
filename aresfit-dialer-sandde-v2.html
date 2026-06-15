@@ -67,13 +67,23 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red)}
 textarea{resize:vertical;min-height:70px}
 textarea.pending{border-color:var(--amber);box-shadow:0 0 0 2px rgba(255,171,0,.12)}
 select{appearance:none;-webkit-appearance:none;padding-right:28px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238e8ea0' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 10px center;color-scheme:dark}
-option{background:#131320;color:#e4e4ec;padding:6px}
+option{background:var(--card);color:var(--txt);padding:6px}
+.setup-dd{position:relative;margin:4px 0 10px}
+.setup-dd-btn{width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 11px;color:var(--txt);display:flex;align-items:center;justify-content:space-between;text-align:left}
+.setup-dd-btn:hover,.setup-dd.open .setup-dd-btn{border-color:var(--red)}
+.setup-dd-caret{font-size:10px;color:var(--txt3);margin-left:8px}
+.setup-dd-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid var(--border2);border-radius:9px;box-shadow:0 10px 28px rgba(0,0,0,.7);z-index:80;overflow:hidden}
+.setup-dd.open .setup-dd-menu{display:block}
+.setup-dd-opt{width:100%;background:transparent;border-radius:0;color:var(--txt);text-align:left;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);transform:none}
+.setup-dd-opt:last-child{border-bottom:none}
+.setup-dd-opt:hover{background:#1c1c1c;color:#fff}
+.setup-dd-opt.active{background:#181818;color:var(--red2)}
 
 /* Custom dropdown (Status/Stage) */
 .dd{position:relative;padding:5px 22px 5px 2px;font-size:13px;border-bottom:1px solid var(--border);cursor:pointer;color:var(--txt);user-select:none}
 .dd-val{min-height:18px;display:flex;align-items:center}
 .dd-caret{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:9px}
-.dd-list{display:none;position:absolute;left:-10px;right:-10px;top:calc(100% + 4px);background:#131320;border:1px solid var(--border2);border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.7);z-index:20;max-height:300px;overflow-y:auto}
+.dd-list{display:none;position:absolute;left:-10px;right:-10px;top:calc(100% + 4px);background:var(--card);border:1px solid var(--border2);border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.7);z-index:20;max-height:300px;overflow-y:auto}
 .dd.open .dd-list{display:block}
 .dd-opt{padding:9px 12px;font-size:13px;color:var(--txt);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03)}
 .dd-opt:last-child{border-bottom:none}
@@ -306,13 +316,15 @@ th{background:var(--card);font-weight:600}
     <div class="logo" style="margin-bottom:10px"><span>ARESFIT</span></div>
     <p class="sub" style="margin-bottom:14px">Your name and email - used for export filenames and email signatures.</p>
     <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Preset</label>
-    <select id="setup-preset" onchange="applySetupPreset()" style="margin:4px 0 10px">
-      <option value="">Select rep...</option>
-      <option value="Sandde|info@aresfit.co.uk">Sandde</option>
-      <option value="Ioan|ioan@aresfit.co.uk">Ioan</option>
-      <option value="Michael|michael@aresfit.co.uk">Michael</option>
-      <option value="custom">Custom</option>
-    </select>
+    <div class="setup-dd" id="setup-preset-dd">
+      <button type="button" class="setup-dd-btn" onclick="toggleSetupPreset(event)"><span id="setup-preset-label">Choose preset</span><span class="setup-dd-caret">v</span></button>
+      <div class="setup-dd-menu">
+        <button type="button" class="setup-dd-opt" data-name="Sandde" data-email="info@aresfit.co.uk" onclick="applySetupPreset(this)">Sandde</button>
+        <button type="button" class="setup-dd-opt" data-name="Ioan" data-email="ioan@aresfit.co.uk" onclick="applySetupPreset(this)">Ioan</button>
+        <button type="button" class="setup-dd-opt" data-name="Michael" data-email="michael@aresfit.co.uk" onclick="applySetupPreset(this)">Michael</button>
+        <button type="button" class="setup-dd-opt" data-custom="true" onclick="applySetupPreset(this)">Custom</button>
+      </div>
+    </div>
     <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Name</label>
     <input type="text" id="setup-name" style="margin:4px 0 10px">
     <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Email</label>
@@ -1056,22 +1068,31 @@ function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs))}c
 // ===== Setup / user =====
 function loadUser(){try{const u=JSON.parse(localStorage.getItem(SETUP_KEY));if(u&&u.name){user=u;return true}}catch(e){}return false}
 function openSetup(){
-  document.getElementById('setup-preset').value='';
+  document.querySelectorAll('#setup-preset-dd .setup-dd-opt').forEach(b=>b.classList.remove('active'));
+  const match=[...document.querySelectorAll('#setup-preset-dd .setup-dd-opt')].find(b=>b.dataset.name===user.name&&b.dataset.email===user.email);
+  if(match)match.classList.add('active');
+  setSetupPresetLabel(match?match.textContent.trim():(user.name?'Custom':'Choose preset'));
   document.getElementById('setup-name').value=user.name||'';
   document.getElementById('setup-email').value=user.email||'';
   document.getElementById('setup-modal').style.display='flex';
 }
 function closeSetup(){document.getElementById('setup-modal').style.display='none'}
-function applySetupPreset(){
-  const v=document.getElementById('setup-preset').value;
-  if(!v||v==='custom')return;
-  const parts=v.split('|');
-  document.getElementById('setup-name').value=parts[0]||'';
-  document.getElementById('setup-email').value=parts[1]||'';
+function setSetupPresetLabel(text){document.getElementById('setup-preset-label').textContent=text||'Choose preset'}
+function toggleSetupPreset(ev){ev.stopPropagation();document.getElementById('setup-preset-dd').classList.toggle('open')}
+function closeSetupPreset(){document.getElementById('setup-preset-dd').classList.remove('open')}
+function applySetupPreset(btn){
+  document.querySelectorAll('#setup-preset-dd .setup-dd-opt').forEach(b=>b.classList.toggle('active',b===btn));
+  setSetupPresetLabel(btn?btn.textContent.trim():'Choose preset');
+  closeSetupPreset();
+  const name=document.getElementById('setup-name');
+  const email=document.getElementById('setup-email');
+  if(btn&&btn.dataset.custom==='true'){name.value='';email.value='';name.focus();return}
+  name.value=btn?.dataset.name||'';
+  email.value=btn?.dataset.email||'';
 }
 function saveSetup(){
   const n=document.getElementById('setup-name').value.trim();
-  if(!n){alert('Rep name required');return}
+  if(!n){alert('Name required');return}
   const e=document.getElementById('setup-email').value.trim();
   if(!e){alert('Email required');return}
   user={name:n,email:e};
@@ -1082,6 +1103,7 @@ function saveSetup(){
     if(hasSession())document.getElementById('resume-box').style.display='block';
   } else { render(); }
 }
+document.addEventListener('click',e=>{if(!e.target.closest('#setup-preset-dd'))closeSetupPreset()});
 function openSettings(){
   document.getElementById('st-name').textContent=user.name||'(not set)';
   document.getElementById('st-email').textContent=user.email||'';
