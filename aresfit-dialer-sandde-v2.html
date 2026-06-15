@@ -8,12 +8,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="AresFit S">
+<meta name="apple-mobile-web-app-title" content="AresFit">
 <meta name="theme-color" content="#08080d">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href='data:application/manifest+json,{"name":"AresFit Dialer Sandde","short_name":"AresFitS","start_url":".","display":"standalone","background_color":"%2308080d","theme_color":"%2308080d","icons":[{"src":"data:image/svg%2Bxml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 rx=%2232%22 fill=%22%2308080d%22/><text x=%2296%22 y=%22130%22 font-size=%22110%22 text-anchor=%22middle%22>🏋️</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
+<link rel="manifest" href='data:application/manifest+json,{"name":"AresFit Dialer","short_name":"AresFit","start_url":".","display":"standalone","background_color":"%2308080d","theme_color":"%2308080d","icons":[{"src":"data:image/svg%2Bxml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 192 192%22><rect width=%22192%22 height=%22192%22 rx=%2232%22 fill=%22%2308080d%22/><text x=%2296%22 y=%22130%22 font-size=%22110%22 text-anchor=%22middle%22>🏋️</text></svg>","sizes":"192x192","type":"image/svg+xml"}]}'>
 <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🏋️</text></svg>'>
-<title>AresFit Dialer · Sandde v2</title>
+<title>AresFit Dialer</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -303,12 +303,12 @@ th{background:var(--card);font-weight:600}
 <div class="modal" id="setup-modal" style="display:none">
   <div class="modal-box" style="max-width:420px">
     <button class="x-btn" onclick="closeSetup()">✕</button>
-    <div class="logo" style="margin-bottom:10px"><span>ARESFIT · SANDDE</span></div>
-    <p class="sub" style="margin-bottom:14px">Your name and email — used for email signatures later. Sandde defaults pre-filled.</p>
+    <div class="logo" style="margin-bottom:10px"><span>ARESFIT</span></div>
+    <p class="sub" style="margin-bottom:14px">Your name and email - used for export filenames and email signatures.</p>
     <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Name</label>
-    <input type="text" id="setup-name" placeholder="Sandde" style="margin:4px 0 10px">
+    <input type="text" id="setup-name" style="margin:4px 0 10px">
     <label style="font-size:10px;color:var(--txt2);text-transform:uppercase;letter-spacing:.06em">Email</label>
-    <input type="email" id="setup-email" placeholder="info@aresfit.co.uk" style="margin:4px 0 14px">
+    <input type="email" id="setup-email" style="margin:4px 0 14px">
     <button class="btn-red" style="width:100%;padding:12px" onclick="saveSetup()">Save</button>
   </div>
 </div>
@@ -317,7 +317,7 @@ th{background:var(--card);font-weight:600}
 <div id="upload-screen" class="upload-screen" style="display:none">
   <div class="upload-card">
     <button class="x-btn" onclick="openSetup()">⚙</button>
-      <div class="logo" style="font-size:20px;margin-bottom:4px"><span>ARESFIT DIALER</span> <span style="font-size:11px;color:var(--txt3);font-weight:500">· sandde v2</span></div>
+      <div class="logo" style="font-size:20px;margin-bottom:4px"><span>ARESFIT DIALER</span></div>
     <p class="sub">22-column AresFit call sheet import. Notes pipe-joined, row numbers preserved.</p>
     <div class="upload-zone" id="upload-zone" onclick="document.getElementById('csv-in').click()">
       <div class="big">📂</div>
@@ -402,7 +402,7 @@ th{background:var(--card);font-weight:600}
     <select id="cl-scheme-sel" onchange="saveClScheme(this.value)" style="margin-bottom:14px"></select>
     <h2>Danger</h2>
     <button style="width:100%;background:#1a0f0f;color:var(--red2);border:1px solid var(--red);padding:10px;border-radius:8px;font-size:12px" onclick="clearSession()">🗑 Clear all session data</button>
-      <p class="sub" style="text-align:center;font-size:10px;margin-top:14px;color:var(--txt3)">AresFit Dialer Sandde · v2 (P0)</p>
+      <p class="sub" style="text-align:center;font-size:10px;margin-top:14px;color:var(--txt3)">AresFit Dialer</p>
   </div>
 </div>
 
@@ -616,7 +616,7 @@ th{background:var(--card);font-weight:600}
 
 <script>
 /* ============================================================
-   AresFit Dialer Sandde v2 - P0
+   AresFit Dialer
    Mobile-first single-column. 22-col sheet. Pipe-append notes.
    ============================================================ */
 
@@ -803,7 +803,7 @@ let justLoggedId=null; // tracks lead.id that just had an outcome logged — fli
 let manualNoteOpen=false; // toggles inline manual-note editor on the call card
 let manualNoteText='';    // draft text for the manual-note editor
 let dueQueueIdx=0;        // index for cycling through overdue/due banner
-let user={name:'', email:'info@aresfit.co.uk'};
+let user={name:'', email:''};
 let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null};
 let idb=null;
 let outcomesSinceBackup=0;
@@ -1047,12 +1047,13 @@ function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs))}c
 
 // ===== Setup / user =====
 function loadUser(){try{const u=JSON.parse(localStorage.getItem(SETUP_KEY));if(u&&u.name){user=u;return true}}catch(e){}return false}
-function openSetup(){document.getElementById('setup-name').value=user.name||'';document.getElementById('setup-email').value=user.email||'info@aresfit.co.uk';document.getElementById('setup-modal').style.display='flex'}
+function openSetup(){document.getElementById('setup-name').value=user.name||'';document.getElementById('setup-email').value=user.email||'';document.getElementById('setup-modal').style.display='flex'}
 function closeSetup(){document.getElementById('setup-modal').style.display='none'}
 function saveSetup(){
   const n=document.getElementById('setup-name').value.trim();
   if(!n){alert('Rep name required');return}
-  const e=document.getElementById('setup-email').value.trim()||'info@aresfit.co.uk';
+  const e=document.getElementById('setup-email').value.trim();
+  if(!e){alert('Email required');return}
   user={name:n,email:e};
   try{localStorage.setItem(SETUP_KEY,JSON.stringify(user))}catch(err){console.warn('localStorage blocked in this preview — settings kept in memory only',err)}
   document.getElementById('setup-modal').style.display='none';
@@ -2090,7 +2091,7 @@ function generateHandover(){
   if(!uncalled.length)lines.push('_Sheet cleared, nothing uncalled._');
   else uncalled.slice(0,10).forEach(l=>lines.push(`- R${l.row} ${l.business} · ${l.priority||'—'} · ${format443(l.phone)}`));
   lines.push('');
-  lines.push('_Generated by AresFit Dialer Sandde v2._');
+  lines.push('_Generated by AresFit Dialer._');
   return lines.join('\n');
 }
 function showHandover(){const md=generateHandover();document.getElementById('handover-body').textContent=md;document.getElementById('handover-modal').style.display='flex'}
