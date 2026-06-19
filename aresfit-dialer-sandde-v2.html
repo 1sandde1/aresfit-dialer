@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AresFit">
@@ -16,19 +16,20 @@
 <title>AresFit Dialer</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[onclick],button,.dd,.field,summary{touch-action:manipulation}
 html,body{-webkit-text-size-adjust:100%;overscroll-behavior:none}
 :root{--bg:#000;--panel:#0a0a0a;--card:#111;--border:#222;--border2:#2e2e2e;--red:#ff3355;--red2:#ff5577;--green:#3ddc84;--amber:#ffb020;--blue:#5a9cff;--purple:#b388ff;--danger:#ff2e4d;--txt:#fafafa;--txt2:#8a8a8a;--txt3:#505050;--font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace}
-/* Light theme — toggled via body.light-mode. Inverts surfaces, keeps semantic colours. */
+/* Light theme - toggled via body.light-mode. Inverts surfaces, keeps semantic colours. */
 body.light-mode{--bg:#fafafa;--panel:#ffffff;--card:#f0f0f0;--border:#d8d8d8;--border2:#bbbbbb;--txt:#0a0a0a;--txt2:#5a5a5a;--txt3:#9a9a9a;--red:#d50000;--red2:#b71c1c;--green:#1b8a3d;--amber:#c77800;--blue:#0066cc;--purple:#6a3ec7;--danger:#cc0033}
-body{font-family:var(--font);background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);min-height:100vh}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);min-height:100vh}
 *::-webkit-scrollbar{width:6px;height:6px}
 *::-webkit-scrollbar-track{background:#0a0a14}
 *::-webkit-scrollbar-thumb{background:#252538;border-radius:3px}
 
 /* Layout */
 .app{max-width:640px;margin:0 auto;padding:10px;padding-bottom:40px}
-.sticky-top{position:sticky;top:0;z-index:50;background:var(--bg);padding-top:6px;margin:-10px -10px 8px;padding:10px 10px 8px;border-bottom:1px solid var(--border)}
+.sticky-top{position:sticky;top:0;z-index:50;background:var(--bg);padding-top:calc(10px + env(safe-area-inset-top,0px));margin:-10px -10px 8px;padding-left:10px;padding-right:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .head-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .logo{font-size:15px;font-weight:800;letter-spacing:.08em;flex:1;color:var(--txt)}
 .logo span{color:var(--txt);font-weight:800}
@@ -64,6 +65,10 @@ button:disabled{opacity:.4;cursor:not-allowed}
 /* Inputs */
 input,textarea,select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--txt);font-family:var(--font);font-size:13px}
 input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red)}
+input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:auto}
+@supports (-webkit-touch-callout: default){
+input,textarea,select{font-size:16px;-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important;touch-action:auto!important}
+}
 textarea{resize:vertical;min-height:70px}
 textarea.pending{border-color:var(--amber);box-shadow:0 0 0 2px rgba(255,171,0,.12)}
 select{appearance:none;-webkit-appearance:none;padding-right:28px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238e8ea0' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 10px center;color-scheme:dark}
@@ -388,7 +393,7 @@ th{background:var(--card);font-weight:600}
     <div class="c-row"><div class="c-lbl">Phone *</div><input type="text" id="nl-phone" placeholder="01234 567890"></div>
     <div class="c-row"><div class="c-lbl">Decision Maker (optional)</div><input type="text" id="nl-dm"></div>
     <div class="c-row"><div class="c-lbl">Email (optional)</div><input type="email" id="nl-email"></div>
-    <div class="c-row"><div class="c-lbl">Source row (optional — reference a parent row e.g. 161)</div><input type="text" id="nl-src" placeholder="R-number of referrer"></div>
+    <div class="c-row"><div class="c-lbl">Source row (optional - reference a parent row e.g. 161)</div><input type="text" id="nl-src" placeholder="R-number of referrer"></div>
     <div style="display:flex;gap:6px;margin-top:12px">
       <button class="btn-ghost" style="flex:1;padding:11px" onclick="closeNewLead()">Cancel</button>
       <button class="btn-red" style="flex:1;padding:11px" onclick="saveNewLead()">Add lead</button>
@@ -408,8 +413,8 @@ th{background:var(--card);font-weight:600}
     <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="openSetup()">Edit sender</button>
     <h2>Data</h2>
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="document.getElementById('csv-in').click()">📂 Upload new CSV (keeps session)</button>
-    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportCSV()">📥 Export CSV (22 cols)</button>
-    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="manualBackup()">💾 Manual backup</button>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportCSV()">📥 Export CSV (full call sheet backup)</button>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="manualBackup()">💾 Manual backup (same CSV download)</button>
     <button class="btn-red" style="width:100%;margin-bottom:14px;padding:11px" onclick="closeSettings();showHandover()">📝 Generate session handover</button>
     <h2>Email subjects</h2>
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="closeSettings();openSubjectEditor()">✉ Edit subject rotation pool</button>
@@ -431,10 +436,11 @@ th{background:var(--card);font-weight:600}
   <div class="modal-box">
     <button class="x-btn" onclick="closeClExportModal()">✕</button>
     <div class="logo" style="margin-bottom:8px"><span>📇 EXPORT FOR CIRCLELOOP</span></div>
-    <p class="sub" style="margin-bottom:12px">Optional: drop your existing CircleLoop contacts export to skip duplicates. The file will be parsed in your browser — nothing is uploaded anywhere.</p>
+    <p class="sub" style="margin-bottom:12px">Optional: drop your existing CircleLoop contacts export to skip duplicates. The file will be parsed in your browser - nothing is uploaded anywhere.</p>
     <p style="font-size:11px;color:var(--txt2);margin-bottom:6px"><strong>How to get the file:</strong> CircleLoop desktop → Admin Settings → Global Settings → Export contacts.</p>
     <input type="file" id="cl-export-file-input" accept=".csv" onchange="onClExportFile(event)" style="margin-bottom:8px;width:100%">
-    <div id="cl-export-status" style="font-size:11px;color:var(--txt2);margin-bottom:14px;padding:8px;border-radius:6px;background:var(--card);border:1px solid var(--border)">No file dropped — will export all contacts.</div>
+    <label class="c-chk" style="margin-bottom:8px"><input type="checkbox" id="cl-today-only"> Today touched only</label>
+    <div id="cl-export-status" style="font-size:11px;color:var(--txt2);margin-bottom:14px;padding:8px;border-radius:6px;background:var(--card);border:1px solid var(--border)">No file dropped - will export all contacts.</div>
     <div style="display:flex;gap:6px">
       <button class="btn-ghost" style="flex:1;padding:11px" onclick="closeClExportModal()">Cancel</button>
       <button class="btn-red" style="flex:2;padding:11px" onclick="doClExport()">Export</button>
@@ -447,7 +453,7 @@ th{background:var(--card);font-weight:600}
   <div class="modal-box">
     <button class="x-btn" onclick="closeHandover()">✕</button>
     <div class="logo" style="margin-bottom:8px"><span>SESSION HANDOVER</span></div>
-    <p class="sub" style="margin-bottom:10px">Markdown summary of today. Paste into a fresh Claude chat to continue tomorrow.</p>
+    <p class="sub" style="margin-bottom:10px">Markdown summary of today. Paste into a fresh ChatGPT chat to continue tomorrow.</p>
     <div class="handover-box" id="handover-body"></div>
     <div style="display:flex;gap:6px"><button class="btn-red" style="flex:1;padding:11px" onclick="copyHandover()">📋 Copy to clipboard</button><button class="btn-ghost" style="flex:1;padding:11px" onclick="downloadHandover()">⬇ Download .md</button></div>
   </div>
@@ -458,12 +464,12 @@ th{background:var(--card);font-weight:600}
   <div class="modal-box" style="max-width:640px">
     <button class="x-btn" onclick="closeComposer()">✕</button>
     <div class="logo" style="margin-bottom:6px"><span>COMPOSE EMAIL</span></div>
-    <p class="sub" style="margin-bottom:6px" id="c-recipient">—</p>
+    <p class="sub" style="margin-bottom:6px" id="c-recipient">-</p>
     <div id="c-recipient-picker" style="display:none;margin-bottom:10px"></div>
     <div class="composer-grid">
       <div>
         <div class="c-lbl">Call reality</div>
-        <select id="c-reality" onchange="refreshComposer()"></select>
+        <select id="c-reality" onchange="suggestSubject();refreshComposer()"></select>
       </div>
       <div>
         <div class="c-lbl">Scheduled send</div>
@@ -475,7 +481,7 @@ th{background:var(--card);font-weight:600}
       <input type="text" id="c-staff" placeholder="reception" oninput="refreshComposer()">
     </div>
     <div class="c-row" id="c-pitch-wrap" style="display:none">
-      <label class="c-chk"><input type="checkbox" id="c-pitch" onchange="refreshComposer()"> Pitch specific brands (DM confirmed equipment on this row)</label>
+      <label class="c-chk"><input type="checkbox" id="c-pitch" onchange="suggestSubject();refreshComposer()"> Pitch specific brands (DM confirmed equipment on this row)</label>
     </div>
     <div class="c-row">
       <div class="c-lbl"><span>Subject</span><button class="btn-sm btn-ghost" style="font-size:10px;padding:3px 8px" onclick="suggestSubject();renderComposerWarnings()">↻ suggest from pool</button></div>
@@ -488,7 +494,7 @@ th{background:var(--card);font-weight:600}
     <div id="c-warnings"></div>
     <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
       <button class="btn-ghost" style="flex:1;padding:11px;min-width:90px" onclick="closeComposer()">Cancel</button>
-      <button class="btn-ghost" style="flex:1;padding:11px;min-width:110px" onclick="launchBlankFromComposer()" title="Open Gmail blank — Claude drafts from scratch">📝 Blank Gmail</button>
+      <button class="btn-ghost" style="flex:1;padding:11px;min-width:110px" onclick="launchBlankFromComposer()" title="Open Gmail blank - GPT drafts from scratch">📝 Blank Gmail</button>
       <button class="btn-red" style="flex:2;padding:11px;min-width:160px" onclick="launchFromComposer()">📧 Launch Gmail →</button>
     </div>
   </div>
@@ -527,7 +533,7 @@ th{background:var(--card);font-weight:600}
   <div class="modal-box" style="max-width:420px">
     <button class="x-btn" onclick="closeCbEdit()">✕</button>
     <div class="logo" style="margin-bottom:8px"><span>EDIT CALLBACK</span></div>
-    <p class="sub" style="margin-bottom:10px" id="cbe-header">—</p>
+    <p class="sub" style="margin-bottom:10px" id="cbe-header">-</p>
     <div class="c-row">
       <div class="c-lbl">Date & time</div>
       <input type="datetime-local" id="cbe-date">
@@ -550,7 +556,7 @@ th{background:var(--card);font-weight:600}
   <div class="modal-box" style="max-width:500px">
     <button class="x-btn" onclick="closeNoteEdit()">✕</button>
     <div class="logo" style="margin-bottom:6px"><span>EDIT NOTE</span></div>
-    <p class="sub" id="ne-header" style="margin-bottom:10px">—</p>
+    <p class="sub" id="ne-header" style="margin-bottom:10px">-</p>
     <div class="c-row">
       <div class="c-lbl">Outcome</div>
       <select id="ne-outcome"></select>
@@ -657,7 +663,7 @@ const STATUS_OPTS = ['','Callback','Quoted','No Answer','Awaiting Callback','Not
 const STAGE_OPTS  = ['','Intro','Contacted','Quoted','Lost','Closed'];
 const OUTCOMES = ['Contacted','VM','NA','Emailed','Awaiting Callback','Dead Air','Provider Reject','Not Int.','Callback','HOT'];
 const ATTEMPT_OUTCOMES = new Set(['VM','NA','Dead Air']); // increment attempts on these
-// Outcomes that auto-fill a default note if user leaves the note blank — removes friction on the low-info outcomes
+// Outcomes that auto-fill a default note if user leaves the note blank - removes friction on the low-info outcomes
 const AUTOFILL_OUTCOMES = {
   'VM':'VM - no message left',
   'NA':'NA - no answer',
@@ -685,7 +691,7 @@ const CL_SCHEME_DEFAULT = 'circleloop://';
 const BACKUP_INTERVAL = 25;
 const DUE_WINDOW_MS = 5 * 60 * 1000; // ±5 min callback window
 
-// Brand swap map — typing these in notes surfaces the swap angle as a chip (P2)
+// Brand swap map - typing these in notes surfaces the swap angle as a chip (P2)
 const BRAND_MAP = {
   'life fitness':'Star Trac cardio, Nautilus resistance',
   'hammer strength':'Nautilus plate-loaded',
@@ -705,14 +711,10 @@ const BRAND_MAP = {
 const DEFAULT_SUBJECTS = [
   'Introducing AresFit',
   'AresFit - commercial equipment supplier',
-  'Following up on our call earlier',
-  'StairMaster options for low-ceiling space',
-  'Treadmill pricing - Star Trac range',
-  'Nautilus resistance options',
-  'Jordan functional kit',
-  'Schwinn cycle options',
   'Commercial gym equipment - quick intro',
-  'AresFit equipment options'
+  'AresFit equipment options',
+  'Quick intro from AresFit',
+  'Commercial equipment options'
 ];
 
 // ===== Email composer (Ship 1) =====
@@ -771,7 +773,7 @@ const CALL_REALITY_OPTS = [
 const SCHEDULE_OPTS = [
   {value:'now', label:'Sending now', past:'earlier', period:'last week', warn:null},
   {value:'later-today', label:'Sending later today', past:'earlier today', period:'last week', warn:null},
-  {value:'tomorrow', label:'Sending tomorrow', past:'yesterday', period:'a few days ago', warn:'Next-day follow-up on cold — skill says don\'t. Continue?'},
+  {value:'tomorrow', label:'Sending tomorrow', past:'yesterday', period:'a few days ago', warn:'Next-day follow-up on cold - skill says don\'t. Continue?'},
   {value:'monday', label:'Sending Monday morning', past:'last week', period:'last week', warn:null}
 ];
 
@@ -783,7 +785,17 @@ const SUBJECT_SUGGESTIONS = {
   followUp:'Following up on my email'
 };
 
-// Skill v10 rejected phrases — warning strip, non-blocking. Em-dash literal checked separately.
+const SUBJECT_POOLS = {
+  cold:['Introducing AresFit','Quick intro from AresFit','Commercial equipment options','AresFit - commercial equipment supplier','AresFit equipment options'],
+  receptionTransferred:['AresFit - commercial equipment supplier','Quick intro from AresFit','Commercial equipment options'],
+  managerBusy:['AresFit - equipment options','Commercial equipment options','Quick intro from AresFit'],
+  notIntPolite:['Thanks for the chat','Good speaking earlier','AresFit - future equipment options'],
+  followUp:['Following up on my email','Quick follow-up from AresFit','AresFit equipment options']
+};
+const PRODUCT_SUBJECT_RE=/stairmaster|treadmill|nautilus|jordan|schwinn|low[- ]?ceiling|star trac/i;
+const CALL_SUBJECT_RE=/following up on our call|call earlier|our call earlier|thanks for the chat|good speaking/i;
+
+// Skill v10 rejected phrases - warning strip, non-blocking. Em-dash literal checked separately.
 const REJECTED_PHRASES = ['the lot','lads','steer','synergies','touch base','circle back','moving forward'];
 
 // Status values safe to auto-overwrite with "Emailed"
@@ -804,7 +816,7 @@ const OUTCOME_AUTO_SET = {
     {field:'stage',value:'Contacted',safe:['','Intro']}
   ],
   'Emailed':[
-    // Sets Status=Emailed but deliberately does NOT touch Stage — DM hasn't responded yet, so Funnel Stage stays at Intro
+    // Sets Status=Emailed but deliberately does NOT touch Stage - DM hasn't responded yet, so Funnel Stage stays at Intro
     {field:'status',value:'Emailed',safe:['','Uncalled','No Answer','Voicemail','Awaiting Callback']}
   ],
   'Not Int.':[
@@ -819,7 +831,7 @@ const OUTCOME_AUTO_SET = {
 // ===== State =====
 let raw=[], headers=[], mapping={}, leads=[], idx=0, filter='All', filtered=[], searchTerm='';
 let activeFilters=['All']; // multi-filter: tap to toggle, intersection logic. 'All' = no constraints.
-let justLoggedId=null; // tracks lead.id that just had an outcome logged — flips Log/Next button to Next on second tap
+let justLoggedId=null; // tracks lead.id that just had an outcome logged - flips Log/Next button to Next on second tap
 let manualNoteOpen=false; // toggles inline manual-note editor on the call card
 let manualNoteText='';    // draft text for the manual-note editor
 let dueQueueIdx=0;        // index for cycling through overdue/due banner
@@ -867,7 +879,7 @@ function relTime(ts){
   if(d<30)return Math.floor(d/7)+'w ago';
   return Math.floor(d/30)+'mo ago';
 }
-// Latest note timestamp helper — used for Recent sort
+// Latest note timestamp helper - used for Recent sort
 function latestNoteTs(l){
   if(!l||!l.notes||!l.notes.length)return 0;
   let max=0;
@@ -878,7 +890,7 @@ function latestNoteTs(l){
   }
   return max;
 }
-// Latest VM entry for a lead — only returns when the lead's MOST RECENT non-legacy note is VM.
+// Latest VM entry for a lead - only returns when the lead's MOST RECENT non-legacy note is VM.
 // (i.e. they're still awaiting your return call. If you Contacted them after the VM, this returns null.)
 function latestVmEntry(l){
   if(!l||!l.notes||!l.notes.length)return null;
@@ -889,7 +901,7 @@ function latestVmEntry(l){
   }
   return (latest&&(latest.outcome||'').toUpperCase()==='VM')?latest:null;
 }
-// Parse Follow-up Date column — handles ISO date, ISO datetime, UK date, UK date+time range, datetime-local
+// Parse Follow-up Date column - handles ISO date, ISO datetime, UK date, UK date+time range, datetime-local
 function parseFollowUp(s){
   if(!s)return null;
   const clean=String(s).trim();if(!clean)return null;
@@ -911,7 +923,7 @@ function parseFollowUp(s){
   if(m)return{ts:new Date(+m[3],+m[2]-1,+m[1]).getTime(),hasTime:false};
   return null;
 }
-// Normalise Status values on import — case/spacing variants → canonical dropdown values
+// Normalise Status values on import - case/spacing variants → canonical dropdown values
 function normStatus(s){
   if(!s)return '';
   const clean=String(s).trim();if(!clean)return '';
@@ -921,7 +933,7 @@ function normStatus(s){
 // Start-of-today and end-of-today timestamps
 function startOfToday(){const d=new Date();d.setHours(0,0,0,0);return d.getTime()}
 function endOfToday(){const d=new Date();d.setHours(23,59,59,999);return d.getTime()}
-// Overdue check — based on either cbDate (precise) or followUp (date-only or date+time)
+// Overdue check - based on either cbDate (precise) or followUp (date-only or date+time)
 function isOverdueRow(l){
   if(!l)return false;
   if((l.status||'').trim()==='DO NOT CALL')return false;
@@ -968,7 +980,7 @@ function parseTime(s){
   return null;
 }
 
-// ===== CSV parser — handles quoted fields, embedded newlines =====
+// ===== CSV parser - handles quoted fields, embedded newlines =====
 function parseCSV(text){
   text=text.replace(/^\ufeff/,'');
   const rows=[];let row=[],field='',q=false;
@@ -1096,7 +1108,7 @@ function saveSetup(){
   const e=document.getElementById('setup-email').value.trim();
   if(!e){alert('Email required');return}
   user={name:n,email:e};
-  try{localStorage.setItem(SETUP_KEY,JSON.stringify(user))}catch(err){console.warn('localStorage blocked in this preview — settings kept in memory only',err)}
+  try{localStorage.setItem(SETUP_KEY,JSON.stringify(user))}catch(err){console.warn('localStorage blocked in this preview - settings kept in memory only',err)}
   document.getElementById('setup-modal').style.display='none';
   if(!leads.length){
     document.getElementById('upload-screen').style.display='flex';
@@ -1137,7 +1149,7 @@ function showMapping(){
   mapping={};
   FIELDS.forEach(f=>{const lbl=LABELS[f];if(headers.includes(lbl))mapping[f]=lbl});
   const grid=document.getElementById('map-grid');
-  grid.innerHTML=FIELDS.map(f=>`<div><label>${LABELS[f]}</label><select id="map-${f}">${['',...headers].map(h=>`<option value="${esc(h)}"${mapping[f]===h?' selected':''}>${esc(h)||'— skip —'}</option>`).join('')}</select></div>`).join('');
+  grid.innerHTML=FIELDS.map(f=>`<div><label>${LABELS[f]}</label><select id="map-${f}">${['',...headers].map(h=>`<option value="${esc(h)}"${mapping[f]===h?' selected':''}>${esc(h)||'- skip -'}</option>`).join('')}</select></div>`).join('');
   // Preview
   document.getElementById('preview-tbl').innerHTML=`<tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`+raw.slice(0,3).map(r=>`<tr>${headers.map(h=>`<td>${esc((r[h]||'').slice(0,50))}</td>`).join('')}</tr>`).join('');
   // Stats
@@ -1184,7 +1196,7 @@ function confirmImport(){
         // No separator. Fall back to digit-count split.
         const digits=String(o.phone).replace(/\D/g,'');
         if(digits.length===22){
-          // Two complete 11-digit UK numbers concatenated — split at position 11.
+          // Two complete 11-digit UK numbers concatenated - split at position 11.
           o.phone=digits.slice(0,11);
           o.phone2=digits.slice(11);
         } else if(digits.length===21){
@@ -1204,7 +1216,7 @@ function confirmImport(){
     }
     // Normalise Status case variants to match dropdown values
     if(o.status)o.status=normStatus(o.status);
-    // Hydrate cbDate from Follow-up Date if it has a time component — restores pill on round-trip
+    // Hydrate cbDate from Follow-up Date if it has a time component - restores pill on round-trip
     if(o.followUp){
       const fu=parseFollowUp(o.followUp);
       if(fu&&fu.hasTime){
@@ -1230,7 +1242,7 @@ function confirmImport(){
 function showApp(){document.getElementById('upload-screen').style.display='none';document.getElementById('main-app').style.display='block'}
 
 // ===== Filters / search =====
-// Predicate per filter — used for multi-filter intersection logic.
+// Predicate per filter - used for multi-filter intersection logic.
 const FILTER_PREDICATES = {
   All: () => true,
   Recent: () => true, // sort handled below; everything passes
@@ -1257,7 +1269,7 @@ function applyFilter(){
   if(active.length){
     r=r.filter(l => active.every(f => (FILTER_PREDICATES[f]||(()=>true))(l)));
   }
-  // Sort logic — applied in priority order, first matching filter wins
+  // Sort logic - applied in priority order, first matching filter wins
   if(active.includes('Recent')){
     if(!active.includes('DNC'))r=r.filter(l=>(l.status||'').trim()!=='DO NOT CALL');
     r.sort((a,b)=>latestNoteTs(b)-latestNoteTs(a));
@@ -1280,7 +1292,7 @@ function applyFilter(){
     if((prefs.reachedSort||'date')==='row') r.sort((a,b)=>(a.row||0)-(b.row||0));
     else r.sort((a,b)=>latestTs(b)-latestTs(a));
   } else if(active.includes('VM')){
-    // Oldest VM/NA first — longest-waiting leads bubble to top so callbacks happen first
+    // Oldest VM/NA first - longest-waiting leads bubble to top so callbacks happen first
     r.sort((a,b)=>{
       const ea=latestVmEntry(a),eb=latestVmEntry(b);
       return (ea?ea.ts:0)-(eb?eb.ts:0);
@@ -1320,7 +1332,7 @@ function renderStats(){
   let todayDials=0, todayContactedDials=0;
   leads.forEach(l=>{
     l.notes.forEach(n=>{
-      // Manual admin notes don't count as dials — they're not call activity
+      // Manual admin notes don't count as dials - they're not call activity
       if(isTodayNote(n)&&!n.manual){
         todayDials++;
         if(['Contacted','HOT','Callback'].includes(n.outcome))todayContactedDials++;
@@ -1339,7 +1351,7 @@ function renderBlockBanner(){
   // Two-tier model based on 1,457-dial analysis (Sandde + Michael, 18/03-01/05).
   // No meaningful dead zones during working hours (49-61% connect band 09:00-16:59).
   // 17:00 dips to 46% but still viable. 18:00+ and pre-09:00 = venues unstaffed.
-  // Friday is highest connect day (64%) — old Friday PM penalty removed.
+  // Friday is highest connect day (64%) - old Friday PM penalty removed.
   const h=new Date().getHours();
   const dow=new Date().getDay();
   const isWeekend=(dow===0||dow===6);
@@ -1369,7 +1381,7 @@ function renderCard(){
   const pendingTime=pending.editedHm||(pending.callStartTs?hhmm(pending.callStartTs):'');
   const canNext=!pending.outcome||pending.text.trim().length>0||(pending.outcome in AUTOFILL_OUTCOMES);
 
-  const callInfo=pending.callStartTs?`<div class="call-info show">📞 Called <span class="t">${hhmm(pending.callStartTs)}</span> — number copied. Paste into CircleLoop if it didn't auto-launch.</div>`:'';
+  const callInfo=pending.callStartTs?`<div class="call-info show">📞 Called <span class="t">${hhmm(pending.callStartTs)}</span> - number copied. Paste into CircleLoop if it didn't auto-launch.</div>`:'';
 
   // P1: Virgin row check + gates
   const virgin=!l.notes.some(n=>!n.legacy);
@@ -1382,27 +1394,27 @@ function renderCard(){
   const dACount=deadAirCount(l);
   const poolFlag=poolStatus(l.id);
 
-  // Due banner (P3) — when this lead IS the due/overdue one
+  // Due banner (P3) - when this lead IS the due/overdue one
   const dueWhen=l.cbDate?esc((l.cbDate||'').replace('T',' ')):(l.followUp?esc(l.followUp):'today');
-  const dueBanner=poolFlag?`<div class="due-banner ${poolFlag==='overdue'?'overdue':''}"><h3>${poolFlag==='overdue'?'⚠ OVERDUE':'⏰ DUE NOW'} — ${dueWhen}</h3><div class="biz">Tap CALL when ready</div><div class="due-banner-btns"><button class="dismiss" onclick="dismissForToday(${l.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${l.id})">🗑 Clear callback</button></div></div>`:'';
+  const dueBanner=poolFlag?`<div class="due-banner ${poolFlag==='overdue'?'overdue':''}"><h3>${poolFlag==='overdue'?'⚠ OVERDUE':'⏰ DUE NOW'} - ${dueWhen}</h3><div class="biz">Tap CALL when ready</div><div class="due-banner-btns"><button class="dismiss" onclick="dismissForToday(${l.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${l.id})">🗑 Clear callback</button></div></div>`:'';
 
   // Gates
   const mobileGate=is07?`<div class="gate mobile"><h4>📱 Mobile number on sheet</h4>
     <label><input type="checkbox" ${l.mobileVerified?'checked':''} onchange="toggleFlag('mobileVerified')"> Verified this mobile number on the venue's own website</label>
-    <div class="hint">Mobile numbers are higher risk — always cross-check before dialling.</div>
+    <div class="hint">Mobile numbers are higher risk - always cross-check before dialling.</div>
   </div>`:'';
 
   // Deconflict bar + toggle
-  const deconBar=l.michaelAlsoCalled?`<div class="flag-bar">⚠ Michael also called this row — apologise if they mention a double-call</div>`:'';
+  const deconBar=l.michaelAlsoCalled?`<div class="flag-bar">⚠ Michael also called this row - apologise if they mention a double-call</div>`:'';
   const deconToggle=`<label class="deconflict-toggle"><input type="checkbox" ${l.michaelAlsoCalled?'checked':''} onchange="toggleFlag('michaelAlsoCalled')"> Michael also called this row</label>`;
 
   // Dead Air 2x warning
-  const dA2xBar=dACount>=2?`<div class="flag-bar danger">🔇 ${dACount}× Dead Air on this row — skill says treat as VM. Find email, send follow-up.</div>`:'';
+  const dA2xBar=dACount>=2?`<div class="flag-bar danger">🔇 ${dACount}× Dead Air on this row - skill says treat as VM. Find email, send follow-up.</div>`:'';
 
   // DNC / Provider Reject visual
-  const dncBar=(l.status||'').trim()==='DO NOT CALL'?`<div class="flag-bar danger">⛔ DO NOT CALL — ${l.providerReject?'provider reject':'flagged'}. Do not dial.</div>`:'';
+  const dncBar=(l.status||'').trim()==='DO NOT CALL'?`<div class="flag-bar danger">⛔ DO NOT CALL - ${l.providerReject?'provider reject':'flagged'}. Do not dial.</div>`:'';
 
-  // Email button — only when email present and gates passed for general email, or always
+  // Email button - only when email present and gates passed for general email, or always
   const emailBtn=l.email?`<button class="email-btn" onclick="openEmailComposer()">📧 Compose email → ${esc(l.email)}</button>`:'';
 
   // Swap chip slot (filled by updateSwapChip on input)
@@ -1421,7 +1433,7 @@ function renderCard(){
       </div>
       <div class="biz-head" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${esc(l.business)}<button class="btn-sm btn-ghost" style="font-size:1em;padding:6px 10px;font-weight:500;line-height:1;align-self:center" onclick="copyBiz()" title="Copy business name">📋</button></div>
       ${(()=>{
-        // Top-line context strip — at-a-glance summary so you know where you left off without scrolling notes
+        // Top-line context strip - at-a-glance summary so you know where you left off without scrolling notes
         const lastTs=latestNoteTs(l);
         const lastDated=l.notes.filter(n=>!n.legacy&&n.ts).sort((a,b)=>(b.ts||0)-(a.ts||0))[0];
         const parts=[];
@@ -1469,17 +1481,17 @@ function renderCard(){
         <div class="field" onclick="event.stopPropagation()">
           <div class="field-lbl">Next Action</div>
           <div class="dd" id="dd-status" onclick="toggleDD('status',event)">
-            <div class="dd-val">${l.status?esc(l.status):'—'}</div>
+            <div class="dd-val">${l.status?esc(l.status):'-'}</div>
             <div class="dd-caret">▾</div>
-            <div class="dd-list">${STATUS_OPTS.map(o=>`<div class="dd-opt ${(l.status||'')===o?'selected':''}" onclick="pickDD(event,'status','${esc(o)}')">${o||'—'}</div>`).join('')}</div>
+            <div class="dd-list">${STATUS_OPTS.map(o=>`<div class="dd-opt ${(l.status||'')===o?'selected':''}" onclick="pickDD(event,'status','${esc(o)}')">${o||'-'}</div>`).join('')}</div>
           </div>
         </div>
         <div class="field" onclick="event.stopPropagation()">
           <div class="field-lbl">Funnel Stage</div>
           <div class="dd" id="dd-stage" onclick="toggleDD('stage',event)">
-            <div class="dd-val">${l.stage?esc(l.stage):'—'}</div>
+            <div class="dd-val">${l.stage?esc(l.stage):'-'}</div>
             <div class="dd-caret">▾</div>
-            <div class="dd-list">${STAGE_OPTS.map(o=>`<div class="dd-opt ${(l.stage||'')===o?'selected':''}" onclick="pickDD(event,'stage','${esc(o)}')">${o||'—'}</div>`).join('')}</div>
+            <div class="dd-list">${STAGE_OPTS.map(o=>`<div class="dd-opt ${(l.stage||'')===o?'selected':''}" onclick="pickDD(event,'stage','${esc(o)}')">${o||'-'}</div>`).join('')}</div>
           </div>
         </div>
         <div class="field full" onclick="editField('equipBrands',event)">
@@ -1493,7 +1505,7 @@ function renderCard(){
       ${l.aresBrands?`<div style="margin:6px 0"><span class="ref-chip"><strong style="color:var(--txt)">AresFit:</strong> ${esc(l.aresBrands)}</span></div>`:''}
       ${l.research?`<details class="reveal"><summary>Research notes</summary><div>${esc(l.research)}</div></details>`:''}
       ${(()=>{const bq=encodeURIComponent(l.business||'');const s='padding:9px;text-align:center;text-decoration:none;font-size:12px;color:var(--txt)';
-        // 🔎 Safari uses x-web-search:// on iOS — invokes the user's default search engine in Safari.
+        // 🔎 Safari uses x-web-search:// on iOS - invokes the user's default search engine in Safari.
         // Falls back to Google search URL on desktop / non-iOS where the scheme isn't supported.
         const safariClick=`if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.location.href='x-web-search://?'+'${bq}';return false}`;
         return `<details class="reveal"><summary>🔍 Research this lead</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"><a href="https://www.google.com/search?q=${bq}" onclick="${safariClick}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">🔎 Safari</a><a href="https://find-and-update.company-information.service.gov.uk/search/companies?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">🏛 Companies House</a><a href="https://www.facebook.com/search/top?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">📘 Facebook</a><a href="https://www.google.com/maps/search/${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">📍 Maps</a></div></details>`})()}
@@ -1527,18 +1539,19 @@ function renderCard(){
           ${pending.callStartTs?`<span class="time-pill" onclick="openTime('${l.id}','pending')" title="Edit call start time">⏱ ${pendingTime}</span>`:''}
         </div>
         <div class="new-note-row">
-          <textarea id="new-note" class="${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'pending':''}" placeholder="${pending.outcome?(AUTOFILL_OUTCOMES[pending.outcome]?'optional — will auto-fill \"'+AUTOFILL_OUTCOMES[pending.outcome]+'\" if blank':'who answered · brands · timing · next action'):'tap an outcome above'}" oninput="updatePending(this.value)">${esc(pending.text)}</textarea>
+          <textarea id="new-note" class="${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'pending':''}" placeholder="${pending.outcome?(AUTOFILL_OUTCOMES[pending.outcome]?'optional - will auto-fill \"'+AUTOFILL_OUTCOMES[pending.outcome]+'\" if blank':'who answered · brands · timing · next action'):'tap an outcome above'}" oninput="updatePending(this.value)">${esc(pending.text)}</textarea>
         </div>
         <div id="swap-chip-slot">${swapChipHtml}</div>
-        <div class="note-warn ${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'show':''}">⚠ Note required before logging — skill rule: notes = data vault</div>
-        ${pending.outcome==='Callback'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Callback direction</div><div style="display:flex;gap:4px"><button class="${(pending.direction||'out')==='out'?'sel':''}" onclick="setCbDirection('out')" style="flex:1;padding:8px;border-radius:8px;background:${(pending.direction||'out')==='out'?'#fff':'var(--card)'};color:${(pending.direction||'out')==='out'?'#000':'var(--txt)'};border:1px solid ${(pending.direction||'out')==='out'?'#fff':'var(--border)'};font-size:12px;font-weight:600">📤 I call them</button><button class="${pending.direction==='in'?'sel':''}" onclick="setCbDirection('in')" style="flex:1;padding:8px;border-radius:8px;background:${pending.direction==='in'?'#fff':'var(--card)'};color:${pending.direction==='in'?'#000':'var(--txt)'};border:1px solid ${pending.direction==='in'?'#fff':'var(--border)'};font-size:12px;font-weight:600">📥 They call me</button></div><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">Callback start date & time <span style="color:var(--amber)">· required</span></div><input type="datetime-local" id="cb-in" value="${esc(l.cbDate||'')}" onchange="updateCb(this.value)"><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">End time (optional — defines a window for "they call me")</div><input type="time" id="cb-end" value="${esc(l.cbEndTime||'')}" onchange="updateCbEnd(this.value)"></div>`:''}
+        ${pending.outcome?`<button class="btn-ghost" onclick="clearPendingOutcome()" style="width:100%;font-size:12px;margin-top:6px">Clear outcome</button>`:''}
+        <div class="note-warn ${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'show':''}">⚠ Note required before logging - skill rule: notes = data vault</div>
+        ${pending.outcome==='Callback'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Callback direction</div><div style="display:flex;gap:4px"><button class="${(pending.direction||'out')==='out'?'sel':''}" onclick="setCbDirection('out')" style="flex:1;padding:8px;border-radius:8px;background:${(pending.direction||'out')==='out'?'#fff':'var(--card)'};color:${(pending.direction||'out')==='out'?'#000':'var(--txt)'};border:1px solid ${(pending.direction||'out')==='out'?'#fff':'var(--border)'};font-size:12px;font-weight:600">📤 I call them</button><button class="${pending.direction==='in'?'sel':''}" onclick="setCbDirection('in')" style="flex:1;padding:8px;border-radius:8px;background:${pending.direction==='in'?'#fff':'var(--card)'};color:${pending.direction==='in'?'#000':'var(--txt)'};border:1px solid ${pending.direction==='in'?'#fff':'var(--border)'};font-size:12px;font-weight:600">📥 They call me</button></div><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">Callback start date & time <span style="color:var(--amber)">· required</span></div><input type="datetime-local" id="cb-in" value="${esc(l.cbDate||'')}" onchange="updateCb(this.value)"><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">End time (optional - defines a window for "they call me")</div><input type="time" id="cb-end" value="${esc(l.cbEndTime||'')}" onchange="updateCbEnd(this.value)"></div>`:''}
         ${l.cbDate&&pending.outcome!=='Callback'?`<div style="margin-top:8px;font-size:11px;color:var(--amber);cursor:pointer;padding:6px 8px;border:1px dashed var(--amber);border-radius:6px" onclick="openCbEdit()" title="Tap to edit or clear">📅 Scheduled callback: ${esc(l.cbDate.replace('T',' '))}${l.cbEndTime?` → ${esc(l.cbEndTime)}`:''} <span style="float:right;font-size:10px">✏ edit</span></div>`:''}
       </div>
 
       ${manualNoteOpen?`
       <div class="manual-note-panel">
         <div class="field-lbl" style="margin-bottom:4px">📝 Manual note <span style="color:var(--txt3);font-weight:400">· not tied to a call · doesn't count toward attempts</span></div>
-        <textarea id="manual-note-text" placeholder="Admin entry — e.g. '21d silent, parked', 'stale follow-up cleared', 'added to suppression list'" oninput="updateManualNoteText(this.value)" style="width:100%;min-height:60px;padding:8px;background:var(--card);border:1px solid var(--blue);border-radius:8px;color:var(--txt);font-size:13px">${esc(manualNoteText)}</textarea>
+        <textarea id="manual-note-text" placeholder="Admin entry - e.g. '21d silent, parked', 'stale follow-up cleared', 'added to suppression list'" oninput="updateManualNoteText(this.value)" style="width:100%;min-height:60px;padding:8px;background:var(--card);border:1px solid var(--blue);border-radius:8px;color:var(--txt);font-size:13px">${esc(manualNoteText)}</textarea>
         <div style="display:flex;gap:6px;margin-top:6px">
           <button class="btn-ghost" onclick="cancelManualNote()" style="flex:1">Cancel</button>
           <button class="btn-red" onclick="saveManualNote()" style="flex:2">📝 Save note</button>
@@ -1555,18 +1568,18 @@ function renderCard(){
   `;
 
   // Dead Air 2x toast (once per render if >3s since last)
-  if(dACount>=2&&Date.now()-lastToastTs>5000){showToast('🔇 2× Dead Air on this row — treat as VM, send email instead of redialling','danger')}
+  if(dACount>=2&&Date.now()-lastToastTs>5000){showToast('🔇 2× Dead Air on this row - treat as VM, send email instead of redialling','danger')}
 }
 function outcomeLabel(o){return {'Contacted':'✅ Contacted','VM':'📱 Voicemail','NA':'❌ No Answer','Emailed':'📧 Emailed','Awaiting Callback':'🔔 Awaiting Callback','Dead Air':'🔇 Dead Air','Provider Reject':'⛔ Provider Reject','Not Int.':'🚫 Not Interested','Callback':'📅 Callback','HOT':'🔥 Hot Lead'}[o]||o}
 // Smart display-time formatting for note text. Splits on ' - ' and sentence boundaries,
 // renders each chunk as a bulleted line. Storage stays raw, so CSV round-trip is unchanged.
-// Sandde keeps typing in his usual jumble — readability happens at render.
+// Sandde keeps typing in his usual jumble - readability happens at render.
 function formatNoteText(text){
   if(!text)return '';
   const raw=String(text).trim();
   // Split on:
   //   - explicit newline (Sandde hits Enter mid-typing for an explicit bullet)
-  //   - ' - ' (space hyphen space — common in legacy CSV imports)
+  //   - ' - ' (space hyphen space - common in legacy CSV imports)
   //   - sentence end (. or ! or ? followed by space + capital letter)
   const chunks=raw.split(/[\r\n]+|\s+-\s+|(?<=[.!?])\s+(?=[A-Z0-9])/g).map(s=>s.trim()).filter(Boolean);
   if(chunks.length<=1)return esc(raw);
@@ -1579,7 +1592,7 @@ function renderNotesHist(l){
     if(n.legacy)return `<div class="entry legacy" ${tapAttr}>${formatNoteText(n.text)} <span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
     const time=(n.dmy||n.hm)?`<span class="ts">${esc(n.dmy)}${n.hm?' '+esc(n.hm):''}</span>`:'';
     if(n.manual){
-      // Manual admin notes — distinct from call outcomes, render in italic with blue marker
+      // Manual admin notes - distinct from call outcomes, render in italic with blue marker
       return `<div class="entry manual" ${tapAttr}><div class="entry-head">${time} <span class="oc">📝 Note</span></div>${formatNoteText(n.text)}<span style="float:right;font-size:10px;color:var(--txt3)">✏</span></div>`;
     }
     const oc=n.outcome?` <span class="oc">${esc(n.outcome)}</span>`:'';
@@ -1643,7 +1656,7 @@ function renderLeadList(){
 // ===== Leads modal =====
 function openLeads(){renderFilterBar();renderLeadList();document.getElementById('leads-modal').style.display='flex';setTimeout(()=>document.getElementById('lead-search').focus(),100)}
 function closeLeads(){document.getElementById('leads-modal').style.display='none'}
-function jumpTo(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();justLoggedId=null;idx=i;filtered=leads.slice();closeLeads();render();save();window.scrollTo({top:0,behavior:'smooth'})}
+function jumpTo(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;justLoggedId=null;idx=i;filtered=leads.slice();closeLeads();render();save();window.scrollTo({top:0,behavior:'smooth'})}
 
 // ===== Field editing =====
 function editField(f,ev){
@@ -1651,7 +1664,7 @@ function editField(f,ev){
   const l=filtered[idx];if(!l)return;
   const el=document.getElementById('fv-'+f);if(!el)return;
   const cur=l[f]||'';
-  // iOS AutoFill suppression for the email field — type=text + inputmode=email keeps the email keyboard
+  // iOS AutoFill suppression for the email field - type=text + inputmode=email keeps the email keyboard
   // but stops AutoFill Contact overlay hijacking the long-press paste menu.
   // autocomplete=off, data-form-type=other, autocapitalize/autocorrect/spellcheck off = belt-and-braces.
   const isEmail=(f==='email');
@@ -1791,7 +1804,7 @@ function renderDueQueueBanner(){
   const target=list[dueQueueIdx];
   const isOver=dueQueueIdx<pool.overdue.length;
   const total=list.length;
-  // Sticky overdue counter — always visible when there are due/overdue items, even if you're already on one.
+  // Sticky overdue counter - always visible when there are due/overdue items, even if you're already on one.
   // Collapsed pill shows both counts split (e.g. "⚠ 3 overdue · ⏰ 2 due today") so glance gives full picture.
   if(prefs.queueBannerCollapsed){
     const parts=[];
@@ -1800,12 +1813,12 @@ function renderDueQueueBanner(){
     slot.innerHTML=`<div onclick="toggleQueueBanner()" style="cursor:pointer;padding:8px 12px;margin-bottom:10px;border-radius:8px;border:2px solid ${pool.overdue.length?'var(--danger)':'var(--amber)'};background:${pool.overdue.length?'rgba(255,23,68,.08)':'rgba(255,171,0,.08)'};color:${pool.overdue.length?'var(--red2)':'var(--amber)'};font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>${parts.join(' · ')}</span><span style="font-size:10px;opacity:.7;white-space:nowrap">tap to expand ▾</span></div>`;
     return;
   }
-  // Expanded form — hide the "jump to lead" CTA if you're already on that row, but keep the banner visible
+  // Expanded form - hide the "jump to lead" CTA if you're already on that row, but keep the banner visible
   const onTarget=(target.id===(filtered[idx]||{}).id);
   const whenLabel=target.cbDate?esc((target.cbDate||'').replace('T',' ')):(target.followUp?esc(target.followUp):'today');
   // Cycle controls: only render when there's more than one to flip through
   const cycleControls=total>1?`<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0;font-size:11px;color:var(--txt2)"><button onclick="cycleDueQueue(-1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1">‹</button><span>${dueQueueIdx+1} of ${total}</span><button onclick="cycleDueQueue(1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1">›</button></div>`:'';
-  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} — ${whenLabel}<button onclick="toggleQueueBanner()" title="Hide" style="float:right;background:transparent;border:none;color:var(--txt2);font-size:12px;cursor:pointer;padding:0 4px;line-height:1">▲</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div>${cycleControls}<div class="due-banner-btns">${onTarget?'':`<button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button>`}<button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${target.id})">🗑 Clear callback</button></div></div>`;
+  slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'⚠ OVERDUE':'⏰ DUE NOW'} - ${whenLabel}<button onclick="toggleQueueBanner()" title="Hide" style="float:right;background:transparent;border:none;color:var(--txt2);font-size:12px;cursor:pointer;padding:0 4px;line-height:1">▲</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div>${cycleControls}<div class="due-banner-btns">${onTarget?'':`<button class="jump" onclick="jumpToDue(${target.id})">Jump to lead →</button>`}<button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${target.id})">🗑 Clear callback</button></div></div>`;
 }
 function cycleDueQueue(dir){
   const pool=getDuePool();
@@ -1815,7 +1828,7 @@ function cycleDueQueue(dir){
   renderDueQueueBanner();
 }
 function toggleQueueBanner(){prefs.queueBannerCollapsed=!prefs.queueBannerCollapsed;savePrefs();renderDueQueueBanner()}
-function jumpToDue(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;commitPending();idx=i;filtered=leads.slice();render();window.scrollTo({top:0,behavior:'smooth'})}
+function jumpToDue(id){const i=leads.findIndex(l=>l.id===id);if(i<0)return;justLoggedId=null;idx=i;filtered=leads.slice();render();window.scrollTo({top:0,behavior:'smooth'})}
 function dismissDue(id){if(!prefs.dismissedOverdue.includes(id))prefs.dismissedOverdue.push(id);savePrefs();renderDueQueueBanner();renderCard()}
 
 // ===== P3 + Ship 1: Email composer =====
@@ -1823,8 +1836,31 @@ function pickSubject(){
   const k=todayKey();const used=prefs.usedSubjects[k]||[];
   const avail=(prefs.subjects||DEFAULT_SUBJECTS).filter(s=>!used.includes(s));
   if(avail.length)return avail[0];
-  showToast('⚠ All subjects used today — reusing oldest','danger');
+  showToast('⚠ All subjects used today - reusing oldest','danger');
   return (prefs.subjects||DEFAULT_SUBJECTS)[0]||'Introducing AresFit';
+}
+function subjectAllowedForReality(subject,reality,opts){
+  const s=String(subject||'').trim();
+  if(!s)return false;
+  const pitch=!!(opts&&opts.pitch);
+  if(!pitch&&PRODUCT_SUBJECT_RE.test(s))return false;
+  if(['cold','receptionTransferred','managerBusy'].includes(reality)&&CALL_SUBJECT_RE.test(s))return false;
+  return true;
+}
+function subjectPoolForReality(reality,l,opts){
+  const base=SUBJECT_POOLS[reality]||SUBJECT_POOLS.cold;
+  const custom=(prefs.subjects||[]).filter(s=>subjectAllowedForReality(s,reality,opts));
+  const seen=new Set();
+  return base.concat(custom).filter(s=>subjectAllowedForReality(s,reality,opts)&&!seen.has(s)&&seen.add(s));
+}
+function pickSafeSubject(reality,l,opts){
+  reality=reality||inferReality(l||filtered[idx]);
+  const pool=subjectPoolForReality(reality,l||filtered[idx],opts);
+  const k=todayKey();const used=prefs.usedSubjects[k]||[];
+  const avail=pool.filter(s=>!used.includes(s));
+  if(avail.length)return avail[0];
+  showToast('All safe subjects used today - reusing oldest','danger');
+  return pool[0]||'Introducing AresFit';
 }
 function detectBrandSwap(brands){
   if(!brands)return null;
@@ -1856,7 +1892,7 @@ function resolveTokens(tmpl,l,opts){
     .replace(/\{STAFF_NAME\}/g,(opts.staffName||'').trim()||'reception')
     .replace(/\{SCHED_PAST\}/g,schedule.past)
     .replace(/\{SCHED_FOLLOWUP_PERIOD\}/g,schedule.period)
-    // Sig is no longer embedded — Gmail auto-appends the account-level signature on send.
+    // Sig is no longer embedded - Gmail auto-appends the account-level signature on send.
     // Embedding caused double-ups. Token resolves to empty string + trailing blank lines stripped.
     .replace(/\{SIGNATURE\}/g,'')
     .replace(/\n{3,}/g,'\n\n')
@@ -1872,20 +1908,17 @@ function buildBodyForComposer(){
   const pitch=!!(pitchBox&&pitchBox.checked);
   let body=resolveTokens(getTemplate(reality),l,{schedule,staffName});
   if(pitch&&canPitch(l)){
-    // Sig no longer in body — append pitch addendum at end. Gmail will auto-append its own sig on send.
+    // Sig no longer in body - append pitch addendum at end. Gmail will auto-append its own sig on send.
     const addn=resolveTokens(PITCH_ADDENDUM,l,{schedule,staffName});
     body=(body.replace(/\s+$/,''))+'\n\n'+addn;
   }
   return body;
 }
 function suggestSubject(){
+  const l=filtered[idx];
   const reality=document.getElementById('c-reality').value;
-  let subj=SUBJECT_SUGGESTIONS[reality]||(prefs.subjects||DEFAULT_SUBJECTS)[0];
-  const k=todayKey();const used=prefs.usedSubjects[k]||[];
-  if(used.includes(subj)){
-    const avail=(prefs.subjects||DEFAULT_SUBJECTS).filter(s=>!used.includes(s));
-    if(avail.length)subj=avail[0];
-  }
+  const pitchBox=document.getElementById('c-pitch');
+  const subj=pickSafeSubject(reality,l,{pitch:!!(pitchBox&&pitchBox.checked)});
   document.getElementById('c-subject').value=subj;
 }
 function renderComposerWarnings(){
@@ -1904,9 +1937,9 @@ function renderComposerWarnings(){
     if(re.test(scanText))warnings.push({kind:'amber',msg:`Rejected phrase detected: "${p}"`});
   });
   // Em-dash literal check
-  if(/[—–]/.test(body+' '+subject))warnings.push({kind:'amber',msg:'Em dash "—" detected — skill says use hyphen "-"'});
+  if(/[\u2014\u2013]/.test(body+' '+subject))warnings.push({kind:'amber',msg:'Long dash detected - skill says use hyphen "-"'});
   // Friday follow-up
-  if(reality==='followUp'&&new Date().getDay()===5)warnings.push({kind:'amber',msg:'Friday follow-up — skill says don\'t, gets buried. Defer to Monday?'});
+  if(reality==='followUp'&&new Date().getDay()===5)warnings.push({kind:'amber',msg:'Friday follow-up - skill says don\'t, gets buried. Defer to Monday?'});
   // Tomorrow on cold
   const schedObj=SCHEDULE_OPTS.find(s=>s.value===schedule);
   if(schedObj&&schedObj.warn&&reality==='cold')warnings.push({kind:'amber',msg:schedObj.warn});
@@ -1917,7 +1950,7 @@ function renderComposerWarnings(){
     const eCore=emailDom.split('.')[0];
     const sCore=siteDom.split('.')[0];
     if(eCore&&sCore&&eCore!==sCore&&!siteDom.includes(eCore)&&!emailDom.includes(sCore)){
-      warnings.push({kind:'danger',msg:`Email domain @${emailDom} ≠ website ${siteDom} — could be third-party sharing the space (renter, contractor). Verify before sending.`});
+      warnings.push({kind:'danger',msg:`Email domain @${emailDom} ≠ website ${siteDom} - could be third-party sharing the space (renter, contractor). Verify before sending.`});
     }
   }
   // Subject-per-domain 7-day lock
@@ -1977,7 +2010,7 @@ function launchFromComposer(){
   const schedule=document.getElementById('c-schedule').value;
   const pitchBox=document.getElementById('c-pitch');
   const pitch=!!(pitchBox&&pitchBox.checked);
-  // Recipient pick — when email2 exists, honour the radio. Default = primary.
+  // Recipient pick - when email2 exists, honour the radio. Default = primary.
   let toAddr=l.email;
   const picked=(document.querySelector('input[name="c-to"]:checked')||{}).value;
   if(l.email2&&picked==='secondary')toAddr=l.email2;
@@ -1990,7 +2023,7 @@ function launchFromComposer(){
     const eCore=emailDom.split('.')[0];
     const sCore=siteDom.split('.')[0];
     if(eCore&&sCore&&eCore!==sCore&&!siteDom.includes(eCore)&&!emailDom.includes(sCore)){
-      if(!confirm(`⚠ Email domain doesn't match website — could be third-party sharing the space (renter, contractor). Proceed?`))return;
+      if(!confirm(`⚠ Email domain doesn't match website - could be third-party sharing the space (renter, contractor). Proceed?`))return;
     }
   }
   _launchGmail(toAddr,subject,body);
@@ -2018,18 +2051,20 @@ function launchFromComposer(){
 }
 function launchBlankFromComposer(){
   const l=filtered[idx];if(!l||!l.email){showToast('No email on this row','danger');return}
-  const subject=pickSubject();
+  const reality=(document.getElementById('c-reality')||{}).value||inferReality(l);
+  const pitchBox=document.getElementById('c-pitch');
+  const subject=(document.getElementById('c-subject').value||'').trim()||pickSafeSubject(reality,l,{pitch:!!(pitchBox&&pitchBox.checked)});
   _launchGmail(l.email,subject,'');
   const k=todayKey();
   if(!prefs.usedSubjects[k])prefs.usedSubjects[k]=[];
   if(!prefs.usedSubjects[k].includes(subject))prefs.usedSubjects[k].push(subject);
   savePrefs();
   const ts=Date.now();
-  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:`Blank compose launched · subject: "${subject}" · draft-in-Claude`});
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:`Blank compose launched · subject: "${subject}" · draft-in-GPT`});
   if(STATUS_SAFE_OVERWRITE.includes((l.status||'').trim()))l.status='Emailed';
   save();closeComposer();renderCard();renderLeadList();renderStats();
   flashDot(true);
-  showToast(`📝 Blank Gmail opened · subject "${subject}" · Claude to draft body`);
+  showToast(`📝 Blank Gmail opened · subject "${subject}" · GPT to draft body`);
 }
 function _launchGmail(to,subject,body){
   const toEnc=encodeURIComponent(to);
@@ -2093,7 +2128,7 @@ function generateHandover(){
   const todayCalls=[];
   leads.forEach(l=>{l.notes.forEach(n=>{if(!n.legacy&&isToday(n.ts))todayCalls.push({l,n})})});
   todayCalls.sort((a,b)=>a.n.ts-b.n.ts);
-  const upcomingCbs=leads.filter(l=>(l.status||'').trim()==='Callback'&&l.cbDate).sort((a,b)=>new Date(a.cbDate)-new Date(b.cbDate));
+  const callbackRows=leads.filter(l=>(l.status||'').trim()==='Callback').sort((a,b)=>a.row-b.row);
   const dncToday=leads.filter(l=>(l.status||'').trim()==='DO NOT CALL'&&l.notes.some(n=>!n.legacy&&isToday(n.ts)));
   const hotToday=leads.filter(l=>(l.status||'').trim()==='Hot Lead'&&l.notes.some(n=>!n.legacy&&isToday(n.ts)));
   const uncalled=leads.filter(l=>!l.notes.length&&!(l.status||'').trim()).sort((a,b)=>{
@@ -2108,18 +2143,18 @@ function generateHandover(){
   const contactPct=dialled?Math.round(contactedSet.size/dialled*100):0;
   const subjUsedToday=(prefs.usedSubjects[today]||[]);
   const lines=[];
-  lines.push(`# AresFit Dialer Handover — ${new Date().toLocaleString('en-GB')}`);
+  lines.push(`# AresFit Dialer Handover - ${new Date().toLocaleString('en-GB')}`);
   lines.push('');
-  lines.push(`**Session stats:** ${todayCalls.length} calls logged · ${contactPct}% contact · ${hotToday.length} new hot · ${upcomingCbs.length} callbacks on book`);
+  lines.push(`**Session stats:** ${todayCalls.length} calls logged · ${contactPct}% contact · ${hotToday.length} new hot · ${callbackRows.length} callback status rows`);
   lines.push(`**Emails sent today:** ${subjUsedToday.length} (subjects used: ${subjUsedToday.map(s=>`"${s}"`).join(', ')||'none'})`);
   lines.push('');
   lines.push('## Today\'s calls');
   if(!todayCalls.length)lines.push('_No calls logged today._');
-  else todayCalls.forEach(({l,n})=>lines.push(`- **R${l.row} ${l.business}** · ${n.dmy} ${n.hm} · **${n.outcome}** — ${n.text}`));
+  else todayCalls.forEach(({l,n})=>lines.push(`- **R${l.row} ${l.business}** · ${n.dmy} ${n.hm} · **${n.outcome}** - ${n.text}`));
   lines.push('');
-  lines.push('## Outstanding callbacks (all rows w/ Callback status)');
-  if(!upcomingCbs.length)lines.push('_None scheduled._');
-  else upcomingCbs.forEach(l=>lines.push(`- **R${l.row} ${l.business}** · ${(l.cbDate||'').replace('T',' ')} · DM: ${l.dm||'?'} · ${format443(l.phone)}`));
+  lines.push('## Outstanding callbacks (all rows with Callback status)');
+  if(!callbackRows.length)lines.push('_None._');
+  else callbackRows.forEach(l=>lines.push(`- **R${l.row} ${l.business}** · ${l.cbDate?(l.cbDate||'').replace('T',' '):'no scheduled time'} · DM: ${l.dm||'?'} · ${format443(l.phone)}`));
   lines.push('');
   lines.push('## Hot leads added today');
   if(!hotToday.length)lines.push('_None._');
@@ -2129,9 +2164,9 @@ function generateHandover(){
   if(!dncToday.length)lines.push('_None._');
   else dncToday.forEach(l=>lines.push(`- R${l.row} ${l.business}${l.providerReject?' (provider reject)':''}`));
   lines.push('');
-  lines.push('## Tomorrow — top 10 uncalled by priority');
+  lines.push('## Tomorrow - top 10 uncalled by priority');
   if(!uncalled.length)lines.push('_Sheet cleared, nothing uncalled._');
-  else uncalled.slice(0,10).forEach(l=>lines.push(`- R${l.row} ${l.business} · ${l.priority||'—'} · ${format443(l.phone)}`));
+  else uncalled.slice(0,10).forEach(l=>lines.push(`- R${l.row} ${l.business} · ${l.priority||'-'} · ${format443(l.phone)}`));
   lines.push('');
   lines.push('_Generated by AresFit Dialer._');
   return lines.join('\n');
@@ -2176,13 +2211,13 @@ function tapCall(which){
   const num=which==='secondary'?(l.phone2||''):(l.phone||'');
   const digits=num.replace(/\D/g,'');
   if(!digits){alert('No phone number on this row');return}
-  // Mobile gate now applies to phone2 too — was only enforced on primary before.
-  if(digits.startsWith('07')&&!l.mobileVerified){alert('Mobile number — tick "verified on website" before dialling.');return}
+  // Mobile gate now applies to phone2 too - was only enforced on primary before.
+  if(digits.startsWith('07')&&!l.mobileVerified){alert('Mobile number - tick "verified on website" before dialling.');return}
   // Auto-capture call start time
   if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
   l.pending.callStartTs=Date.now();
   l.pending.editedHm='';
-  // Clipboard copy — always, as failsafe
+  // Clipboard copy - always, as failsafe
   copyToClipboard(digits);
   // Use user-selected scheme (default circleloop://call/). On desktop also works via Chrome extension.
   const scheme=(prefs.clScheme||CL_SCHEME_DEFAULT);
@@ -2208,11 +2243,19 @@ function copyNotes(){
 function setOutcome(o){
   const l=filtered[idx];if(!l)return;
   if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
+  if(l.pending.outcome===o){clearPendingOutcome();return}
   l.pending.outcome=o;
-  // Picking a new outcome after just logging resets the just-logged state — button flips back to "Log →"
+  // Picking a new outcome after just logging resets the just-logged state - button flips back to "Log →"
   if(justLoggedId===l.id)justLoggedId=null;
   save();renderCard();
   setTimeout(()=>{const t=document.getElementById('new-note');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}},50);
+}
+function clearPendingOutcome(){
+  const l=filtered[idx];if(!l)return;
+  const p=l.pending||{};
+  l.pending={outcome:'',text:'',callStartTs:p.callStartTs||0,editedHm:p.editedHm||'',direction:p.direction||'out'};
+  justLoggedId=null;
+  save();renderCard();
 }
 function updatePending(v){
   const l=filtered[idx];if(!l)return;
@@ -2245,7 +2288,7 @@ function commitPending(){
   }
   l.notes.push(noteEntry);
   if(ATTEMPT_OUTCOMES.has(p.outcome))l.attempts=(l.attempts||0)+1;
-  // Auto-sync Status/Stage on certain outcomes — each outcome can upgrade multiple fields, each with its own safe-overwrite list
+  // Auto-sync Status/Stage on certain outcomes - each outcome can upgrade multiple fields, each with its own safe-overwrite list
   const rules=OUTCOME_AUTO_SET[p.outcome]||[];
   rules.forEach(rule=>{if(rule.safe.includes((l[rule.field]||'').trim()))l[rule.field]=rule.value});
   if(p.outcome==='Provider Reject'){l.status='DO NOT CALL';l.stage='Lost';l.providerReject=true}
@@ -2268,13 +2311,12 @@ function nav(dir){
       if(!commitPending())return;
       justLoggedId=lid;
       render();
-      showToast('✅ Logged — tap Next to advance');
+      showToast('✅ Logged - tap Next to advance');
       return; // do NOT advance on first tap
     }
     // No pending outcome → plain Next (advance regardless of justLogged state)
   } else {
-    // Prev: commit if possible, don't block if not
-    commitPending();
+    // Prev is navigation only. It must never auto-log a pending outcome.
   }
   // Leaving this row clears justLogged
   justLoggedId=null;
@@ -2358,7 +2400,7 @@ function saveNoteEdit(){
     if(endT)n.cbEndTime=endT;else delete n.cbEndTime;
     // If user wants to queue it, write cbDate/cbEndTime onto the lead
     if(document.getElementById('ne-queue').checked){
-      // Build cbDate from note date + time (DD/MM + HH:MM) — assume current year
+      // Build cbDate from note date + time (DD/MM + HH:MM) - assume current year
       if(newDate&&parsedTime){
         const [dd,mm]=newDate.split('/').map(x=>parseInt(x,10));
         const [hh,mi]=parsedTime.split(':').map(x=>parseInt(x,10));
@@ -2456,7 +2498,7 @@ function saveTime(){
 // ===== Export =====
 function exportCSV(){
   if(!leads.length){alert('No leads');return}
-  if(!user.name){openSetup();alert('Set rep name before exporting CSV');return}
+  if(!user.name){openSetup();alert('Set sender name before exporting CSV');return}
   // Reconstruct 22-column rows. Use original raw[] as source of truth for legacy cols,
   // overwriting only the mapped 14 with current lead state.
   const cols=SHEET_COLS;
@@ -2479,7 +2521,7 @@ function exportCSV(){
       if(mapping.stage)rowObj[mapping.stage]=l.stage||'';
       if(mapping.followUp){
         // If cbDate is set in-app, write the precise datetime back to Follow-up Date
-        // so external readers (Claude, spreadsheet) see the time too.
+        // so external readers (ChatGPT, spreadsheet) see the time too.
         // Format: YYYY-MM-DD HH:MM (+ -HH:MM range if cbEndTime set)
         let fu=l.followUp||'';
         if(l.cbDate){
@@ -2524,7 +2566,7 @@ function clNormPhone(raw){
   else if(d.startsWith('440')&&d.length===13)d='0'+d.slice(3);
   return d;
 }
-// Parse a CircleLoop EXPORT CSV (different format than the import — has phoneNumber1..10 + phoneNumberLabel1..10)
+// Parse a CircleLoop EXPORT CSV (different format than the import - has phoneNumber1..10 + phoneNumberLabel1..10)
 // Returns a Set of normalised phone numbers already in CircleLoop.
 function parseClExport(csvText){
   const set=new Set();
@@ -2544,18 +2586,19 @@ function parseClExport(csvText){
 function openClExportModal(){
   closeSettings();
   document.getElementById('cl-export-file-input').value='';
-  document.getElementById('cl-export-status').textContent='No file dropped — will export all contacts.';
+  document.getElementById('cl-today-only').checked=false;
+  document.getElementById('cl-export-status').textContent='No file dropped - will export all contacts.';
   document.getElementById('cl-export-modal').style.display='flex';
 }
 function closeClExportModal(){document.getElementById('cl-export-modal').style.display='none'}
 let _clDedupeSet=null;
 function onClExportFile(ev){
-  const f=ev.target.files[0];if(!f){_clDedupeSet=null;document.getElementById('cl-export-status').textContent='No file dropped — will export all contacts.';return}
+  const f=ev.target.files[0];if(!f){_clDedupeSet=null;document.getElementById('cl-export-status').textContent='No file dropped - will export all contacts.';return}
   const r=new FileReader();
   r.onload=e=>{
     try{
       _clDedupeSet=parseClExport(e.target.result);
-      document.getElementById('cl-export-status').textContent=`✅ Loaded ${_clDedupeSet.size} existing CircleLoop phone numbers — dedupe ready.`;
+      document.getElementById('cl-export-status').textContent=`✅ Loaded ${_clDedupeSet.size} existing CircleLoop phone numbers - dedupe ready.`;
     }catch(err){
       _clDedupeSet=null;
       document.getElementById('cl-export-status').textContent='⚠ Could not parse the file. Try again or skip dedupe.';
@@ -2565,38 +2608,52 @@ function onClExportFile(ev){
 }
 function doClExport(){
   const dedupeSet=_clDedupeSet;
+  const todayOnly=!!document.getElementById('cl-today-only').checked;
   closeClExportModal();
-  exportCircleLoopContacts(dedupeSet);
+  exportCircleLoopContacts(dedupeSet,{todayOnly});
   _clDedupeSet=null;
 }
-// CircleLoop contacts export — matches their exact CSV format from the Example Import CSV:
+// CircleLoop contacts export - matches their exact CSV format from the Example Import CSV:
 //   global,companyName,fullName,firstName,lastName,email,jobTitle,phoneNumber,phoneNumberLabel,
 //   phoneNumber1,phoneNumberLabel1,phoneNumber2,phoneNumberLabel2,phoneNumber3,phoneNumberLabel3
 // One row per lead. phone goes in phoneNumber (work), phone2 in phoneNumber1 (mobile).
-function exportCircleLoopContacts(dedupeSet){
+function clTouchedToday(l){
+  const today=todayKey();
+  const d=new Date();
+  const dmy=pad2(d.getDate())+'/'+pad2(d.getMonth()+1);
+  const iso=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  return !!(l&&l.notes&&l.notes.some(n=>{
+    if(!n.legacy&&n.ts&&new Date(n.ts).toISOString().slice(0,10)===today)return true;
+    if(n.legacy&&n.text){
+      const txt=String(n.text);
+      return new RegExp('(^|\\D)'+dmy.replace('/','\\/')+'(\\D|$)').test(txt)||txt.includes(iso);
+    }
+    return false;
+  }));
+}
+function exportCircleLoopContacts(dedupeSet,opts){
   if(!leads.length){alert('No leads to export');return}
+  opts=opts||{};
   const headers=['global','companyName','fullName','firstName','lastName','email','jobTitle','phoneNumber','phoneNumberLabel','phoneNumber1','phoneNumberLabel1','phoneNumber2','phoneNumberLabel2','phoneNumber3','phoneNumberLabel3'];
   const lines=[headers.join(',')];
   let count=0, skipped=0;
+  const seenPhones=new Set();
   leads.forEach(l=>{
-    if(!l.business||!l.phone)return;
+    if(opts.todayOnly&&!clTouchedToday(l))return;
+    if(!l.business||(!l.phone&&!l.phone2))return;
+    const p1=clNormPhone(l.phone);
+    const p2=clNormPhone(l.phone2);
+    const rowPhones=[p1,p2].filter(Boolean);
+    if(!rowPhones.length)return;
     // Dedupe against existing CircleLoop phones if a set was supplied
     if(dedupeSet&&dedupeSet.size){
-      const p1=clNormPhone(l.phone);
-      const p2=clNormPhone(l.phone2);
-      if((p1&&dedupeSet.has(p1))||(p2&&dedupeSet.has(p2))){skipped++;return}
+      if(rowPhones.some(p=>dedupeSet.has(p))){skipped++;return}
     }
-    // Name handling: PSC field can be messy ("Mrs Katherine Jane Ritchie", "(Sav) Savvas Kyriacou - Founder/Owner",
-    // "Peter Birch (actual DM - ...)") so we keep fullName intact and only split firstName/lastName when clean.
+    if(rowPhones.every(p=>seenPhones.has(p))){skipped++;return}
+    rowPhones.forEach(p=>seenPhones.add(p));
     const dm=(l.dm||'').trim();
-    let fullName=dm||l.business;
+    let fullName=l.business;
     let firstName='', lastName='';
-    if(dm && !dm.includes('(') && !dm.includes(' - ')){
-      const parts=dm.split(/\s+/);
-      if(parts.length===1){firstName=parts[0]}
-      else if(parts.length===2){firstName=parts[0];lastName=parts[1]}
-      // 3+ words: leave first/last blank so CircleLoop relies on fullName
-    }
     const row=[
       'false',
       csvEscape(l.business),
@@ -2605,10 +2662,10 @@ function exportCircleLoopContacts(dedupeSet){
       csvEscape(lastName),
       csvEscape(l.email||''),
       csvEscape(dm?'Decision Maker':''),
-      csvEscape(l.phone),
+      csvEscape(l.phone||l.phone2||''),
       'work',
-      csvEscape(l.phone2||''),
-      l.phone2?'mobile':'',
+      csvEscape(l.phone?l.phone2||'':''),
+      l.phone&&l.phone2?'mobile':'',
       '','','',''
     ];
     lines.push(row.join(','));
@@ -2618,7 +2675,8 @@ function exportCircleLoopContacts(dedupeSet){
   const csv=lines.join('\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
   const ts=new Date();
-  const fnBase=dedupeSet?`CircleLoop_Import_NEW_ONLY_${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`:`CircleLoop_Contacts_${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`;
+  const scope=opts.todayOnly?'TODAY_TOUCHED_':'';
+  const fnBase=dedupeSet?`CircleLoop_Import_NEW_ONLY_${scope}${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`:`CircleLoop_Contacts_${scope}${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`;
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fnBase;a.click();
   const msg=dedupeSet?`📇 Exported ${count} NEW contacts (skipped ${skipped} already in CircleLoop)`:`📇 Exported ${count} contacts for CircleLoop import`;
   showToast(msg);
