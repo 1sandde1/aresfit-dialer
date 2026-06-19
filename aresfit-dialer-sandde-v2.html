@@ -420,7 +420,7 @@ th{background:var(--card);font-weight:600}
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="closeSettings();openSubjectEditor()">✉ Edit subject rotation pool</button>
     <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="closeSettings();openTemplatesEditor()">📝 Edit signature + email templates</button>
     <h2>CircleLoop setup</h2>
-    <p class="sub" style="font-size:11px;margin-bottom:6px">One-time: import these contacts into CircleLoop so business names auto-show on every dial. Re-export only when you add new leads.</p>
+    <p class="sub" style="font-size:11px;margin-bottom:6px">Exports contacts from the currently loaded call sheet only. Optional CircleLoop upload is duplicate checking only.</p>
     <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="openClExportModal()">📇 Export contacts for CircleLoop</button>
     <h2>CircleLoop scheme (iOS)</h2>
     <p class="sub" style="font-size:11px;margin-bottom:6px">Test which scheme auto-populates the keypad.</p>
@@ -436,11 +436,13 @@ th{background:var(--card);font-weight:600}
   <div class="modal-box">
     <button class="x-btn" onclick="closeClExportModal()">✕</button>
     <div class="logo" style="margin-bottom:8px"><span>📇 EXPORT FOR CIRCLELOOP</span></div>
-    <p class="sub" style="margin-bottom:12px">Optional: drop your existing CircleLoop contacts export to skip duplicates. The file will be parsed in your browser - nothing is uploaded anywhere.</p>
+    <p class="sub" style="margin-bottom:8px">Optional: drop your existing CircleLoop contacts export to skip duplicates. The uploaded file is never used as a contact source.</p>
+    <p style="font-size:11px;color:var(--amber);margin-bottom:10px;padding:8px;border-radius:6px;background:rgba(255,171,0,.08);border:1px solid rgba(255,171,0,.25)"><strong>Safe rule:</strong> exports come from the loaded AresFit call sheet only. CircleLoop export = dedupe reference only.</p>
     <p style="font-size:11px;color:var(--txt2);margin-bottom:6px"><strong>How to get the file:</strong> CircleLoop desktop → Admin Settings → Global Settings → Export contacts.</p>
     <input type="file" id="cl-export-file-input" accept=".csv" onchange="onClExportFile(event)" style="margin-bottom:8px;width:100%">
-    <label class="c-chk" style="margin-bottom:8px"><input type="checkbox" id="cl-today-only"> Today touched only</label>
-    <div id="cl-export-status" style="font-size:11px;color:var(--txt2);margin-bottom:14px;padding:8px;border-radius:6px;background:var(--card);border:1px solid var(--border)">No file dropped - will export all contacts.</div>
+    <label class="c-chk" style="margin-bottom:8px"><input type="checkbox" id="cl-today-only" onchange="renderClExportPreview()"> Today touched only</label>
+    <div id="cl-export-status" style="font-size:11px;color:var(--txt2);margin-bottom:8px;padding:8px;border-radius:6px;background:var(--card);border:1px solid var(--border)">No CircleLoop export loaded - full current sheet export ready.</div>
+    <div id="cl-export-counts" style="font-size:11px;color:var(--txt);margin-bottom:14px;padding:8px;border-radius:6px;background:#050505;border:1px solid var(--border)">Load a call sheet to see export counts.</div>
     <div style="display:flex;gap:6px">
       <button class="btn-ghost" style="flex:1;padding:11px" onclick="closeClExportModal()">Cancel</button>
       <button class="btn-red" style="flex:2;padding:11px" onclick="doClExport()">Export</button>
@@ -2583,24 +2585,92 @@ function parseClExport(csvText){
   }
   return set;
 }
+function analyseClExport(csvText){
+  const set=new Set();
+  const warnings=[];
+  if(!csvText)return {set,warnings,rows:0};
+  const rows=parseCSV(csvText);
+  if(!rows.length)return {set,warnings,rows:0};
+  const headers=rows[0].map(h=>(h||'').trim().replace(/^ï»¿/,''));
+  const phoneIdx=[];
+  const sourceIdx=headers.findIndex(h=>/^source$/i.test(h));
+  const fullNameIdx=headers.findIndex(h=>/^fullName$/i.test(h));
+  headers.forEach((h,i)=>{if(/^phoneNumber\d*$/i.test(h))phoneIdx.push(i)});
+  for(let r=1;r<rows.length;r++){
+    const cells=rows[r];
+    phoneIdx.forEach(i=>{const p=clNormPhone(cells[i]);if(p)set.add(p)});
+    const source=sourceIdx>=0?String(cells[sourceIdx]||'').trim().toLowerCase():'';
+    const fullName=fullNameIdx>=0?String(cells[fullNameIdx]||''):'';
+    if(source==='userprofile')warnings.push('userprofile rows found');
+    if(/Michael Davies|Ioan Jones|Sandde Kloer/i.test(fullName))warnings.push('staff names found');
+  }
+  return {set,warnings:[...new Set(warnings)],rows:Math.max(0,rows.length-1)};
+}
+function clExportStats(dedupeSet,opts){
+  opts=opts||{};
+  let sourceRows=0, skippedExisting=0, skippedDuplicate=0, exportRows=0;
+  const seenPhones=new Set();
+  (leads||[]).forEach(l=>{
+    if(opts.todayOnly&&!clTouchedToday(l))return;
+    if(!l.business||(!l.phone&&!l.phone2))return;
+    const rowPhones=[clNormPhone(l.phone),clNormPhone(l.phone2)].filter(Boolean);
+    if(!rowPhones.length)return;
+    sourceRows++;
+    if(dedupeSet&&dedupeSet.size&&rowPhones.some(p=>dedupeSet.has(p))){
+      skippedExisting++;
+      return;
+    }
+    if(rowPhones.every(p=>seenPhones.has(p))){
+      skippedDuplicate++;
+      return;
+    }
+    rowPhones.forEach(p=>seenPhones.add(p));
+    exportRows++;
+  });
+  return {sourceRows,skippedExisting,skippedDuplicate,exportRows};
+}
+function renderClExportPreview(){
+  const box=document.getElementById('cl-export-counts');
+  if(!box)return;
+  const todayOnly=!!document.getElementById('cl-today-only')?.checked;
+  const s=clExportStats(_clDedupeSet,{todayOnly});
+  const skipped=s.skippedExisting+s.skippedDuplicate;
+  box.innerHTML=`<strong>Current sheet contacts with phone:</strong> ${s.sourceRows}<br><strong>Already in CircleLoop:</strong> ${s.skippedExisting}<br><strong>Duplicate in this export:</strong> ${s.skippedDuplicate}<br><strong>Will export:</strong> ${s.exportRows}`;
+  if(!_clDedupeSet||!_clDedupeSet.size){
+    box.innerHTML+=`<br><span style="color:var(--txt3)">No CircleLoop dedupe file loaded, so this is a full current-sheet export.</span>`;
+  }else if(skipped){
+    box.innerHTML+=`<br><span style="color:var(--green)">New-only export ready.</span>`;
+  }
+}
+function clAccountExportWarning(info){
+  if(!info||!info.warnings||!info.warnings.length)return '';
+  return ' This looks like a full CircleLoop account export. It will only be used for dedupe; none of its contacts will be exported.';
+}
 function openClExportModal(){
   closeSettings();
+  _clDedupeSet=null;
+  _clDedupeInfo=null;
   document.getElementById('cl-export-file-input').value='';
   document.getElementById('cl-today-only').checked=false;
-  document.getElementById('cl-export-status').textContent='No file dropped - will export all contacts.';
+  document.getElementById('cl-export-status').textContent='No CircleLoop export loaded - full current sheet export ready.';
   document.getElementById('cl-export-modal').style.display='flex';
+  renderClExportPreview();
 }
 function closeClExportModal(){document.getElementById('cl-export-modal').style.display='none'}
 let _clDedupeSet=null;
+let _clDedupeInfo=null;
 function onClExportFile(ev){
-  const f=ev.target.files[0];if(!f){_clDedupeSet=null;document.getElementById('cl-export-status').textContent='No file dropped - will export all contacts.';return}
+  const f=ev.target.files[0];if(!f){_clDedupeSet=null;_clDedupeInfo=null;document.getElementById('cl-export-status').textContent='No CircleLoop export loaded - full current sheet export ready.';renderClExportPreview();return}
   const r=new FileReader();
   r.onload=e=>{
     try{
-      _clDedupeSet=parseClExport(e.target.result);
-      document.getElementById('cl-export-status').textContent=`✅ Loaded ${_clDedupeSet.size} existing CircleLoop phone numbers - dedupe ready.`;
+      _clDedupeInfo=analyseClExport(e.target.result);
+      _clDedupeSet=_clDedupeInfo.set;
+      document.getElementById('cl-export-status').textContent=`Loaded ${_clDedupeSet.size} existing CircleLoop phone numbers for dedupe only.${clAccountExportWarning(_clDedupeInfo)}`;
+      renderClExportPreview();
     }catch(err){
       _clDedupeSet=null;
+      _clDedupeInfo=null;
       document.getElementById('cl-export-status').textContent='⚠ Could not parse the file. Try again or skip dedupe.';
     }
   };
@@ -2612,6 +2682,7 @@ function doClExport(){
   closeClExportModal();
   exportCircleLoopContacts(dedupeSet,{todayOnly});
   _clDedupeSet=null;
+  _clDedupeInfo=null;
 }
 // CircleLoop contacts export - matches their exact CSV format from the Example Import CSV:
 //   global,companyName,fullName,firstName,lastName,email,jobTitle,phoneNumber,phoneNumberLabel,
@@ -2636,7 +2707,7 @@ function exportCircleLoopContacts(dedupeSet,opts){
   opts=opts||{};
   const headers=['global','companyName','fullName','firstName','lastName','email','jobTitle','phoneNumber','phoneNumberLabel','phoneNumber1','phoneNumberLabel1','phoneNumber2','phoneNumberLabel2','phoneNumber3','phoneNumberLabel3'];
   const lines=[headers.join(',')];
-  let count=0, skipped=0;
+  let count=0, skipped=0, skippedExisting=0, skippedDuplicate=0, sourceRows=0;
   const seenPhones=new Set();
   leads.forEach(l=>{
     if(opts.todayOnly&&!clTouchedToday(l))return;
@@ -2645,13 +2716,13 @@ function exportCircleLoopContacts(dedupeSet,opts){
     const p2=clNormPhone(l.phone2);
     const rowPhones=[p1,p2].filter(Boolean);
     if(!rowPhones.length)return;
+    sourceRows++;
     // Dedupe against existing CircleLoop phones if a set was supplied
     if(dedupeSet&&dedupeSet.size){
-      if(rowPhones.some(p=>dedupeSet.has(p))){skipped++;return}
+      if(rowPhones.some(p=>dedupeSet.has(p))){skipped++;skippedExisting++;return}
     }
-    if(rowPhones.every(p=>seenPhones.has(p))){skipped++;return}
+    if(rowPhones.every(p=>seenPhones.has(p))){skipped++;skippedDuplicate++;return}
     rowPhones.forEach(p=>seenPhones.add(p));
-    const dm=(l.dm||'').trim();
     let fullName=l.business;
     let firstName='', lastName='';
     const row=[
@@ -2661,7 +2732,7 @@ function exportCircleLoopContacts(dedupeSet,opts){
       csvEscape(firstName),
       csvEscape(lastName),
       csvEscape(l.email||''),
-      csvEscape(dm?'Decision Maker':''),
+      '',
       csvEscape(l.phone||l.phone2||''),
       'work',
       csvEscape(l.phone?l.phone2||'':''),
@@ -2678,8 +2749,10 @@ function exportCircleLoopContacts(dedupeSet,opts){
   const scope=opts.todayOnly?'TODAY_TOUCHED_':'';
   const fnBase=dedupeSet?`CircleLoop_Import_NEW_ONLY_${scope}${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`:`CircleLoop_Contacts_${scope}${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`;
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fnBase;a.click();
-  const msg=dedupeSet?`📇 Exported ${count} NEW contacts (skipped ${skipped} already in CircleLoop)`:`📇 Exported ${count} contacts for CircleLoop import`;
-  showToast(msg);
+  const detailMsg=dedupeSet
+    ? `Exported ${count} NEW contacts. Current sheet: ${sourceRows}. Already in CircleLoop: ${skippedExisting}. Duplicate in export: ${skippedDuplicate}.`
+    : `Exported ${count} contacts for CircleLoop import.`;
+  showToast(detailMsg);
 }
 
 // ===== Init =====
