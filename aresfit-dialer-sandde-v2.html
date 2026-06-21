@@ -412,10 +412,16 @@ th{background:var(--card);font-weight:600}
     <p style="font-size:12px;margin-bottom:8px;color:var(--txt2)"><strong style="color:var(--txt)" id="st-name"></strong><br><span id="st-email"></span></p>
     <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="openSetup()">Edit sender</button>
     <h2>Data</h2>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportEventLog()">Export event log</button>
+    <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportNotionDelta()">Export Notion delta</button>
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="document.getElementById('csv-in').click()">📂 Upload new CSV (keeps session)</button>
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="exportCSV()">📥 Export CSV (full call sheet backup)</button>
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="manualBackup()">💾 Manual backup (same CSV download)</button>
     <button class="btn-red" style="width:100%;margin-bottom:14px;padding:11px" onclick="closeSettings();showHandover()">📝 Generate session handover</button>
+    <h2>Queue gate</h2>
+    <label class="c-chk" style="margin-bottom:6px"><input type="checkbox" id="q-warm-reviewed" onchange="saveQueueGate()"> Warm queue reviewed</label>
+    <label class="c-chk" style="margin-bottom:6px"><input type="checkbox" id="q-blockers-reviewed" onchange="saveQueueGate()"> Blockers reviewed</label>
+    <input type="text" id="q-override-reason" placeholder="Override reason for fresh dials" oninput="saveQueueGate()" style="margin-bottom:14px">
     <h2>Email subjects</h2>
     <button class="btn-ghost" style="width:100%;margin-bottom:6px" onclick="closeSettings();openSubjectEditor()">✉ Edit subject rotation pool</button>
     <button class="btn-ghost" style="width:100%;margin-bottom:14px" onclick="closeSettings();openTemplatesEditor()">📝 Edit signature + email templates</button>
@@ -602,6 +608,64 @@ th{background:var(--card);font-weight:600}
   </div>
 </div>
 
+<!-- MANUAL EVENT MODAL -->
+<div class="modal" id="manual-event-modal" style="display:none">
+  <div class="modal-box" style="max-width:520px">
+    <button class="x-btn" onclick="closeManualEvent()">x</button>
+    <div class="logo" style="margin-bottom:6px"><span>LOG EVENT</span></div>
+    <p class="sub" id="manual-event-header" style="margin-bottom:10px">-</p>
+    <div class="composer-grid">
+      <div>
+        <div class="c-lbl">Channel</div>
+        <select id="manual-event-channel" onchange="refreshManualEventFields()"></select>
+      </div>
+      <div>
+        <div class="c-lbl">Outcome</div>
+        <select id="manual-event-outcome" onchange="refreshManualEventFields()"></select>
+      </div>
+    </div>
+    <div class="composer-grid">
+      <div id="manual-event-reason-wrap">
+        <div class="c-lbl">Reason</div>
+        <select id="manual-event-reason"></select>
+      </div>
+      <div id="manual-event-blocker-wrap">
+        <div class="c-lbl">Blocker type</div>
+        <select id="manual-event-blocker-type"></select>
+      </div>
+    </div>
+    <div class="composer-grid">
+      <div id="manual-event-quote-wrap">
+        <div class="c-lbl">Quote value</div>
+        <input type="text" id="manual-event-quote-value" placeholder="e.g. 12500">
+      </div>
+      <div id="manual-event-blocked-wrap">
+        <div class="c-lbl">Blocked value</div>
+        <input type="text" id="manual-event-blocked-value" placeholder="e.g. 12500">
+      </div>
+    </div>
+    <div class="composer-grid">
+      <div>
+        <div class="c-lbl">Next action</div>
+        <input type="text" id="manual-event-next-action" placeholder="e.g. send quote PDF">
+      </div>
+      <div>
+        <div class="c-lbl">Next action date</div>
+        <input type="date" id="manual-event-next-date">
+      </div>
+    </div>
+    <div class="c-row">
+      <div class="c-lbl">Notes</div>
+      <textarea id="manual-event-notes" style="min-height:100px"></textarea>
+    </div>
+    <div id="manual-event-errors"></div>
+    <div style="display:flex;gap:6px;margin-top:12px">
+      <button class="btn-ghost" style="flex:1;padding:11px" onclick="closeManualEvent()">Cancel</button>
+      <button class="btn-red" style="flex:2;padding:11px" onclick="saveManualEvent()">Log event</button>
+    </div>
+  </div>
+</div>
+
 <!-- TIME EDIT MODAL -->
 <div class="modal" id="time-modal" style="display:none">
   <div class="modal-box" style="max-width:340px">
@@ -630,6 +694,7 @@ th{background:var(--card);font-weight:600}
     </div>
     <div id="block-banner-slot"></div>
     <div id="due-queue-slot"></div>
+    <div id="queue-gate-slot"></div>
   </div>
 
   <div id="card-slot"></div>
@@ -674,6 +739,25 @@ const AUTOFILL_OUTCOMES = {
   'Dead Air':'Dead air - picked up silent or dropped',
   'Provider Reject':'Provider reject - dead number',
   'Not Int.':'Not interested - declined'
+};
+const EVENT_LOG_STORAGE_KEY = 'aresfit_sandde_v2_event_log';
+const EVENT_LOG_HEADER_LINE = 'timestamp,rep,row_number,lead_id,business_name,phone,email,channel,outcome,reason,next_action,next_action_date,owner,proof_source,quote_value,blocked_value,blocker_type,notes';
+const EVENT_LOG_HEADERS = EVENT_LOG_HEADER_LINE.split(',');
+const EVENT_OUTCOMES = ['reached','no answer','voicemail','dead air','email sent','reply received','quote sent','quote needed','supplier needed','customer waiting','parked','lost','do not touch','HOLD','app issue'];
+const EVENT_CHANNELS = ['call','email','WhatsApp','quote','supplier','Shopify','blocker','app issue'];
+const EVENT_LOST_REASONS = ['no budget','supplier contract','already bought','not a gym','bad fit','bad number','central procurement','waiting refurb','waiting lease','waiting customer','wrong contact','unknown'];
+const EVENT_BLOCKER_TYPES = ['pricing','supplier','quote PDF','invoice','Shopify','app/CircleLoop','legal/rep','stock','customer waiting','unknown'];
+const CALL_OUTCOME_EVENT_MAP = {
+  'Contacted':'reached',
+  'VM':'voicemail',
+  'NA':'no answer',
+  'Emailed':'email sent',
+  'Awaiting Callback':'customer waiting',
+  'Dead Air':'dead air',
+  'Provider Reject':'do not touch',
+  'Not Int.':'lost',
+  'Callback':'customer waiting',
+  'HOT':'reached'
 };
 const FILTERS = ['All','Recent','Uncalled','Callback','Awaiting CB','Quoted','Hot','VM','Contacted','Reached','DNC'];
 
@@ -831,7 +915,7 @@ const OUTCOME_AUTO_SET = {
 };
 
 // ===== State =====
-let raw=[], headers=[], mapping={}, leads=[], idx=0, filter='All', filtered=[], searchTerm='';
+let raw=[], headers=[], mapping={}, leads=[], eventLog=[], idx=0, filter='All', filtered=[], searchTerm='';
 let activeFilters=['All']; // multi-filter: tap to toggle, intersection logic. 'All' = no constraints.
 let justLoggedId=null; // tracks lead.id that just had an outcome logged - flips Log/Next button to Next on second tap
 let manualNoteOpen=false; // toggles inline manual-note editor on the call card
@@ -842,6 +926,7 @@ let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], 
 let idb=null;
 let outcomesSinceBackup=0;
 let timeEditContext=null; // {leadId, noteId} for time-modal
+let manualEventContext=null;
 let lastToastTs=0;
 
 // ===== Utils =====
@@ -1076,8 +1161,10 @@ async function loadSession(){
 function clearSession(){if(!confirm('Clear all session data? Export first if you care about it.'))return;localStorage.removeItem(SAVE_KEY);idbSave(null);location.reload()}
 
 // ===== Prefs =====
-function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY));if(p)prefs={...prefs,...p}}catch(e){}if(!Array.isArray(prefs.subjects)||!prefs.subjects.length)prefs.subjects=[...DEFAULT_SUBJECTS];if(!prefs.usedSubjects||typeof prefs.usedSubjects!=='object')prefs.usedSubjects={};if(!Array.isArray(prefs.dismissedOverdue))prefs.dismissedOverdue=[];if(typeof prefs.autoQueue!=='boolean')prefs.autoQueue=true;if(!prefs.clScheme)prefs.clScheme=CL_SCHEME_DEFAULT;if(!prefs.signature)prefs.signature=DEFAULT_SIGNATURE;if(!prefs.emailTemplates||typeof prefs.emailTemplates!=='object')prefs.emailTemplates={};if(!prefs.subjectDomainLock||typeof prefs.subjectDomainLock!=='object')prefs.subjectDomainLock={}}
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY));if(p)prefs={...prefs,...p}}catch(e){}if(!Array.isArray(prefs.subjects)||!prefs.subjects.length)prefs.subjects=[...DEFAULT_SUBJECTS];if(!prefs.usedSubjects||typeof prefs.usedSubjects!=='object')prefs.usedSubjects={};if(!Array.isArray(prefs.dismissedOverdue))prefs.dismissedOverdue=[];if(typeof prefs.autoQueue!=='boolean')prefs.autoQueue=true;if(!prefs.clScheme)prefs.clScheme=CL_SCHEME_DEFAULT;if(!prefs.signature)prefs.signature=DEFAULT_SIGNATURE;if(!prefs.emailTemplates||typeof prefs.emailTemplates!=='object')prefs.emailTemplates={};if(!prefs.subjectDomainLock||typeof prefs.subjectDomainLock!=='object')prefs.subjectDomainLock={};ensureQueueGateState()}
 function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs))}catch(e){}}
+function loadEventLog(){try{const rows=JSON.parse(localStorage.getItem(EVENT_LOG_STORAGE_KEY));eventLog=Array.isArray(rows)?rows:[]}catch(e){eventLog=[]}}
+function saveEventLog(){try{localStorage.setItem(EVENT_LOG_STORAGE_KEY,JSON.stringify(eventLog))}catch(e){}}
 
 // ===== Setup / user =====
 function loadUser(){try{const u=JSON.parse(localStorage.getItem(SETUP_KEY));if(u&&u.name){user=u;return true}}catch(e){}return false}
@@ -1124,6 +1211,7 @@ function openSettings(){
   const sel=document.getElementById('cl-scheme-sel');
   if(sel)sel.innerHTML=CL_SCHEME_OPTIONS.map(o=>`<option value="${esc(o.value)}"${(prefs.clScheme||CL_SCHEME_DEFAULT)===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
   applyTheme(); // refresh theme button label
+  renderQueueGateControls();
   document.getElementById('settings-modal').style.display='flex';
 }
 function saveClScheme(v){prefs.clScheme=v;savePrefs();showToast('CircleLoop scheme set → '+v)}
@@ -1135,6 +1223,266 @@ function applyTheme(){
 }
 function toggleTheme(){prefs.theme=(prefs.theme==='light')?'dark':'light';savePrefs();applyTheme();showToast(prefs.theme==='light'?'☀ Light mode':'🌙 Dark mode')}
 function closeSettings(){document.getElementById('settings-modal').style.display='none'}
+
+// ===== Event log + daily queue gate =====
+function ensureQueueGateState(){
+  const k=todayKey();
+  if(!prefs.queueGate||prefs.queueGate.date!==k)prefs.queueGate={date:k,warmReviewed:false,blockersReviewed:false,overrideReason:''};
+  prefs.queueGate.warmReviewed=!!prefs.queueGate.warmReviewed;
+  prefs.queueGate.blockersReviewed=!!prefs.queueGate.blockersReviewed;
+  prefs.queueGate.overrideReason=String(prefs.queueGate.overrideReason||'');
+}
+function canStartFreshDials(){
+  ensureQueueGateState();
+  const g=prefs.queueGate;
+  return (g.warmReviewed&&g.blockersReviewed)||g.overrideReason.trim().length>=5;
+}
+function isFreshDial(l){
+  if(!l)return false;
+  if(l.notes&&l.notes.some(n=>!n.legacy))return false;
+  const st=(l.status||'').trim();
+  return !['Callback','Hot Lead','Quoted','DO NOT CALL'].includes(st);
+}
+function saveQueueGate(){
+  ensureQueueGateState();
+  const warm=document.getElementById('q-warm-reviewed');
+  const blockers=document.getElementById('q-blockers-reviewed');
+  const override=document.getElementById('q-override-reason');
+  if(warm)prefs.queueGate.warmReviewed=!!warm.checked;
+  if(blockers)prefs.queueGate.blockersReviewed=!!blockers.checked;
+  if(override)prefs.queueGate.overrideReason=override.value.trim();
+  savePrefs();
+  renderQueueGate();
+}
+function renderQueueGateControls(){
+  ensureQueueGateState();
+  const g=prefs.queueGate;
+  const warm=document.getElementById('q-warm-reviewed');
+  const blockers=document.getElementById('q-blockers-reviewed');
+  const override=document.getElementById('q-override-reason');
+  if(warm)warm.checked=!!g.warmReviewed;
+  if(blockers)blockers.checked=!!g.blockersReviewed;
+  if(override)override.value=g.overrideReason||'';
+}
+function renderQueueGate(){
+  const slot=document.getElementById('queue-gate-slot');if(!slot)return;
+  ensureQueueGateState();
+  const g=prefs.queueGate;
+  const allowed=canStartFreshDials();
+  const msg=allowed?'Fresh dials allowed':'Fresh dials blocked until Warm queue reviewed and Blockers reviewed';
+  const cls=allowed?'prime':'secondary';
+  slot.innerHTML=`<div class="block-banner ${cls}" style="margin-bottom:6px"><span class="ico">${allowed?'OK':'!'}</span><span class="msg">${msg}${g.overrideReason?` - override: ${esc(g.overrideReason)}`:''}</span></div>`;
+}
+function eventTimestamp(ts=Date.now()){return new Date(ts).toISOString().replace('Z','+00:00')}
+function eventLocalDateKey(row){
+  const d=new Date(row.timestamp||Date.now());
+  if(Number.isNaN(d.getTime()))return '';
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+}
+function getLeadId(l){
+  if(!l)return '';
+  const rawRow=raw[l.rawIdx]||{};
+  return String(rawRow.Lead_ID||rawRow['Lead_ID']||l.leadId||'').trim();
+}
+function buildEventRow(l,draft){
+  draft=draft||{};
+  const ts=draft.ts||Date.now();
+  const phone=draft.phone!=null?draft.phone:(l?(l.phone||''):'');
+  const email=draft.email!=null?draft.email:(l?(l.email||''):'');
+  const owner=(draft.owner||user.name||'Unknown rep').trim();
+  const row={
+    timestamp:draft.timestamp||eventTimestamp(ts),
+    rep:(draft.rep||user.name||'').trim(),
+    row_number:l?String(l.row||''):'',
+    lead_id:draft.lead_id!=null?draft.lead_id:getLeadId(l),
+    business_name:draft.business_name!=null?draft.business_name:(l?(l.business||''):''),
+    phone,
+    email,
+    channel:draft.channel||'call',
+    outcome:draft.outcome||'HOLD',
+    reason:draft.reason||'',
+    next_action:draft.next_action||'',
+    next_action_date:draft.next_action_date||'',
+    owner,
+    proof_source:draft.proof_source||'manual event',
+    quote_value:draft.quote_value||'',
+    blocked_value:draft.blocked_value||'',
+    blocker_type:draft.blocker_type||'',
+    notes:draft.notes||''
+  };
+  const clean={};
+  EVENT_LOG_HEADERS.forEach(h=>clean[h]=String(row[h]==null?'':row[h]).trim());
+  return clean;
+}
+function validateEventDraft(row){
+  const errors=[];
+  if(!row.outcome)errors.push('Outcome required');
+  if(row.outcome&&!EVENT_OUTCOMES.includes(row.outcome))errors.push('Outcome is not parser-compatible');
+  ['timestamp','row_number','business_name','channel','owner','proof_source'].forEach(f=>{if(!row[f])errors.push(`${f} required`)});
+  if(row.outcome==='lost'&&!row.reason)errors.push('Lost requires a reason');
+  if((row.outcome==='quote sent'||row.outcome==='quote needed')&&!row.quote_value)errors.push('Quote outcome requires quote value');
+  if((row.channel==='blocker'||row.blocker_type)&&!row.blocker_type)errors.push('Blocker type required');
+  if((row.channel==='blocker'||row.outcome==='supplier needed'||row.outcome==='app issue')&&!row.blocked_value)errors.push('Blocked value required');
+  if(row.next_action_date&&!/^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2})?$/.test(row.next_action_date))errors.push('Next action date must be YYYY-MM-DD or YYYY-MM-DD HH:MM');
+  return errors;
+}
+function appendEventRow(row){
+  const errors=validateEventDraft(row);
+  if(errors.length){alert(errors.join('\n'));return false}
+  eventLog.push({...row,_event_id:uid()});
+  saveEventLog();
+  flashDot(true);
+  return true;
+}
+function callNextAction(l,p,outcome){
+  if(outcome==='lost')return 'lost';
+  if(outcome==='do not touch')return 'do not touch';
+  if(p&&p.outcome==='Callback')return 'callback';
+  if(p&&p.outcome==='Emailed')return 'email follow-up';
+  return (l&&l.status)||'';
+}
+function buildCallEventRow(l,noteEntry,p){
+  const outcome=CALL_OUTCOME_EVENT_MAP[p.outcome]||'HOLD';
+  const reason=outcome==='lost'?(p.reason||''):(p.outcome==='Provider Reject'?'bad number':'');
+  const nextDate=(l&&l.cbDate)?l.cbDate.replace('T',' '):'';
+  return buildEventRow(l,{
+    ts:noteEntry.ts,
+    channel:'call',
+    outcome,
+    reason,
+    next_action:callNextAction(l,p,outcome),
+    next_action_date:nextDate,
+    proof_source:p.callStartTs?'CircleLoop dial tap':'manual call outcome',
+    notes:noteEntry.text
+  });
+}
+function logCallEvent(l,noteEntry,p){
+  return appendEventRow((p&&p._eventRow)||buildCallEventRow(l,noteEntry,p));
+}
+function logEmailEvent(l,draft){
+  draft=draft||{};
+  return appendEventRow(buildEventRow(l,{
+    ts:draft.ts||Date.now(),
+    channel:'email',
+    outcome:'email sent',
+    email:draft.toAddr||l.email||'',
+    next_action:draft.next_action||'follow up',
+    proof_source:draft.proof_source||'Gmail compose launched',
+    notes:draft.notes||''
+  }));
+}
+function eventRowsForToday(){
+  const k=todayKey();
+  return eventLog.filter(row=>eventLocalDateKey(row)===k);
+}
+function eventRowsToCsv(rows){
+  return [EVENT_LOG_HEADER_LINE].concat(rows.map(row=>EVENT_LOG_HEADERS.map(h=>csvEscape(row[h]||'')).join(','))).join('\n');
+}
+function downloadTextFile(filename,text,type){
+  const blob=new Blob(['\ufeff'+text],{type:type||'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+}
+function exportEventLog(){
+  const rows=eventRowsForToday();
+  if(!rows.length){alert('No event rows for today');return}
+  downloadTextFile(`AresFit_Event_Log_${todayKey()}.csv`,eventRowsToCsv(rows),'text/csv;charset=utf-8');
+  showToast(`Exported ${rows.length} event rows`);
+}
+function exportNotionDelta(){
+  const rows=eventRowsForToday();
+  if(!rows.length){alert('No event rows for today');return}
+  const byOutcome={};const blockers=[];const quotes=[];
+  rows.forEach(r=>{byOutcome[r.outcome]=(byOutcome[r.outcome]||0)+1;if(r.blocker_type)blockers.push(r);if(r.quote_value)quotes.push(r)});
+  const lines=[];
+  lines.push(`# AresFit Notion Delta ${todayKey()}`);
+  lines.push('');
+  lines.push(`Event rows: ${rows.length}`);
+  lines.push('');
+  lines.push('## Outcomes');
+  Object.keys(byOutcome).sort().forEach(k=>lines.push(`- ${k}: ${byOutcome[k]}`));
+  lines.push('');
+  lines.push('## Quotes');
+  if(!quotes.length)lines.push('- None');
+  else quotes.forEach(r=>lines.push(`- R${r.row_number} ${r.business_name}: ${r.outcome}, quote_value ${r.quote_value}`));
+  lines.push('');
+  lines.push('## Blockers');
+  if(!blockers.length)lines.push('- None');
+  else blockers.forEach(r=>lines.push(`- R${r.row_number} ${r.business_name}: ${r.blocker_type}, blocked_value ${r.blocked_value}, ${r.notes}`));
+  lines.push('');
+  lines.push('## Event Detail');
+  rows.forEach(r=>lines.push(`- ${r.timestamp} - R${r.row_number} - ${r.business_name} - ${r.channel} - ${r.outcome} - ${r.notes}`));
+  downloadTextFile(`AresFit_Notion_Delta_${todayKey()}.md`,lines.join('\n'),'text/markdown;charset=utf-8');
+  showToast(`Exported Notion delta with ${rows.length} rows`);
+}
+function openManualEvent(channel){
+  const l=filtered[idx];if(!l)return;
+  manualEventContext={leadId:l.id};
+  document.getElementById('manual-event-header').textContent=`R${l.row} ${l.business}`;
+  const ch=document.getElementById('manual-event-channel');
+  ch.innerHTML=EVENT_CHANNELS.filter(c=>c!=='call'&&c!=='email').map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  ch.value=channel||'WhatsApp';
+  const out=document.getElementById('manual-event-outcome');
+  out.dataset.touched='';
+  out.innerHTML=EVENT_OUTCOMES.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
+  document.getElementById('manual-event-reason').innerHTML=EVENT_LOST_REASONS.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
+  document.getElementById('manual-event-blocker-type').innerHTML=EVENT_BLOCKER_TYPES.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
+  document.getElementById('manual-event-quote-value').value='';
+  document.getElementById('manual-event-blocked-value').value='';
+  document.getElementById('manual-event-next-action').value='';
+  document.getElementById('manual-event-next-date').value='';
+  document.getElementById('manual-event-notes').value='';
+  document.getElementById('manual-event-errors').innerHTML='';
+  refreshManualEventFields();
+  document.getElementById('manual-event-modal').style.display='flex';
+}
+function defaultOutcomeForManualChannel(channel){
+  return {WhatsApp:'reply received',quote:'quote needed',supplier:'supplier needed',Shopify:'HOLD',blocker:'customer waiting','app issue':'app issue'}[channel]||'HOLD';
+}
+function refreshManualEventFields(){
+  const channel=document.getElementById('manual-event-channel').value;
+  const out=document.getElementById('manual-event-outcome');
+  if(out&&!out.dataset.touched)out.value=defaultOutcomeForManualChannel(channel);
+  if(out)out.onchange=()=>{out.dataset.touched='1';refreshManualEventFields()};
+  const outcome=out.value;
+  const needsReason=outcome==='lost';
+  const needsQuote=outcome==='quote sent'||outcome==='quote needed'||channel==='quote';
+  const needsBlocker=channel==='blocker'||outcome==='supplier needed'||outcome==='app issue';
+  const needsBlocked=needsBlocker||channel==='Shopify';
+  document.getElementById('manual-event-reason-wrap').style.display=needsReason?'block':'none';
+  document.getElementById('manual-event-quote-wrap').style.display=needsQuote?'block':'none';
+  document.getElementById('manual-event-blocker-wrap').style.display=needsBlocker?'block':'none';
+  document.getElementById('manual-event-blocked-wrap').style.display=needsBlocked?'block':'none';
+}
+function closeManualEvent(){document.getElementById('manual-event-modal').style.display='none';manualEventContext=null}
+function saveManualEvent(){
+  const ctx=manualEventContext;if(!ctx)return;
+  const l=leads.find(x=>x.id===ctx.leadId);if(!l)return;
+  const channel=document.getElementById('manual-event-channel').value;
+  const outcome=document.getElementById('manual-event-outcome').value;
+  const notes=(document.getElementById('manual-event-notes').value||'').trim();
+  const row=buildEventRow(l,{
+    channel,
+    outcome,
+    reason:outcome==='lost'?document.getElementById('manual-event-reason').value:'',
+    next_action:document.getElementById('manual-event-next-action').value.trim(),
+    next_action_date:document.getElementById('manual-event-next-date').value.trim(),
+    proof_source:`manual ${channel} log`,
+    quote_value:document.getElementById('manual-event-quote-value').value.trim(),
+    blocked_value:document.getElementById('manual-event-blocked-value').value.trim(),
+    blocker_type:document.getElementById('manual-event-blocker-type').value.trim(),
+    notes
+  });
+  const errors=validateEventDraft(row);
+  if(errors.length){document.getElementById('manual-event-errors').innerHTML=errors.map(e=>`<div class="c-warn danger">! ${esc(e)}</div>`).join('');return}
+  if(!appendEventRow(row))return;
+  const ts=Date.now();
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'Event',text:`${channel} - ${outcome}${notes?` - ${notes}`:''}`,manual:true});
+  if(outcome==='quote sent')l.status='Quoted';
+  if(outcome==='lost')l.status='Not Interested';
+  if(outcome==='do not touch')l.status='DO NOT CALL';
+  save();closeManualEvent();render();
+  showToast('Event logged');
+}
 
 // ===== CSV import =====
 function handleFile(ev){
@@ -1326,7 +1674,7 @@ function onSearch(){searchTerm=document.getElementById('lead-search').value.trim
 function render(){
   filtered=leads.slice(); // call card navigates whole list, not filtered
   if(idx>=filtered.length)idx=Math.max(0,filtered.length-1);
-  renderCard();renderStats();renderBlockBanner();renderLeadList();renderFilterBar();renderDueQueueBanner();
+  renderCard();renderStats();renderBlockBanner();renderLeadList();renderFilterBar();renderDueQueueBanner();renderQueueGate();
 }
 function renderStats(){
   const today=todayKey();
@@ -1381,6 +1729,7 @@ function renderCard(){
   const priClass=(l.priority||'').toUpperCase().includes('TOP')?'top':'';
   const pending=l.pending||{outcome:'',text:'',callStartTs:0,editedHm:''};
   const pendingTime=pending.editedHm||(pending.callStartTs?hhmm(pending.callStartTs):'');
+  const pendingEventOutcome=CALL_OUTCOME_EVENT_MAP[pending.outcome]||'';
   const canNext=!pending.outcome||pending.text.trim().length>0||(pending.outcome in AUTOFILL_OUTCOMES);
 
   const callInfo=pending.callStartTs?`<div class="call-info show">📞 Called <span class="t">${hhmm(pending.callStartTs)}</span> - number copied. Paste into CircleLoop if it didn't auto-launch.</div>`:'';
@@ -1524,6 +1873,7 @@ function renderCard(){
         <button class="copy-btn" onclick="copyPhone2()" title="Copy alt number">📋</button>
       </div>`:''}
       ${emailBtn}
+      <button class="btn-ghost" onclick="openManualEvent()" style="width:100%;font-size:12px;margin:0 0 10px">Log WhatsApp, quote, supplier, Shopify, blocker, or app issue</button>
 
       <div class="outcomes">
         ${OUTCOMES.map(o=>`<button data-out="${esc(o)}" class="${pending.outcome===o?'sel':''}" onclick="setOutcome('${esc(o)}')">${outcomeLabel(o)}</button>`).join('')}
@@ -1543,6 +1893,7 @@ function renderCard(){
         <div class="new-note-row">
           <textarea id="new-note" class="${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'pending':''}" placeholder="${pending.outcome?(AUTOFILL_OUTCOMES[pending.outcome]?'optional - will auto-fill \"'+AUTOFILL_OUTCOMES[pending.outcome]+'\" if blank':'who answered · brands · timing · next action'):'tap an outcome above'}" oninput="updatePending(this.value)">${esc(pending.text)}</textarea>
         </div>
+        ${pendingEventOutcome==='lost'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Lost reason <span style="color:var(--amber)">required</span></div><select id="pending-reason" onchange="setPendingReason(this.value)"><option value="">Pick reason</option>${EVENT_LOST_REASONS.map(r=>`<option value="${esc(r)}"${pending.reason===r?' selected':''}>${esc(r)}</option>`).join('')}</select></div>`:''}
         <div id="swap-chip-slot">${swapChipHtml}</div>
         ${pending.outcome?`<button class="btn-ghost" onclick="clearPendingOutcome()" style="width:100%;font-size:12px;margin-top:6px">Clear outcome</button>`:''}
         <div class="note-warn ${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'show':''}">⚠ Note required before logging - skill rule: notes = data vault</div>
@@ -2044,7 +2395,9 @@ function launchFromComposer(){
   const ts=Date.now();
   const tmplLabel=(CALL_REALITY_OPTS.find(r=>r.value===reality)||{}).label||reality;
   const mode=pitch?'pitch':'generic';
-  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:`Sent to ${toAddr} · subject: "${subject}" · template: ${tmplLabel} · mode: ${mode} · send: ${schedule}`});
+  const emailNote=`Gmail compose launched to ${toAddr} - subject: "${subject}" - template: ${tmplLabel} - mode: ${mode} - send: ${schedule}`;
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:emailNote});
+  logEmailEvent(l,{ts,toAddr,notes:emailNote,proof_source:'Gmail compose launched'});
   // Status auto-set (safe overwrite only)
   if(STATUS_SAFE_OVERWRITE.includes((l.status||'').trim()))l.status='Emailed';
   save();closeComposer();renderCard();renderLeadList();renderStats();
@@ -2062,7 +2415,9 @@ function launchBlankFromComposer(){
   if(!prefs.usedSubjects[k].includes(subject))prefs.usedSubjects[k].push(subject);
   savePrefs();
   const ts=Date.now();
-  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:`Blank compose launched · subject: "${subject}" · draft-in-GPT`});
+  const emailNote=`Blank Gmail compose launched - subject: "${subject}" - draft-in-GPT`;
+  l.notes.push({id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL',text:emailNote});
+  logEmailEvent(l,{ts,toAddr:l.email,notes:emailNote,proof_source:'Gmail blank compose launched'});
   if(STATUS_SAFE_OVERWRITE.includes((l.status||'').trim()))l.status='Emailed';
   save();closeComposer();renderCard();renderLeadList();renderStats();
   flashDot(true);
@@ -2152,11 +2507,11 @@ function generateHandover(){
   lines.push('');
   lines.push('## Today\'s calls');
   if(!todayCalls.length)lines.push('_No calls logged today._');
-  else todayCalls.forEach(({l,n})=>lines.push(`- **R${l.row} ${l.business}** · ${n.dmy} ${n.hm} · **${n.outcome}** - ${n.text}`));
+  else todayCalls.forEach(({l,n})=>lines.push(`- **R${l.row} ${l.business}** · Lead_ID: ${getLeadId(l)||'-'} · ${n.dmy} ${n.hm} · **${n.outcome}** - ${n.text}`));
   lines.push('');
   lines.push('## Outstanding callbacks (all rows with Callback status)');
   if(!callbackRows.length)lines.push('_None._');
-  else callbackRows.forEach(l=>lines.push(`- **R${l.row} ${l.business}** · ${l.cbDate?(l.cbDate||'').replace('T',' '):'no scheduled time'} · DM: ${l.dm||'?'} · ${format443(l.phone)}`));
+  else callbackRows.forEach(l=>lines.push(`- **R${l.row} ${l.business}** · Lead_ID: ${getLeadId(l)||'-'} · ${l.cbDate?(l.cbDate||'').replace('T',' '):'no scheduled time'} · DM: ${l.dm||'?'} · ${format443(l.phone)}`));
   lines.push('');
   lines.push('## Hot leads added today');
   if(!hotToday.length)lines.push('_None._');
@@ -2215,6 +2570,11 @@ function tapCall(which){
   if(!digits){alert('No phone number on this row');return}
   // Mobile gate now applies to phone2 too - was only enforced on primary before.
   if(digits.startsWith('07')&&!l.mobileVerified){alert('Mobile number - tick "verified on website" before dialling.');return}
+  if(isFreshDial(l)&&!canStartFreshDials()){
+    alert('Fresh dials blocked. Review warm queue and blockers first, or add an override reason in Settings.');
+    openSettings();
+    return;
+  }
   // Auto-capture call start time
   if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:''};
   l.pending.callStartTs=Date.now();
@@ -2255,7 +2615,7 @@ function setOutcome(o){
 function clearPendingOutcome(){
   const l=filtered[idx];if(!l)return;
   const p=l.pending||{};
-  l.pending={outcome:'',text:'',callStartTs:p.callStartTs||0,editedHm:p.editedHm||'',direction:p.direction||'out'};
+  l.pending={outcome:'',text:'',callStartTs:p.callStartTs||0,editedHm:p.editedHm||'',direction:p.direction||'out',reason:''};
   justLoggedId=null;
   save();renderCard();
 }
@@ -2271,6 +2631,12 @@ function updatePending(v){
   updateSwapChip(v);
   // Throttled save
   clearTimeout(updatePending._t);updatePending._t=setTimeout(save,400);
+}
+function setPendingReason(v){
+  const l=filtered[idx];if(!l)return;
+  if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:'',reason:''};
+  l.pending.reason=v;
+  save();
 }
 function commitPending(){
   const l=filtered[idx];if(!l)return false;
@@ -2288,6 +2654,11 @@ function commitPending(){
     noteEntry.direction=p.direction||'out';
     if(l.cbEndTime)noteEntry.cbEndTime=l.cbEndTime;
   }
+  const eventRow=buildCallEventRow(l,noteEntry,p);
+  const eventErrors=validateEventDraft(eventRow);
+  if(eventErrors.length){alert(eventErrors.join('\n'));return false}
+  p._eventRow=eventRow;
+  if(!logCallEvent(l,noteEntry,p))return false;
   l.notes.push(noteEntry);
   if(ATTEMPT_OUTCOMES.has(p.outcome))l.attempts=(l.attempts||0)+1;
   // Auto-sync Status/Stage on certain outcomes - each outcome can upgrade multiple fields, each with its own safe-overwrite list
@@ -2757,6 +3128,7 @@ function exportCircleLoopContacts(dedupeSet,opts){
 
 // ===== Init =====
 loadPrefs();
+loadEventLog();
 applyTheme();
 openIDB().catch(()=>{});
 const hasUserSetup=loadUser();
