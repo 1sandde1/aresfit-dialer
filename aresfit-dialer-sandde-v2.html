@@ -12,7 +12,7 @@ body{margin:0;background:#080b10;color:#f5f6f8;font:14px system-ui,-apple-system
 </style>
 <div class="box">
   <strong>Loading AresFit Dialer v2...</strong>
-  <div class="muted">Applying 2026-06-22 app fixes.</div>
+  <div class="muted">Applying 2026-06-22 and 2026-06-29 app fixes.</div>
 </div>
 <script>
 const ARES_V2_BASE_URL='https://raw.githubusercontent.com/1sandde1/aresfit-dialer/ba4fc91abef4c41451c6d74bc2cffa596a6ee719/aresfit-dialer-sandde-v2.html';
@@ -54,10 +54,69 @@ function applyUnifiedPatch(source,patch){
   while(srcIndex<src.length)out.push(src[srcIndex++]);
   return out.join('\n');
 }
+function replaceOnce(source,oldText,newText,label){
+  if(!source.includes(oldText))throw new Error(`2026-06-29 email fix missing ${label}`);
+  return source.replace(oldText,newText);
+}
+function applyEmailRealityFix(html){
+  html=replaceOnce(html,
+    '<div class="c-lbl" style="margin-top:8px">Manager busy</div><div class="tmpl-edit"><textarea id="tmpl-managerBusy"></textarea></div>\n    <div class="c-lbl" style="margin-top:8px">Not interested (polite)</div>',
+    '<div class="c-lbl" style="margin-top:8px">Manager busy</div><div class="tmpl-edit"><textarea id="tmpl-managerBusy"></textarea></div>\n    <div class="c-lbl" style="margin-top:8px">Interested / options needed</div><div class="tmpl-edit"><textarea id="tmpl-interested"></textarea></div>\n    <div class="c-lbl" style="margin-top:8px">Not interested (polite)</div>',
+    'template editor field'
+  );
+  html=replaceOnce(html,
+    [
+      "I'm Sandde, Director at AresFit. We supply commercial gym equipment from Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness. If you've got anything coming up equipment-wise, happy to put some options together for whenever works for you.",
+      "",
+      "{SIGNATURE}`,",
+      "  notIntPolite:`Hi,"
+    ].join('\n'),
+    [
+      "I'm Sandde, Director at AresFit. We supply commercial gym equipment from Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness. If you've got anything coming up equipment-wise, happy to put some options together for whenever works for you.",
+      "",
+      "{SIGNATURE}`,",
+      "  interested:`Hi,",
+      "",
+      "Thanks for taking the time {SCHED_PAST}.",
+      "",
+      "As discussed, I'm Sandde, Director at AresFit. We supply commercial gym equipment from Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness, and can put together options with pricing for replacements, additions or refurbs.",
+      "",
+      "You can see the website here: https://aresfit.co.uk/",
+      "",
+      "If finance is useful, the business finance page is here: https://aresfit.co.uk/pages/business-finance",
+      "",
+      "If anything comes up or you want pricing on specific kit, send it over and I'll put options together.",
+      "",
+      "{SIGNATURE}`,",
+      "  notIntPolite:`Hi,"
+    ].join('\n'),
+    'interested template'
+  );
+  html=replaceOnce(html,
+    "  {value:'managerBusy', label:'DM repeatedly busy / in meetings'},\n  {value:'notIntPolite', label:'Not interested but polite'},",
+    "  {value:'managerBusy', label:'DM repeatedly busy / in meetings'},\n  {value:'interested', label:'Interested / needs options or pricing'},\n  {value:'notIntPolite', label:'Not interested but polite'},",
+    'call reality option'
+  );
+  html=replaceOnce(html,
+    "  managerBusy:'AresFit - equipment options',\n  notIntPolite:'Thanks for the chat',",
+    "  managerBusy:'AresFit - equipment options',\n  interested:'Commercial gym equipment options',\n  notIntPolite:'Thanks for the chat',",
+    'subject suggestion'
+  );
+  html=replaceOnce(html,
+    "  if(recent.some(n=>n.outcome==='Not Int.'))return 'notIntPolite';\n  return 'cold';",
+    "  if(recent.some(n=>n.outcome==='Not Int.'))return 'notIntPolite';\n  if(recent.some(n=>n.outcome==='Contacted'&&/\\b(interested|options?|pricing|quote|future|owner|dm)\\b/i.test(n.text||'')))return 'interested';\n  return 'cold';",
+    'auto inference'
+  );
+  const oldLoop="  ['cold','receptionTransferred','managerBusy','notIntPolite','followUp'].forEach(k=>{";
+  const newLoop="  CALL_REALITY_OPTS.map(o=>o.value).forEach(k=>{";
+  const loopCount=html.split(oldLoop).length-1;
+  if(loopCount!==2)throw new Error(`2026-06-29 email fix expected 2 template loops, found ${loopCount}`);
+  return html.split(oldLoop).join(newLoop);
+}
 (async()=>{
   try{
     const [base,patch]=await Promise.all([fetchText(ARES_V2_BASE_URL),fetchText(ARES_V2_PATCH_URL)]);
-    const html=applyUnifiedPatch(base,patch);
+    const html=applyEmailRealityFix(applyUnifiedPatch(base,patch));
     document.open();
     document.write(html);
     document.close();
