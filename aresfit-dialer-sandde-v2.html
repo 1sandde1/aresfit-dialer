@@ -12,7 +12,7 @@ body{margin:0;background:#080b10;color:#f5f6f8;font:14px system-ui,-apple-system
 </style>
 <div class="box">
   <strong>Loading AresFit Dialer v2...</strong>
-  <div class="muted">Applying 2026-06-22 and 2026-06-29 app fixes.</div>
+  <div class="muted">Applying 2026-06-22, 2026-06-29 and 2026-06-30 app fixes.</div>
 </div>
 <script>
 const ARES_V2_BASE_URL='https://raw.githubusercontent.com/1sandde1/aresfit-dialer/ba4fc91abef4c41451c6d74bc2cffa596a6ee719/aresfit-dialer-sandde-v2.html';
@@ -55,7 +55,7 @@ function applyUnifiedPatch(source,patch){
   return out.join('\n');
 }
 function replaceOnce(source,oldText,newText,label){
-  if(!source.includes(oldText))throw new Error(`2026-06-29 email fix missing ${label}`);
+  if(!source.includes(oldText))throw new Error(`AresFit loader patch missing ${label}`);
   return source.replace(oldText,newText);
 }
 function applyEmailRealityFix(html){
@@ -68,13 +68,13 @@ function applyEmailRealityFix(html){
     [
       "I'm Sandde, Director at AresFit. We supply commercial gym equipment from Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness. If you've got anything coming up equipment-wise, happy to put some options together for whenever works for you.",
       "",
-      "{SIGNATURE}`,",
+      "{SIGNATURE}` ,".replace('` ,','`,'),
       "  notIntPolite:`Hi,"
     ].join('\n'),
     [
       "I'm Sandde, Director at AresFit. We supply commercial gym equipment from Nautilus, Star Trac, StairMaster, Schwinn and Jordan Fitness. If you've got anything coming up equipment-wise, happy to put some options together for whenever works for you.",
       "",
-      "{SIGNATURE}`,",
+      "{SIGNATURE}` ,".replace('` ,','`,'),
       "  interested:`Hi,",
       "",
       "Thanks for taking the time {SCHED_PAST}.",
@@ -87,7 +87,7 @@ function applyEmailRealityFix(html){
       "",
       "If anything comes up or you want pricing on specific kit, send it over and I'll put options together.",
       "",
-      "{SIGNATURE}`,",
+      "{SIGNATURE}` ,".replace('` ,','`,'),
       "  notIntPolite:`Hi,"
     ].join('\n'),
     'interested template'
@@ -113,10 +113,38 @@ function applyEmailRealityFix(html){
   if(loopCount!==2)throw new Error(`2026-06-29 email fix expected 2 template loops, found ${loopCount}`);
   return html.split(oldLoop).join(newLoop);
 }
+function applyCallbackLogicFix(html){
+  html=replaceOnce(html,
+    "function isOverdueRow(l){\n  if(!l)return false;\n  if((l.status||'').trim()==='DO NOT CALL')return false;\n  const cbState=classifyCallbackState(l).state;",
+    "function isOverdueRow(l){\n  if(!l)return false;\n  if((l.status||'').trim()==='DO NOT CALL')return false;\n  if(!isActiveCallbackRow(l))return false;\n  const cbState=classifyCallbackState(l).state;",
+    '2026-06-30 overdue active callback gate'
+  );
+  html=replaceOnce(html,
+    "function isDueTodayRow(l){\n  if(!l)return false;\n  if((l.status||'').trim()==='DO NOT CALL')return false;\n  const cbState=classifyCallbackState(l).state;",
+    "function isDueTodayRow(l){\n  if(!l)return false;\n  if((l.status||'').trim()==='DO NOT CALL')return false;\n  if(!isActiveCallbackRow(l))return false;\n  const cbState=classifyCallbackState(l).state;",
+    '2026-06-30 due-today active callback gate'
+  );
+  html=replaceOnce(html,
+    "function allLeadText(l){\n  if(!l)return '';\n  const parts=[l.status,l.stage,l.followUp,l.callAngle,l.research,l.business,l.dm];\n  (l.notes||[]).forEach(n=>parts.push(n.text,n.outcome));\n  return parts.join(' ').toLowerCase();\n}\nfunction classifyCallbackState(l){",
+    "function allLeadText(l){\n  if(!l)return '';\n  const parts=[l.status,l.stage,l.followUp,l.callAngle,l.research,l.business,l.dm];\n  (l.notes||[]).forEach(n=>parts.push(n.text,n.outcome));\n  return parts.join(' ').toLowerCase();\n}\nfunction isActiveCallbackRow(l){\n  if(!l)return false;\n  const st=(l.status||'').trim();\n  return st==='Callback';\n}\nfunction classifyCallbackState(l){",
+    '2026-06-30 active callback helper'
+  );
+  html=replaceOnce(html,
+    "  if(/stale|old missed|remove from active|do not chase/.test(text))return{state:'stale callback/remove',detail:'Stale callback'};\n  const fu=parseFollowUp(l.followUp);\n  const cbTs=l.cbDate?new Date(l.cbDate).getTime():0;\n  const targetTs=(!Number.isNaN(cbTs)&&cbTs)?cbTs:(fu?fu.ts:0);\n  if(targetTs&&targetTs>startOfToday())return{state:'future callback',detail:'Future dated callback'};\n  if(st==='Callback'||targetTs)return{state:'call-now',detail:'Active callback'};\n  if(st==='Awaiting Callback')return{state:'waiting reply',detail:'Awaiting callback'};",
+    "  if(/stale|old missed|remove from active|do not chase/.test(text))return{state:'stale callback/remove',detail:'Stale callback'};\n  if(st==='Awaiting Callback')return{state:'waiting reply',detail:'Awaiting callback'};\n  if(!isActiveCallbackRow(l))return{state:'',detail:''};\n  const fu=parseFollowUp(l.followUp);\n  const cbTs=l.cbDate?new Date(l.cbDate).getTime():0;\n  const targetTs=(!Number.isNaN(cbTs)&&cbTs)?cbTs:(fu?fu.ts:0);\n  if(targetTs&&targetTs>startOfToday())return{state:'future callback',detail:'Future dated callback'};\n  if(st==='Callback')return{state:'call-now',detail:'Active callback'};",
+    '2026-06-30 callback classifier status gate'
+  );
+  html=replaceOnce(html,
+    "  leads.forEach(l=>{\n    if((l.status||'').trim()==='DO NOT CALL')return;\n    const cbState=classifyCallbackState(l).state;",
+    "  leads.forEach(l=>{\n    if((l.status||'').trim()==='DO NOT CALL')return;\n    if(!isActiveCallbackRow(l))return;\n    const cbState=classifyCallbackState(l).state;",
+    '2026-06-30 due pool active callback gate'
+  );
+  return html;
+}
 (async()=>{
   try{
     const [base,patch]=await Promise.all([fetchText(ARES_V2_BASE_URL),fetchText(ARES_V2_PATCH_URL)]);
-    const html=applyEmailRealityFix(applyUnifiedPatch(base,patch));
+    const html=applyCallbackLogicFix(applyEmailRealityFix(applyUnifiedPatch(base,patch)));
     document.open();
     document.write(html);
     document.close();
