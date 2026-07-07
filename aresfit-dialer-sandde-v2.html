@@ -12,7 +12,7 @@ body{margin:0;background:#080b10;color:#f5f6f8;font:14px system-ui,-apple-system
 </style>
 <div class="box">
   <strong>Loading AresFit Dialer v2...</strong>
-  <div class="muted">Applying 2026-06-22, 2026-06-29, 2026-06-30 and 2026-07-03 app fixes.</div>
+  <div class="muted">Applying 2026-06-22, 2026-06-29, 2026-06-30, 2026-07-03 and 2026-07-07 app fixes.</div>
 </div>
 <script>
 const ARES_V2_BASE_URL='https://raw.githubusercontent.com/1sandde1/aresfit-dialer/ba4fc91abef4c41451c6d74bc2cffa596a6ee719/aresfit-dialer-sandde-v2.html';
@@ -149,7 +149,7 @@ function applyRetryFilterFix(html){
   );
   html=replaceOnce(html,
     "function latestVmEntry(l){\n  if(!l||!l.notes||!l.notes.length)return null;\n  let latest=null;\n  for(const n of l.notes){\n    if(n.legacy)continue;\n    if(!latest||(n.ts||0)>(latest.ts||0))latest=n;\n  }\n  return (latest&&(latest.outcome||'').toUpperCase()==='VM')?latest:null;\n}\n// Parse Follow-up Date column",
-    "function latestVmEntry(l){\n  if(!l||!l.notes||!l.notes.length)return null;\n  let latest=null;\n  for(const n of l.notes){\n    if(n.legacy)continue;\n    if(!latest||(n.ts||0)>(latest.ts||0))latest=n;\n  }\n  return (latest&&(latest.outcome||'').toUpperCase()==='VM')?latest:null;\n}\nfunction latestRealNote(l){\n  if(!l||!l.notes||!l.notes.length)return null;\n  let latest=null;\n  for(const n of l.notes){\n    if(n.legacy)continue;\n    if(!latest||(n.ts||0)>(latest.ts||0))latest=n;\n  }\n  return latest;\n}\nfunction isRetryLead(l){\n  const status=(l.status||'').trim();\n  if(['DO NOT CALL','Not Interested','Provider Reject','Callback','Awaiting Callback','Emailed','Quoted'].includes(status))return false;\n  if(Number(l.attempts||0)!==1)return false;\n  const latest=latestRealNote(l);\n  if(!latest)return false;\n  const outcome=(latest.outcome||'').trim();\n  return ['NA','No Answer','VM','Voicemail'].includes(outcome);\n}\n// Parse Follow-up Date column",
+    "function latestVmEntry(l){\n  if(!l||!l.notes||!l.notes.length)return null;\n  let latest=null;\n  for(const n of l.notes){\n    if(n.legacy)continue;\n    if(!latest||(n.ts||0)>(latest.ts||0))latest=n;\n  }\n  return (latest&&(latest.outcome||'').toUpperCase()==='VM')?latest:null;\n}\nfunction latestRealNote(l){\n  if(!l||!l.notes||!l.notes.length)return null;\n  let latest=null;\n  for(const n of l.notes){\n    if(n.legacy)continue;\n    if(!latest||(n.ts||0)>(latest.ts||0))latest=n;\n  }\n  return latest;\n}\nfunction isRetryLead(l){\n  const status=(l.status||'').trim();\n  if(['DO NOT CALL','Not Interested','Provider Reject','Callback','Awaiting Callback','Emailed','Quoted'].includes(status))return false;\n  if(Number(l.attempts||0)!==1)return false;\n  const latest=latestRealNote(l);\n  if(!latest)return false;\n  const outcome=(latest.outcome||'').trim();\n  return ['NA','No Answer'].includes(outcome);\n}\n// Parse Follow-up Date column",
     '2026-07-03 retry helper'
   );
   html=replaceOnce(html,
