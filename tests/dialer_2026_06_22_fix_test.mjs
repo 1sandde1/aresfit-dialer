@@ -6,6 +6,7 @@ const index = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 assert(html.startsWith('<!DOCTYPE html>'), 'the deployable v2 must be a standalone HTML document');
 assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260714-full-qa-refresh'), 'the repository entry link must cache-bust to the verified build');
+assert(html.includes('<link rel="icon" href="data:,">') && index.includes('<link rel="icon" href="data:,">'), 'the public entry and app must not trigger a favicon 404');
 assert(!html.includes('ARES_V2_BASE_URL'), 'the deployable v2 must not fetch a second app at runtime');
 assert(!html.includes('applyUnifiedPatch'), 'the deployable v2 must not patch remote source in the browser');
 assert(html.includes("const APP_BUILD = '2026.07.14'"), 'the visible build identifier is missing');
