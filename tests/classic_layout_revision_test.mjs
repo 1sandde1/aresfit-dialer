@@ -9,6 +9,7 @@ const archiveDir = new URL('versions/2026-07-14-full-qa-c4b70a1/', root);
 const archivedHtml = readFileSync(new URL('aresfit-dialer-sandde-v2.html', archiveDir));
 const archivedIndex = readFileSync(new URL('index.html', archiveDir));
 const manifest = readFileSync(new URL('MANIFEST.md', archiveDir), 'utf8');
+const archivePolicy = readFileSync(new URL('versions/README.md', root), 'utf8');
 const sha256 = value => createHash('sha256').update(value).digest('hex').toUpperCase();
 
 assert.equal(
@@ -22,6 +23,7 @@ assert.equal(
   'the preserved 2026.07.14 entry file changed',
 );
 assert(manifest.includes('archive/live-2026-07-14-full-qa-c4b70a1'), 'the preserved release branch is not documented');
+assert(archivePolicy.includes('Archived releases are append-only'), 'the future release archive policy is missing');
 assert(index.includes('20260714-classic-layout-r1'), 'the current entry file does not target the classic-layout revision');
 assert(html.includes("const APP_BUILD = '2026.07.14.1'"), 'the classic-layout build identifier is missing');
 
