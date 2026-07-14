@@ -73,10 +73,11 @@ assert.equal(canStartFreshDials(),true);
 const first=buildEventRow(lead,{channel:'WhatsApp',outcome:'reply received',proof_source:'manual WhatsApp log',notes:'customer replied'});
 eventLog.push(first);
 const originalTimestamp=eventLog[0].timestamp;
-const second=buildEventRow({...lead,row:8,rawIdx:0},{channel:'email',outcome:'email sent',proof_source:'Gmail compose launched',notes:'opened compose'});
+const second=buildEventRow({...lead,row:8,rawIdx:0},{channel:'email',outcome:'HOLD',next_action:'confirm sent or not sent',proof_source:'Gmail compose launched; send not verified',notes:'opened compose'});
 appendEventRow(second);
 assert.equal(eventLog.length,2);
 assert.equal(eventLog[0].timestamp,originalTimestamp);
+assert.equal(eventLog[1].outcome,'HOLD');
 assert(eventRowsToCsv(eventLog).startsWith(EVENT_LOG_HEADER_LINE+'\\n'));
 `;
 

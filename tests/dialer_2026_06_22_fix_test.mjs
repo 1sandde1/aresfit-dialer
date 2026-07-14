@@ -1,64 +1,58 @@
 import { readFileSync } from 'node:fs';
 import { strict as assert } from 'node:assert';
 
-const loader = readFileSync(new URL('../aresfit-dialer-sandde-v2.html', import.meta.url), 'utf8');
-const patch = readFileSync(new URL('../aresfit-dialer-v2-2026-06-22.patch', import.meta.url), 'utf8');
-const source = `${loader}\n${patch}`;
+const html = readFileSync(new URL('../aresfit-dialer-sandde-v2.html', import.meta.url), 'utf8');
+const index = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
-assert(loader.includes('ARES_V2_BASE_URL'), 'v2 file must load the pinned remote base');
-assert(loader.includes('ARES_V2_PATCH_URL'), 'v2 file must load the 2026-06-22 patch');
-assert(loader.includes('applyUnifiedPatch'), 'v2 loader must apply the patch before rendering');
-assert(loader.includes('ba4fc91abef4c41451c6d74bc2cffa596a6ee719'), 'v2 loader must pin the expected base commit');
-assert(loader.includes('aresfit-dialer-v2-2026-06-22.patch'), 'v2 loader must reference the patch file');
+assert(html.startsWith('<!DOCTYPE html>'), 'the deployable v2 must be a standalone HTML document');
+assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260714-full-qa-refresh'), 'the repository entry link must cache-bust to the verified build');
+assert(!html.includes('ARES_V2_BASE_URL'), 'the deployable v2 must not fetch a second app at runtime');
+assert(!html.includes('applyUnifiedPatch'), 'the deployable v2 must not patch remote source in the browser');
+assert(html.includes("const APP_BUILD = '2026.07.14'"), 'the visible build identifier is missing');
+assert(!/setTimeout\([^\n]*(?:nl-biz|lead-search|time-in)[^\n]*focus/.test(html), 'delayed modal autofocus can steal user input');
+assert(
+  html.includes("const ROLLBACK_BASE_COMMIT = '0b04ff2eea8f5f440001d19fbac400316b426014'"),
+  'the exact rollback baseline must be recorded in the app source'
+);
 
-const requiredSnippets = [
-  'Export handover + CSV package',
+for (const snippet of [
   'function exportSessionPackage',
   'function createZipBlob',
-  'AresFit_Session_Package_${stampShort}.zip',
-  'handover-${stampLong}.md',
-  'AresFit_Call_Sheet_${stampLong}.csv',
-  'function exportStampShort',
-  'function exportStampLong',
-  'function getExportFileName',
-  'modal-head',
-  'Warm approved row callable',
-  'not treated as a fresh dial',
-  'function dialGateState',
-  'function classifyCallbackState',
-  'CALLBACK_ROW_OVERRIDES',
-  "'Future CB'",
-  "'Stale CB'",
-  'Callback queue state split',
-  'active call-now callbacks',
-];
-
-for (const snippet of requiredSnippets) {
-  assert(source.includes(snippet), `missing 2026-06-22 fix snippet: ${snippet}`);
+  'function validateExportSnapshot',
+  'function parseImportedNotes',
+  'function mergeImportedLeadHistory',
+  'function activateLeadQueue',
+  'function clearLeadQueue',
+  'function markEmailSent',
+  'function markEmailNotSent',
+  'function callbackOverrideForLead',
+  'function circleLoopNovelPhones',
+  'function localDateKey',
+]) {
+  assert(html.includes(snippet), `missing hardened v2 behaviour: ${snippet}`);
 }
 
-assert(
-  /function isFreshDial\(l\)\{[\s\S]*if\(l\.notes&&l\.notes\.length\)return false;[\s\S]*if\(st&&st!=='Uncalled'\)return false;[\s\S]*return true;[\s\S]*\}/.test(source),
-  'fresh dial gate must treat blank/Uncalled rows as fresh and warm/history rows as callable'
-);
-
-assert(
-  /Callback:\s*l\s*=>\s*isActiveCallNowCallback\(l\)/.test(source),
-  'Callback filter must mean active call-now callbacks only'
-);
-
-for (const row of [184, 228, 232, 234, 236, 245, 271, 294, 300, 318]) {
-  assert(source.includes(`${row}:{state:`), `missing callback cleanup override for row ${row}`);
+for (const leadId of [
+  'L01311',
+  'L02465',
+  'L03467',
+  'L04449',
+  'L03003',
+  'L03637',
+  'L03684',
+  'L03400',
+  'L04717',
+  'L00687',
+]) {
+  assert(html.includes(`${leadId}:`), `missing stable callback override for ${leadId}`);
 }
 
-assert(
-  /if\(gate\.state==='blocked'\)\{[\s\S]*alert\(gate\.message/.test(source),
-  'call button must block non-callable rows such as DO NOT CALL'
-);
+assert(!html.includes('const CALLBACK_ROW_OVERRIDES'), 'callback exceptions must not depend on mutable row numbers');
+assert(html.includes('AresFit_Session_Package_${exportStampShort(date)}_${rep}.zip'), 'package filename must use the completion timestamp and sender from Michael\'s brief');
+assert(html.includes('AresFit_Call_Sheet_${exportStampLong(date)}_${rep}.csv'), 'packaged CSV filename must use the long completion timestamp and sender');
+assert(html.includes('handover-${exportStampLong(date)}.md'), 'handover filename must use the exact completion timestamp contract');
+assert(html.includes("'Emailed':'HOLD'"), 'asked-to-email call outcomes must not claim an email was sent');
+assert(html.includes("outcome:'EMAIL OPENED'"), 'opening Gmail must be recorded honestly');
+assert(html.includes("draft.confirmed?'email sent':'HOLD'"), 'confirmed email sends must remain parser-compatible');
 
-assert(
-  /if\(gate\.state==='fresh-blocked'\)\{[\s\S]*Fresh dials blocked/.test(source),
-  'call button must still block true fresh dials until reviewed or overridden'
-);
-
-console.log('dialer 2026-06-22 loader + patch contract passed');
+console.log('standalone rollback and safety contract checks passed');
