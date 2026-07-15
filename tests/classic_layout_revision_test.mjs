@@ -24,8 +24,8 @@ assert.equal(
 );
 assert(manifest.includes('archive/live-2026-07-14-full-qa-c4b70a1'), 'the preserved release branch is not documented');
 assert(archivePolicy.includes('Archived releases are append-only'), 'the future release archive policy is missing');
-assert(index.includes('20260714-classic-layout-r1'), 'the current entry file does not target the classic-layout revision');
-assert(html.includes("const APP_BUILD = '2026.07.14.1'"), 'the classic-layout build identifier is missing');
+assert(index.includes('20260715-compact-mobile-r1'), 'the current entry file does not target the compact-mobile revision');
+assert(html.includes("const APP_BUILD = '2026.07.15'"), 'the compact-mobile build identifier is missing');
 
 const renderCard = html.slice(html.indexOf('function renderCard()'), html.indexOf('function renderLeadList()'));
 const fieldsPosition = renderCard.indexOf('<div class="fields">');

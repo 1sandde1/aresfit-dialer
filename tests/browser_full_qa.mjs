@@ -30,7 +30,7 @@ export async function runBrowserQa({ htmlPath, fixturePath, outputDir, executabl
 
   try {
     await page.goto(appUrl, { waitUntil: 'load' });
-    check(page.url().includes('aresfit-dialer-sandde-v2.html?v=20260714-classic-layout-r1'), 'repository entry link did not open the verified cache-busted v2 build');
+    check(page.url().includes('aresfit-dialer-sandde-v2.html?v=20260715-compact-mobile-r1'), 'repository entry link did not open the verified cache-busted v2 build');
     await page.locator('#setup-modal').waitFor({ state: 'visible' });
     await page.locator('#setup-preset-button').click();
     await page.locator('.setup-dd-opt[data-name="Sandde"]').click();

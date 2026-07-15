@@ -65,6 +65,9 @@ button:disabled{opacity:.4;cursor:not-allowed}
 input,textarea,select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--txt);font-family:var(--font);font-size:13px}
 input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red)}
 input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:auto}
+@supports (-webkit-touch-callout: default){
+input,textarea,select{font-size:16px;-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important;touch-action:auto!important}
+}
 textarea{resize:vertical;min-height:70px}
 textarea.pending{border-color:var(--amber);box-shadow:0 0 0 2px rgba(255,171,0,.12)}
 select{appearance:none;-webkit-appearance:none;padding-right:28px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238e8ea0' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 10px center;color-scheme:dark}
@@ -396,25 +399,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .due-banner.overdue{animation:none;background:#17080a}
 @media (max-width:430px){
   .app{padding:10px;padding-bottom:calc(40px + env(safe-area-inset-bottom))}
-  .sticky-top{position:static;margin:-10px -10px 6px;padding-top:calc(6px + env(safe-area-inset-top,0px));padding-left:10px;padding-right:10px;padding-bottom:5px}
-  .head-row{margin-bottom:4px}
-  .head-row .btn-sm{min-height:32px;padding:5px 8px;font-size:11px}
-  .source-summary{display:none}
-  .stats{gap:0;margin-bottom:4px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--card)}
-  .stat{display:flex;align-items:baseline;justify-content:center;gap:4px;padding:5px 2px;border:0;border-right:1px solid var(--border);border-radius:0}
-  .stat:last-child{border-right:0}
-  .stat-val{font-size:13px}
-  .stat-lbl{font-size:8px;margin-top:0}
-  .block-banner{padding:6px 8px;border-width:1px;border-radius:7px;margin-bottom:4px;font-size:10px;gap:6px}
-  .block-banner .ico{font-size:9px}
-  .queue-strip{padding:5px 7px;margin-bottom:4px;border-radius:7px}
-  .queue-strip button{min-height:28px;padding:3px 7px}
-  .due-banner{padding:8px 9px;margin-bottom:8px}
-  .due-banner h3{margin-bottom:0}
-  .due-banner .biz{font-size:12px;margin-top:2px}
-  .due-banner-btns{margin-top:6px}
-  .due-banner .dismiss{min-height:34px;padding:6px 8px;font-size:10px}
-  .card{padding:12px}
+  .sticky-top{margin:-10px -10px 8px;padding-left:10px;padding-right:10px}
+  .source-summary{font-size:9px}
+  .stat-lbl{font-size:9px}
+  .card{padding:14px}
   .biz-head{font-size:21px}
   .fields{grid-template-columns:1fr 1fr}
   .email-confirmation{grid-template-columns:1fr 1fr}
@@ -433,9 +421,6 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 }
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
-}
-@supports (-webkit-touch-callout: default){
-  input,textarea,select{font-size:16px!important;-webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important;touch-action:auto!important}
 }
 </style>
 </head>
@@ -862,7 +847,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.07.15';
+const APP_BUILD = '2026.07.14.1';
 const ROLLBACK_BASE_COMMIT = '0b04ff2eea8f5f440001d19fbac400316b426014';
 const FIELDS = ['priority','business','phone','website','status','stage','notes','followUp','equipBrands','aresBrands','dm','email','callAngle','research'];
 const LABELS = {
@@ -1728,11 +1713,10 @@ function renderQueueGate(){
   const allowed=canStartFreshDials();
   const l=filtered[idx];
   const state=dialGateState(l);
-  if(state.state!=='blocked'&&(state.state==='warm'||allowed)){slot.innerHTML='';return}
-  const msg=state.state==='blocked'?state.message:'Review warm leads and blockers before fresh calls';
-  const cls='secondary';
+  const msg=state.state==='blocked'?state.message:(state.state==='warm'?'Existing lead · calling allowed':(allowed?'Fresh leads · calling allowed':'Review warm leads and blockers before fresh calls'));
+  const cls=(allowed||state.state==='warm')&&state.state!=='blocked'?'prime':'secondary';
   const detail=(state.state==='blocked')?'':(g.overrideReason?` · override: ${esc(g.overrideReason)}`:'');
-  slot.innerHTML=`<div class="block-banner ${cls}" style="margin-bottom:6px"><span class="ico">!</span><span class="msg">${msg}${detail}</span></div>`;
+  slot.innerHTML=`<div class="block-banner ${cls}" style="margin-bottom:6px"><span class="ico">${(allowed||state.state==='warm')&&state.state!=='blocked'?'OK':'!'}</span><span class="msg">${msg}${detail}</span></div>`;
 }
 function eventTimestamp(ts=Date.now()){return new Date(ts).toISOString().replace('Z','+00:00')}
 function eventLocalDateKey(row){
@@ -2334,7 +2318,7 @@ function renderCard(){
 
   // Due banner (P3) - when this lead IS the due/overdue one
   const dueWhen=l.cbDate?esc((l.cbDate||'').replace('T',' ')):(l.followUp?esc(l.followUp):'today');
-  const dueBanner=poolFlag?`<div class="due-banner ${poolFlag==='overdue'?'overdue':''}" role="status"><h3>${poolFlag==='overdue'?'OVERDUE':'DUE NOW'} · ${dueWhen}</h3><div class="due-banner-btns"><button class="dismiss" onclick="dismissForToday(${l.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${l.id})">Clear callback</button></div></div>`:'';
+  const dueBanner=poolFlag?`<div class="due-banner ${poolFlag==='overdue'?'overdue':''}"><h3>${poolFlag==='overdue'?'OVERDUE':'DUE NOW'} · ${dueWhen}</h3><div class="biz">Call when ready</div><div class="due-banner-btns"><button class="dismiss" onclick="dismissForToday(${l.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${l.id})">Clear callback</button></div></div>`:'';
 
   // Gates
   const mobileGate=is07?`<div class="gate mobile"><h4>Mobile number on sheet</h4>
@@ -2767,8 +2751,6 @@ function renderDueQueueBanner(){
   const target=list[dueQueueIdx];
   const isOver=dueQueueIdx<pool.overdue.length;
   const total=list.length;
-  const onTarget=(target.id===(filtered[idx]||{}).id);
-  if(onTarget){slot.innerHTML='';return}
   // Sticky overdue counter - always visible when there are due/overdue items, even if you're already on one.
   // The collapsed control still shows both counts at a glance.
   if(prefs.queueBannerCollapsed){
@@ -2779,6 +2761,7 @@ function renderDueQueueBanner(){
     return;
   }
   // Expanded form - hide the "jump to lead" CTA if you're already on that row, but keep the banner visible
+  const onTarget=(target.id===(filtered[idx]||{}).id);
   const whenLabel=target.cbDate?esc((target.cbDate||'').replace('T',' ')):(target.followUp?esc(target.followUp):'today');
   // Cycle controls: only render when there's more than one to flip through
   const cycleControls=total>1?`<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0;font-size:11px;color:var(--txt2)"><button onclick="cycleDueQueue(-1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;font-size:11px">Previous</button><span>${dueQueueIdx+1} of ${total}</span><button onclick="cycleDueQueue(1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;font-size:11px">Next</button></div>`:'';
