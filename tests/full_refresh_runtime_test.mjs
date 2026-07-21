@@ -72,9 +72,10 @@ vm.runInContext(`
 
 {
   const names=sessionPackageNames(new Date(2026,6,14,16,5),'Michael Davies');
-  assert.equal(names.zip,'AresFit_Session_Package_1605-140726_Michael_Davies.zip');
-  assert.equal(names.csv,'AresFit_Call_Sheet_1605-14-07-2026_Michael_Davies.csv');
-  assert.equal(names.handover,'handover-1605-14-07-2026.md');
+  assert.equal(names.zip,'AresFit_Session_Package_14-07-2026_1605.zip');
+  assert.equal(names.csv,'AresFit_Call_Sheet_14-07-2026_1605.csv');
+  assert.equal(names.handover,'handover-14-07-2026_1605.md');
+  assert.equal(getExportFileName(new Date(2026,6,14,16,5)),'AresFit_Call_Sheet_14-07-2026_1605.csv');
 }
 
 {
