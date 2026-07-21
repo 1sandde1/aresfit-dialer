@@ -7,7 +7,7 @@ function check(condition, message) {
 }
 
 async function visibleText(page, selector) {
-  return (await page.locator(selector).innerText()).trim();
+  return ((await page.locator(selector).textContent()) || '').trim();
 }
 
 export async function runBrowserQa({ htmlPath, fixturePath, outputDir, executablePath, playwright }) {
@@ -30,7 +30,7 @@ export async function runBrowserQa({ htmlPath, fixturePath, outputDir, executabl
 
   try {
     await page.goto(appUrl, { waitUntil: 'load' });
-    check(page.url().includes('aresfit-dialer-sandde-v2.html?v=20260715-compact-mobile-r1'), 'repository entry link did not open the verified cache-busted v2 build');
+    check(page.url().includes('aresfit-dialer-sandde-v2.html?v=20260721-original-layout-r1'), 'repository entry link did not open the verified cache-busted v2 build');
     await page.locator('#setup-modal').waitFor({ state: 'visible' });
     await page.locator('#setup-preset-button').click();
     await page.locator('.setup-dd-opt[data-name="Sandde"]').click();
@@ -84,11 +84,10 @@ export async function runBrowserQa({ htmlPath, fixturePath, outputDir, executabl
     await page.getByRole('button', { name: 'Retry', exact: true }).click();
     check(await page.locator('#lead-list .lead-item').count() === 1, 'Retry filter did not return exactly one lead');
     await page.getByRole('button', { name: /QA RETRY GYM/ }).click();
-    await page.locator('#queue-strip').waitFor({ state: 'visible' });
-    check((await visibleText(page, '#queue-strip')).includes('Retry · 1 leads'), 'filtered queue label/count is incorrect');
+    check(await page.evaluate(() => queueLabel === 'Retry' && queueLeadIds.length === 1), 'filtered queue label/count is incorrect');
     check((await visibleText(page, '.biz-head')).includes('QA RETRY GYM'), 'filtered queue selected the wrong lead');
-    await page.getByRole('button', { name: 'Clear queue', exact: true }).click();
-    check(await page.locator('#queue-strip').isHidden(), 'queue strip did not clear');
+    await page.evaluate(() => clearLeadQueue());
+    check(await page.evaluate(() => queueLeadIds.length === 0), 'queue did not clear');
     record('Retry filter and persistent card queue');
 
     await page.getByRole('button', { name: 'Leads', exact: true }).first().click();
@@ -158,35 +157,35 @@ export async function runBrowserQa({ htmlPath, fixturePath, outputDir, executabl
       user = previousUser;
       return { directCsv, packageNames };
     });
-    check(filenameContract.directCsv === 'AresFit_Call_Sheet_0918-080726_Michael_Davies.csv', 'direct CSV filename contract is wrong');
-    check(filenameContract.packageNames.zip === 'AresFit_Session_Package_0918-080726_Michael_Davies.zip', 'package filename contract is wrong');
-    check(filenameContract.packageNames.handover === 'handover-0918-08-07-2026.md', 'handover filename contract is wrong');
-    check(filenameContract.packageNames.csv === 'AresFit_Call_Sheet_0918-08-07-2026_Michael_Davies.csv', 'inner CSV filename contract is wrong');
-    record('Michael brief exact export filename contract');
+    check(filenameContract.directCsv === 'AresFit_Call_Sheet_08-07-2026_0918.csv', 'direct CSV filename contract is wrong');
+    check(filenameContract.packageNames.zip === 'AresFit_Session_Package_08-07-2026_0918.zip', 'package filename contract is wrong');
+    check(filenameContract.packageNames.handover === 'handover-08-07-2026_0918.md', 'handover filename contract is wrong');
+    check(filenameContract.packageNames.csv === 'AresFit_Call_Sheet_08-07-2026_0918.csv', 'inner CSV filename contract is wrong');
+    record('restored readable export filename contract');
 
     await page.getByRole('button', { name: 'Settings', exact: true }).first().click();
     const packageDownloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Export handover + CSV package', exact: true }).click();
     const packageDownload = await packageDownloadPromise;
     const packageName = packageDownload.suggestedFilename();
-    check(/^AresFit_Session_Package_\d{4}-\d{6}_Sandde\.zip$/.test(packageName), `package filename is incorrect: ${packageName}`);
+    check(/^AresFit_Session_Package_\d{2}-\d{2}-\d{4}_\d{4}\.zip$/.test(packageName), `package filename is incorrect: ${packageName}`);
     const packagePath = join(outputDir, packageName);
     await packageDownload.saveAs(packagePath);
     const packageBytes = readFileSync(packagePath);
-    check(packageBytes.includes(Buffer.from('_Sandde.csv')) && packageBytes.includes(Buffer.from('handover-')), 'inner package filenames are incorrect');
+    check(packageBytes.includes(Buffer.from('AresFit_Call_Sheet_')) && packageBytes.includes(Buffer.from('handover-')), 'inner package filenames are incorrect');
     await page.locator('#settings-modal .x-btn').click();
 
     const csvDownloadPromise = page.waitForEvent('download');
     await page.evaluate(() => exportCSV());
     const csvDownload = await csvDownloadPromise;
     const csvName = csvDownload.suggestedFilename();
-    check(/^AresFit_Call_Sheet_\d{4}-\d{6}_Sandde\.csv$/.test(csvName), `CSV filename is incorrect: ${csvName}`);
+    check(/^AresFit_Call_Sheet_\d{2}-\d{2}-\d{4}_\d{4}\.csv$/.test(csvName), `CSV filename is incorrect: ${csvName}`);
     const csvPath = join(outputDir, csvName);
     await csvDownload.saveAs(csvPath);
     const csvText = readFileSync(csvPath, 'utf8').replace(/^\ufeff/, '');
     check(csvText.split(/\r?\n/)[0].split(',').length === 22, 'downloaded CSV header is not 22 columns');
     check(csvText.includes('QA NEW LEAD') && csvText.includes(newLeadState.id), 'downloaded CSV omitted the new lead or its ID');
-    record('sender-stamped package and CSV downloads');
+    record('readable dated package and CSV downloads');
 
     await page.getByRole('button', { name: 'Handover', exact: true }).click();
     const handover = await visibleText(page, '#handover-body');
@@ -203,7 +202,7 @@ export async function runBrowserQa({ htmlPath, fixturePath, outputDir, executabl
     await page.reload({ waitUntil: 'load' });
     await page.getByRole('button', { name: 'Resume previous session', exact: true }).click();
     await page.locator('#main-app').waitFor({ state: 'visible' });
-    check((await visibleText(page, '#queue-strip')).includes('Retry · 1 leads'), 'filtered queue did not survive reload/resume');
+    check(await page.evaluate(() => queueLabel === 'Retry' && queueLeadIds.length === 1), 'filtered queue did not survive reload/resume');
     check((await visibleText(page, '#source-summary')).includes('5 rows'), 'source metadata did not survive reload/resume');
     record('localStorage/IndexedDB resume state');
 
@@ -215,7 +214,7 @@ export async function runBrowserQa({ htmlPath, fixturePath, outputDir, executabl
     await page.locator('#settings-modal').waitFor({ state: 'hidden' });
     record('modal Escape and focus-management path');
 
-    await page.getByRole('button', { name: 'Clear queue', exact: true }).click();
+    await page.evaluate(() => clearLeadQueue());
     const accessibility = await page.evaluate(() => {
       const ids = [...document.querySelectorAll('[id]')].map(element => element.id);
       const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
