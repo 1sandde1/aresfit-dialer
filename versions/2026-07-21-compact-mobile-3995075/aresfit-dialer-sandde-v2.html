@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; manifest-src data:">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AresFit">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href='data:application/manifest+json,{"name":"AresFit Dialer","short_name":"AresFit","start_url":".","display":"standalone","background_color":"%23000000","theme_color":"%23000000"}'>
+<link rel="icon" href="data:,">
+<title>AresFit Dialer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[onclick],button,.dd,.field,summary{touch-action:manipulation}
+html,body{-webkit-text-size-adjust:100%;overscroll-behavior:none}
+:root{--bg:#000;--panel:#070707;--card:#101010;--border:#2b2b2b;--border2:#4b4b4b;--red:#ff4d63;--red2:#ff7182;--green:#45d483;--amber:#f4b542;--blue:#72a7ff;--purple:#c2a7ff;--danger:#ff4d63;--txt:#f7f7f5;--txt2:#b1b1ad;--txt3:#8c8c87;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;--mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);min-height:100vh}
+*::-webkit-scrollbar{width:6px;height:6px}
+*::-webkit-scrollbar-track{background:#0a0a14}
+*::-webkit-scrollbar-thumb{background:#252538;border-radius:3px}
+
+/* Layout */
+.app{max-width:640px;margin:0 auto;padding:10px;padding-bottom:40px}
+.sticky-top{position:sticky;top:0;z-index:50;background:var(--bg);padding-top:calc(10px + env(safe-area-inset-top,0px));margin:-10px -10px 8px;padding-left:10px;padding-right:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.head-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.logo{font-size:15px;font-weight:800;letter-spacing:.08em;flex:1;color:var(--txt)}
+.logo span{color:var(--txt);font-weight:800}
+.save-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--txt3);margin-left:6px;vertical-align:middle;transition:background .25s}
+.save-dot.ok{background:var(--green);box-shadow:0 0 8px rgba(0,230,118,.6)}
+.save-dot.fail{background:var(--danger)}
+.save-dot.pulse{animation:pulse .6s ease-out}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.stat{background:var(--card);padding:8px 6px;border-radius:9px;border:1px solid var(--border);text-align:center}
+.stat-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--txt);line-height:1.1}
+.stat-lbl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+
+/* Call block banner */
+.block-banner{padding:10px 12px;border-radius:10px;margin-bottom:10px;font-size:12px;font-weight:600;border:2px solid;display:flex;align-items:center;gap:8px}
+.block-banner .ico{font-size:16px}
+.block-banner .msg{flex:1}
+.block-banner.prime{background:rgba(0,230,118,.08);border-color:var(--green);color:var(--green)}
+.block-banner.secondary{background:rgba(255,171,0,.08);border-color:var(--amber);color:var(--amber)}
+.block-banner.dead{background:rgba(255,23,68,.1);border-color:var(--danger);color:var(--red2)}
+
+/* Buttons */
+button{font-family:var(--font);cursor:pointer;border:none;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--txt);transition:transform .1s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn-red{background:#fff;color:#000}
+.btn-ghost{background:var(--card);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border2)}
+.btn-sm{padding:6px 10px;font-size:11px;border-radius:7px}
+
+/* Inputs */
+input,textarea,select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 11px;color:var(--txt);font-family:var(--font);font-size:13px}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red)}
+input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:auto}
+textarea{resize:vertical;min-height:70px}
+textarea.pending{border-color:var(--amber);box-shadow:0 0 0 2px rgba(255,171,0,.12)}
+select{appearance:none;-webkit-appearance:none;padding-right:28px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%238e8ea0' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 10px center;color-scheme:dark}
+option{background:var(--card);color:var(--txt);padding:6px}
+.setup-dd{position:relative;margin:4px 0 10px}
+.setup-dd-btn{width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 11px;color:var(--txt);display:flex;align-items:center;justify-content:space-between;text-align:left}
+.setup-dd-btn:hover,.setup-dd.open .setup-dd-btn{border-color:var(--red)}
+.setup-dd-caret{font-size:10px;color:var(--txt3);margin-left:8px}
+.setup-dd-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--card);border:1px solid var(--border2);border-radius:9px;box-shadow:0 10px 28px rgba(0,0,0,.7);z-index:80;overflow:hidden}
+.setup-dd.open .setup-dd-menu{display:block}
+.setup-dd-opt{width:100%;background:transparent;border-radius:0;color:var(--txt);text-align:left;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);transform:none}
+.setup-dd-opt:last-child{border-bottom:none}
+.setup-dd-opt:hover{background:#1c1c1c;color:#fff}
+.setup-dd-opt.active{background:#181818;color:var(--red2)}
+
+/* Custom dropdown (Status/Stage) */
+.dd{position:relative;padding:5px 22px 5px 2px;font-size:13px;border-bottom:1px solid var(--border);cursor:pointer;color:var(--txt);user-select:none}
+.dd-val{min-height:18px;display:flex;align-items:center}
+.dd-caret{position:absolute;right:4px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:9px}
+.dd-list{display:none;position:absolute;left:-10px;right:-10px;top:calc(100% + 4px);background:var(--card);border:1px solid var(--border2);border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.7);z-index:20;max-height:300px;overflow-y:auto}
+.dd.open .dd-list{display:block}
+.dd-opt{padding:9px 12px;font-size:13px;color:var(--txt);cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03)}
+.dd-opt:last-child{border-bottom:none}
+.dd-opt:hover{background:#fff;color:#000}
+.dd-opt.selected{color:var(--red2);font-weight:600}
+.dd-opt.selected:hover{background:#fff;color:#000}
+
+/* Gates (P1) */
+.gate{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin:10px 0}
+.gate.pre{border-left:4px solid var(--amber)}
+.gate.mobile{border-left:4px solid var(--danger);background:rgba(255,23,68,.06)}
+.gate h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);margin-bottom:6px;font-weight:700}
+.gate.mobile h4{color:var(--danger)}
+.gate label{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:var(--txt);cursor:pointer}
+.gate input[type=checkbox]{width:16px;height:16px;accent-color:var(--green);flex:0 0 auto;cursor:pointer}
+.gate .hint{font-size:10px;color:var(--txt3);margin-top:4px;line-height:1.4}
+
+/* Deconflict + dead air (P2) */
+.flag-bar{background:rgba(255,171,0,.12);border-left:3px solid var(--amber);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--amber);margin-bottom:8px}
+.flag-bar.danger{background:rgba(255,23,68,.1);border-left-color:var(--danger);color:var(--red2)}
+.deconflict-toggle{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--txt3);margin-top:6px;padding:4px 0;cursor:pointer}
+.deconflict-toggle input{width:14px;height:14px;accent-color:var(--amber)}
+
+/* Brand swap chip (P2) */
+.swap-chip{display:inline-block;background:#171207;border:1px solid var(--amber);border-radius:8px;padding:7px 11px;margin-top:6px;font-size:11px;cursor:pointer;color:var(--amber);line-height:1.35;animation:fadein .25s}
+.swap-chip .brand{color:#fff;font-weight:700}
+.swap-chip:hover{background:var(--amber);color:#000}
+.swap-chip:hover .brand{color:#000}
+@keyframes fadein{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+
+/* Due banner (P3) */
+.due-banner{background:#171207;border:2px solid var(--amber);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.due-banner.overdue{background:#17080a;border-color:var(--danger)}
+@keyframes pulse-border-amber{0%,100%{box-shadow:0 0 0 rgba(255,171,0,0)}50%{box-shadow:0 0 16px rgba(255,171,0,.4)}}
+@keyframes pulse-border-red{0%,100%{box-shadow:0 0 0 rgba(255,46,77,0)}50%{box-shadow:0 0 16px rgba(255,46,77,.45)}}
+.due-banner h3{font-size:11px;text-transform:uppercase;font-weight:800;color:var(--amber);margin-bottom:4px}
+.due-banner.overdue h3{color:var(--danger)}
+.due-banner .biz{font-size:14px;font-weight:700;color:#fff}
+.due-banner-btns{display:flex;gap:6px;margin-top:8px}
+.due-banner .jump{background:var(--amber);color:#000;flex:1;padding:8px;font-size:12px;font-weight:700;border-radius:8px;border:none;cursor:pointer}
+.due-banner.overdue .jump{background:var(--danger);color:#fff}
+.due-banner .dismiss{background:transparent;color:var(--txt2);border:1px solid var(--border2);padding:8px 12px;font-size:11px;border-radius:8px;cursor:pointer}
+
+/* Email button (P3) */
+.email-btn{width:100%;background:transparent;color:var(--txt);padding:14px 16px;font-size:14px;font-weight:700;line-height:1.4;border-radius:12px;margin:10px 0 14px;border:2px solid #fff;cursor:pointer;text-align:center;word-break:break-word}
+.email-btn:hover{background:#fff;color:#000}
+.email-btn:active{transform:scale(.98)}
+
+/* Toast (P1/P3) */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--amber);border-left:4px solid var(--amber);border-radius:10px;padding:12px 18px;font-size:12px;color:var(--amber);z-index:300;max-width:90%;box-shadow:0 8px 30px rgba(0,0,0,.7);animation:slideup .3s;font-weight:600}
+.toast.danger{border-color:var(--danger);border-left-color:var(--danger);color:var(--red2)}
+@keyframes slideup{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* DNC row marker (P1) */
+.lead-item.dnc-row{background:rgba(255,23,68,.08)!important;border-left-color:var(--danger)!important}
+
+/* Overdue / due-today row flags in lead list */
+.lead-item.overdue-row{border-left-color:var(--danger)!important;background:rgba(255,23,68,.05)}
+.lead-item.due-today-row{border-left-color:var(--amber)!important;background:rgba(255,171,0,.05)}
+.fu-badge{font-size:8px;font-weight:800;padding:2px 5px;border-radius:4px;letter-spacing:.05em;font-family:var(--mono)}
+.fu-badge.overdue{background:var(--danger);color:#fff}
+.fu-badge.due{background:var(--amber);color:#000}
+
+/* Handover modal */
+.handover-box{background:#0a0a14;border:1px solid var(--border);border-radius:8px;padding:10px;font-family:var(--mono);font-size:10px;line-height:1.5;color:var(--txt2);max-height:320px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;margin:8px 0}
+.subj-pool textarea{min-height:140px;font-family:var(--mono);font-size:11px}
+
+/* Email composer modal (Ship 1) */
+.composer-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.c-row{margin-bottom:10px}
+.c-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--txt3);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.c-chk{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--txt);cursor:pointer;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px}
+.c-chk input{width:16px;height:16px;accent-color:var(--green)}
+.c-warn{background:rgba(255,171,0,.1);border-left:3px solid var(--amber);padding:8px 10px;font-size:11px;color:var(--amber);margin:4px 0;border-radius:6px;line-height:1.45}
+.c-warn.danger{background:rgba(255,23,68,.1);border-left-color:var(--danger);color:var(--red2)}
+.c-warn+.c-warn{margin-top:4px}
+#c-body{min-height:220px;font-size:13px;line-height:1.55}
+.tmpl-edit textarea{min-height:120px;font-family:var(--mono);font-size:11px;margin-bottom:8px}
+
+/* Call card */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}
+.row-line{font-family:var(--mono);font-size:11px;color:var(--txt3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row-line .pri{color:var(--amber);font-weight:700}
+.row-line .pri.top{color:var(--red2)}
+.row-line .r{color:var(--red2);font-weight:700}
+.row-line .att{background:var(--border2);padding:1px 6px;border-radius:10px;color:var(--txt);font-weight:600}
+.biz-head{font-size:22px;font-weight:800;line-height:1.15;margin-bottom:3px;word-break:break-word}
+.sub{color:var(--txt2);font-size:12px}
+
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.field{background:var(--card);padding:8px 9px;border-radius:8px;border:1px solid var(--border);cursor:pointer;min-height:42px}
+.field.full{grid-column:1 / -1}
+.field:hover{border-color:var(--border2)}
+.field-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center}
+.field-lbl .edit{color:var(--txt3);font-size:8px}
+.field-val{font-size:13px;color:var(--txt);word-break:break-word;min-height:18px}
+.field-val.mono{font-family:var(--mono);font-size:14px;letter-spacing:.02em}
+.field-val.empty{color:var(--txt3);font-style:italic;font-size:12px}
+.field select{padding:5px 26px 5px 2px;font-size:12px;border:none;background-color:transparent;border-bottom:1px solid var(--border)}
+.field input{padding:4px 0;font-size:13px;background:transparent;border:none;border-bottom:1px solid var(--red)}
+.reveal{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:12px;color:var(--txt2)}
+.reveal summary{cursor:pointer;color:var(--txt);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.reveal summary::marker{color:var(--txt3)}
+.reveal div{margin-top:6px;white-space:pre-wrap;line-height:1.55}
+.ref-chip{display:inline-block;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-size:11px;color:var(--txt2);margin:2px 4px 2px 0}
+
+/* CALL button */
+.call-row{display:flex;gap:8px;margin:12px 0 10px}
+.call-btn{flex:1;padding:18px;font-size:19px;font-weight:800;border-radius:12px;background:#fff;color:#000;letter-spacing:.02em;border:none;cursor:pointer}
+.call-btn:active{transform:scale(.98)}
+.call-btn .n{font-family:var(--mono);font-size:15px;font-weight:700;display:block;margin-top:2px;opacity:.95}
+.copy-btn{width:54px;background:var(--card);border:1px solid var(--border);font-size:20px;border-radius:14px}
+.call-info{font-size:11px;padding:8px 10px;background:rgba(255,171,0,.08);border-left:3px solid var(--amber);border-radius:6px;margin-bottom:10px;color:var(--amber);display:none}
+.call-info.show{display:block}
+.call-info .t{font-family:var(--mono);font-weight:700}
+
+/* Outcomes */
+.outcomes{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.outcomes button{padding:14px 10px;font-size:13px;background:var(--card);border:1px solid var(--border);min-height:52px;line-height:1.2;border-radius:10px;font-weight:600}
+.outcomes button.sel{background:#fff;border-color:#fff;color:#000}
+.outcomes button[data-out="Provider Reject"].sel{background:var(--danger);border-color:var(--danger)}
+.outcomes button[data-out="HOT"].sel{background:#ff4081;border-color:#ff4081}
+.outcomes button[data-out="Callback"].sel{background:var(--amber);border-color:var(--amber);color:#000}
+
+/* Notes */
+.notes-wrap{margin-top:12px}
+.notes-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--txt3);margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+.notes-hist{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 11px;max-height:180px;overflow-y:auto;font-size:12px;line-height:1.55;color:var(--txt);white-space:pre-wrap;word-break:break-word;margin-bottom:6px}
+.notes-hist:empty::before{content:"No notes yet. Pick outcome below, type note, tap Next to log.";color:var(--txt3);font-style:italic;font-size:11px}
+.notes-hist .entry{padding:5px 6px;border-bottom:1px dashed rgba(255,255,255,.04);border-radius:4px;transition:background .12s}
+.notes-hist .entry:last-child{border-bottom:none}
+.notes-hist .entry:hover{background:rgba(255,255,255,.04)}
+.notes-hist .entry .ts{color:var(--red2);font-family:var(--mono);font-weight:600}
+.notes-hist .entry .oc{color:var(--amber);font-weight:700}
+.notes-hist .legacy{color:var(--txt2);font-size:11px;font-style:italic}
+.new-note-row{display:flex;gap:4px;align-items:flex-start}
+.new-note-row textarea{flex:1}
+.time-pill{font-family:var(--mono);font-size:10px;padding:4px 6px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--amber);cursor:pointer;white-space:nowrap;align-self:stretch;display:flex;align-items:center}
+.time-pill.unset{color:var(--txt3)}
+.note-warn{font-size:11px;color:var(--red2);margin-top:3px;display:none}
+.note-warn.show{display:block}
+
+/* Nav */
+.nav-row{display:flex;gap:6px;margin-top:10px;align-items:center}
+.nav-row .pos{flex:1;text-align:center;font-family:var(--mono);font-size:12px;color:var(--txt2)}
+.nav-row button{flex:0 0 auto;padding:10px 14px}
+.next-btn{background:#fff;color:#000}
+
+/* Toolbar bottom */
+.toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.toolbar button{font-size:11px;padding:9px 4px;background:var(--card);border:1px solid var(--border)}
+
+/* Upload screen */
+.upload-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.upload-card{max-width:520px;width:100%;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px;position:relative}
+.upload-zone{border:2px dashed var(--border2);border-radius:12px;padding:36px 20px;text-align:center;cursor:pointer;background:#000;transition:all .2s;margin-top:14px}
+.upload-zone:hover,.upload-zone.drag{border-color:#fff;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 0 3px rgba(255,255,255,.04)}
+.upload-zone .big{font-size:38px}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto}
+.modal-box{background:var(--panel);border-radius:14px;padding:16px;max-width:600px;width:100%;border:1px solid var(--border);position:relative;margin-top:20px;margin-bottom:20px}
+.x-btn{position:absolute;top:10px;right:10px;background:none;color:var(--txt3);font-size:20px;padding:4px 10px}
+.x-btn:hover{color:var(--txt)}
+.modal-head{display:flex;justify-cont…47815 tokens truncated…quired');return}
+  // Ensure headers exist (if brand new session with no import, create minimal set)
+  if(!headers||!headers.length)headers=SHEET_COLS.slice();
+  // Build raw row
+  const newRaw={};headers.forEach(h=>newRaw[h]='');
+  const temporaryLeadId=createTemporaryLeadId();
+  newRaw['Business Name']=biz;
+  newRaw['Phone']=phone;
+  newRaw['Lead_ID']=temporaryLeadId;
+  if(dm)newRaw['PSC / Decision Maker']=dm;
+  if(email)newRaw['Email']=email;
+  if(src)newRaw['Research Notes']=`Added in-app. Source row: R${src}`;
+  raw.push(newRaw);
+  const rawIdx=raw.length-1;
+  // Build lead
+  const maxId=leads.reduce((m,l)=>Math.max(m,l.id||0),-1);
+  const maxRow=leads.reduce((m,l)=>Math.max(m,l.row||0),0);
+  const o={
+    id:maxId+1, row:maxRow+1, rawIdx,
+    attempts:0, notes:[], cbDate:'', cbSetAt:0,leadId:temporaryLeadId,
+    preflightPassed:false, mobileVerified:false, michaelAlsoCalled:false, providerReject:false,
+    pending:{outcome:'',text:'',callStartTs:0,editedHm:'',speakerRole:''},
+    priority:'', business:biz, phone, website:'', status:'', stage:'',
+    followUp:'', equipBrands:'', aresBrands:'', dm, email, callAngle:'',
+    research:src?`Added in-app. Source row: R${src}`:''
+  };
+  leads.push(o);
+  sourceMeta.rowCount=raw.length;
+  save();closeNewLead();
+  // Jump to the new lead
+  queueLeadIds=[];queueLabel='';filtered=leads.slice();idx=filtered.findIndex(x=>x.id===o.id);
+  filter='All';activeFilters=['All'];closeLeads();render();
+  showToast(`Added R${o.row} ${biz}`);
+}
+function saveTime(){
+  if(!timeEditContext)return;
+  const raw=document.getElementById('time-in').value;
+  const parsed=parseTime(raw);
+  if(!parsed){alert('Bad time. Use HH:MM, 1432, or "half 2".');return}
+  const l=leads.find(x=>String(x.id)===timeEditContext.leadId);
+  if(!l){closeTime();return}
+  if(timeEditContext.noteId==='pending'){
+    if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:'',speakerRole:''};
+    l.pending.editedHm=parsed;
+    if(!l.pending.callStartTs)l.pending.callStartTs=Date.now();
+  } else {
+    const n=l.notes.find(x=>x.id===timeEditContext.noteId);
+    if(n)n.hm=parsed;
+  }
+  closeTime();save();render();
+}
+
+// ===== Export =====
+function buildCsvLines(){
+  const rows=buildCanonicalSheetRows();
+  return[SHEET_COLS.map(csvEscape).join(','),...rows.map(row=>SHEET_COLS.map(header=>csvEscape(row[header]||'')).join(','))];
+}
+function buildCanonicalSheetRows(){
+  const byIdx=new Map();leads.forEach(lead=>byIdx.set(lead.rawIdx,lead));
+  return raw.map((source,index)=>{
+    const row={};SHEET_COLS.forEach(header=>row[header]=source[header]||'');
+    const lead=byIdx.get(index);if(!lead)return row;
+    row['FINAL PRIORITY']=lead.priority||'';
+    row['Business Name']=lead.business||'';
+    row.Phone=lead.phone2?`${lead.phone||''} | ${lead.phone2}`:(lead.phone||'');
+    row.Website=lead.website||'';
+    row.Status=lead.status||'';
+    row.Stage=lead.stage||'';
+    let followUp=lead.followUp||'';
+    if(lead.cbDate){const date=lead.cbDate.replace('T',' ');followUp=lead.cbEndTime?`${date}-${lead.cbEndTime}`:date}
+    row['Follow-up Date']=followUp;
+    row['Equipment Brands']=lead.equipBrands||'';
+    row['AresFit Brands']=lead.aresBrands||'';
+    row['PSC / Decision Maker']=lead.dm||'';
+    row.Email=lead.email2?`${lead.email||''} | ${lead.email2}`:(lead.email||'');
+    row['Call Angle']=lead.callAngle||'';
+    row['Research Notes']=lead.research||'';
+    row.Notes=(lead.notes||[]).map(note=>note.legacy?note.text:`${note.dmy} ${note.hm} - ${note.outcome}${note.speakerRole?` [${note.speakerRole}]`:''} - ${note.text}`).join(' | ');
+    row.Lead_ID=getLeadId(lead)||row.Lead_ID||'';
+    return row;
+  });
+}
+function validateExportSnapshot(){
+  const rows=buildCanonicalSheetRows();
+  const errors=[];const warnings=[];
+  if(rows.length!==raw.length)errors.push(`Row count mismatch: expected ${raw.length}, built ${rows.length}`);
+  const seenIds=new Map();let blankIds=0;
+  rows.forEach((row,index)=>{
+    const id=String(row.Lead_ID||'').trim().toUpperCase();
+    if(!id)blankIds++;
+    else if(seenIds.has(id))errors.push(`Duplicate Lead_ID ${id} on rows ${seenIds.get(id)} and ${index+1}`);
+    else seenIds.set(id,index+1);
+    const status=String(row.Status||'').trim();
+    const stage=String(row.Stage||'').trim();
+    if(status&&!STATUS_OPTS.includes(status))warnings.push(`R${index+1} has non-standard Status: ${status}`);
+    if(stage&&!STAGE_OPTS.includes(stage))warnings.push(`R${index+1} has non-standard Stage: ${stage}`);
+  });
+  if(blankIds)warnings.push(`${blankIds} rows have no Lead_ID`);
+  return{errors,warnings,rowCount:rows.length,headers:[...SHEET_COLS]};
+}
+function canExportSnapshot(){
+  const result=validateExportSnapshot();
+  if(result.errors.length){alert(`Export blocked:\n${result.errors.join('\n')}`);return false}
+  if(result.warnings.length&&!confirm(`Export checks found ${result.warnings.length} warning(s):\n\n${result.warnings.slice(0,8).join('\n')}${result.warnings.length>8?'\n...':''}\n\nContinue?`))return false;
+  return true;
+}
+function generateCsvText(){return buildCsvLines().join('\n')}
+function downloadBlob(filename,blob){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function crc32(bytes){
+  if(!crc32.table){
+    crc32.table=new Uint32Array(256);
+    for(let n=0;n<256;n++){
+      let c=n;
+      for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);
+      crc32.table[n]=c>>>0;
+    }
+  }
+  let c=0xffffffff;
+  for(const b of bytes)c=crc32.table[(c^b)&0xff]^(c>>>8);
+  return (c^0xffffffff)>>>0;
+}
+function zipDosParts(date=new Date()){
+  const time=(date.getHours()<<11)|(date.getMinutes()<<5)|Math.floor(date.getSeconds()/2);
+  const day=(date.getFullYear()-1980)<<9|((date.getMonth()+1)<<5)|date.getDate();
+  return{time,day};
+}
+function le16(n){return [n&255,(n>>>8)&255]}
+function le32(n){return [n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]}
+function concatBytes(parts){
+  const total=parts.reduce((sum,p)=>sum+p.length,0);
+  const out=new Uint8Array(total);
+  let offset=0;
+  parts.forEach(p=>{out.set(p,offset);offset+=p.length});
+  return out;
+}
+function createZipBlob(files){
+  const enc=new TextEncoder();
+  const localParts=[];const centralParts=[];
+  let offset=0;
+  const {time,day}=zipDosParts();
+  files.forEach(file=>{
+    const name=enc.encode(file.name);
+    const data=enc.encode(file.text);
+    const crc=crc32(data);
+    const local=concatBytes([
+      new Uint8Array(le32(0x04034b50)),new Uint8Array(le16(20)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),
+      new Uint8Array(le16(time)),new Uint8Array(le16(day)),new Uint8Array(le32(crc)),new Uint8Array(le32(data.length)),new Uint8Array(le32(data.length)),
+      new Uint8Array(le16(name.length)),new Uint8Array(le16(0)),name,data
+    ]);
+    const central=concatBytes([
+      new Uint8Array(le32(0x02014b50)),new Uint8Array(le16(20)),new Uint8Array(le16(20)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),
+      new Uint8Array(le16(time)),new Uint8Array(le16(day)),new Uint8Array(le32(crc)),new Uint8Array(le32(data.length)),new Uint8Array(le32(data.length)),
+      new Uint8Array(le16(name.length)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),
+      new Uint8Array(le32(0)),new Uint8Array(le32(offset)),name
+    ]);
+    localParts.push(local);centralParts.push(central);offset+=local.length;
+  });
+  const centralStart=offset;
+  const central=concatBytes(centralParts);
+  const end=concatBytes([
+    new Uint8Array(le32(0x06054b50)),new Uint8Array(le16(0)),new Uint8Array(le16(0)),new Uint8Array(le16(files.length)),new Uint8Array(le16(files.length)),
+    new Uint8Array(le32(central.length)),new Uint8Array(le32(centralStart)),new Uint8Array(le16(0))
+  ]);
+  return new Blob([concatBytes(localParts.concat([central,end]))],{type:'application/zip'});
+}
+function exportCSV(){
+  if(!leads.length){alert('No leads');return}
+  if(!user.name){openSetup();alert('Set sender name before exporting CSV');return}
+  if(!canExportSnapshot())return;
+  const csv=generateCsvText();
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const fn=getExportFileName();
+  downloadBlob(fn,blob);
+  flashDot(true);
+}
+function exportSessionPackage(){
+  if(!leads.length){alert('No leads');return}
+  if(!user.name){openSetup();alert('Set sender name before exporting package');return}
+  if(!canExportSnapshot())return;
+  const d=new Date();
+  const names=sessionPackageNames(d,user.name);
+  const zip=createZipBlob([
+    {name:names.handover,text:generateHandover()},
+    {name:names.csv,text:'\ufeff'+generateCsvText()}
+  ]);
+  downloadBlob(names.zip,zip);
+  flashDot(true);
+  showToast('Exported handover + CSV package');
+}
+function autoBackup(){if(!leads.length)return;exportCSV()}
+function manualBackup(){exportCSV()}
+// ===== CircleLoop export wizard with optional dedupe =====
+// Normalise a phone number to digits-only with UK 0-prefix. Handles +44/44/0 variants.
+function clNormPhone(raw){
+  if(!raw)return '';
+  let d=String(raw).replace(/\D/g,'');
+  if(!d)return '';
+  if(d.startsWith('44')&&d.length===12)d='0'+d.slice(2);
+  else if(d.startsWith('440')&&d.length===13)d='0'+d.slice(3);
+  return d;
+}
+// Parse a CircleLoop EXPORT CSV (different format than the import - has phoneNumber1..10 + phoneNumberLabel1..10)
+// Returns a Set of normalised phone numbers already in CircleLoop.
+function parseClExport(csvText){
+  const set=new Set();
+  if(!csvText)return set;
+  const rows=parseCSV(csvText);
+  if(!rows.length)return set;
+  const headers=rows[0].map(h=>(h||'').trim().replace(/^﻿/,''));
+  // Find every "phoneNumberN" column (export uses phoneNumber1..10, import uses phoneNumber + phoneNumber1..3)
+  const phoneIdx=[];
+  headers.forEach((h,i)=>{if(/^phoneNumber\d*$/i.test(h))phoneIdx.push(i)});
+  for(let r=1;r<rows.length;r++){
+    const cells=rows[r];
+    phoneIdx.forEach(i=>{const p=clNormPhone(cells[i]);if(p)set.add(p)});
+  }
+  return set;
+}
+function analyseClExport(csvText){
+  const set=new Set();
+  const warnings=[];
+  if(!csvText)return {set,warnings,rows:0};
+  const rows=parseCSV(csvText);
+  if(!rows.length)return {set,warnings,rows:0};
+  const headers=rows[0].map(h=>(h||'').trim().replace(/^ï»¿/,''));
+  const phoneIdx=[];
+  const sourceIdx=headers.findIndex(h=>/^source$/i.test(h));
+  const fullNameIdx=headers.findIndex(h=>/^fullName$/i.test(h));
+  headers.forEach((h,i)=>{if(/^phoneNumber\d*$/i.test(h))phoneIdx.push(i)});
+  for(let r=1;r<rows.length;r++){
+    const cells=rows[r];
+    phoneIdx.forEach(i=>{const p=clNormPhone(cells[i]);if(p)set.add(p)});
+    const source=sourceIdx>=0?String(cells[sourceIdx]||'').trim().toLowerCase():'';
+    const fullName=fullNameIdx>=0?String(cells[fullNameIdx]||''):'';
+    if(source==='userprofile')warnings.push('userprofile rows found');
+    if(/Michael Davies|Ioan Jones|Sandde Kloer/i.test(fullName))warnings.push('staff names found');
+  }
+  return {set,warnings:[...new Set(warnings)],rows:Math.max(0,rows.length-1)};
+}
+function circleLoopNovelPhones(lead,dedupeSet,seenPhones){
+  const candidates=[
+    {raw:lead.phone||'',normalised:clNormPhone(lead.phone),label:'work'},
+    {raw:lead.phone2||'',normalised:clNormPhone(lead.phone2),label:'mobile'}
+  ].filter(phone=>phone.normalised);
+  const rowSeen=new Set();const phones=[];
+  let existing=0,duplicate=0;
+  candidates.forEach(phone=>{
+    if(rowSeen.has(phone.normalised)){duplicate++;return}
+    rowSeen.add(phone.normalised);
+    if(dedupeSet&&dedupeSet.has(phone.normalised)){existing++;return}
+    if(seenPhones&&seenPhones.has(phone.normalised)){duplicate++;return}
+    phones.push(phone);
+    if(seenPhones)seenPhones.add(phone.normalised);
+  });
+  return{phones,existing,duplicate};
+}
+function clExportStats(dedupeSet,opts){
+  opts=opts||{};
+  let sourceRows=0, skippedExisting=0, skippedDuplicate=0, partialExisting=0, exportRows=0;
+  const seenPhones=new Set();
+  (leads||[]).forEach(l=>{
+    if(opts.todayOnly&&!clTouchedToday(l))return;
+    if(!l.business||(!l.phone&&!l.phone2))return;
+    const rowPhones=[clNormPhone(l.phone),clNormPhone(l.phone2)].filter(Boolean);if(!rowPhones.length)return;
+    sourceRows++;
+    const result=circleLoopNovelPhones(l,dedupeSet,seenPhones);
+    if(result.phones.length){exportRows++;if(result.existing)partialExisting++}
+    else if(result.existing)skippedExisting++;
+    else if(result.duplicate)skippedDuplicate++;
+  });
+  return {sourceRows,skippedExisting,skippedDuplicate,partialExisting,exportRows};
+}
+function renderClExportPreview(){
+  const box=document.getElementById('cl-export-counts');
+  if(!box)return;
+  const todayOnly=!!document.getElementById('cl-today-only')?.checked;
+  const s=clExportStats(_clDedupeSet,{todayOnly});
+  const skipped=s.skippedExisting+s.skippedDuplicate;
+  box.innerHTML=`<strong>Current sheet contacts with phone:</strong> ${s.sourceRows}<br><strong>Fully already in CircleLoop:</strong> ${s.skippedExisting}<br><strong>Existing contact with a new second number:</strong> ${s.partialExisting}<br><strong>Duplicate in this export:</strong> ${s.skippedDuplicate}<br><strong>Will export:</strong> ${s.exportRows}`;
+  if(!_clDedupeSet||!_clDedupeSet.size){
+    box.innerHTML+=`<br><span style="color:var(--txt3)">No CircleLoop dedupe file loaded, so this is a full current-sheet export.</span>`;
+  }else if(skipped){
+    box.innerHTML+=`<br><span style="color:var(--green)">New-only export ready.</span>`;
+  }
+}
+function clAccountExportWarning(info){
+  if(!info||!info.warnings||!info.warnings.length)return '';
+  return ' This looks like a full CircleLoop account export. It will only be used for dedupe; none of its contacts will be exported.';
+}
+function openClExportModal(){
+  closeSettings();
+  _clDedupeSet=null;
+  _clDedupeInfo=null;
+  document.getElementById('cl-export-file-input').value='';
+  document.getElementById('cl-today-only').checked=false;
+  document.getElementById('cl-export-status').textContent='No CircleLoop export loaded - full current sheet export ready.';
+  document.getElementById('cl-export-modal').style.display='flex';
+  renderClExportPreview();
+}
+function closeClExportModal(){document.getElementById('cl-export-modal').style.display='none'}
+let _clDedupeSet=null;
+let _clDedupeInfo=null;
+function onClExportFile(ev){
+  const f=ev.target.files[0];if(!f){_clDedupeSet=null;_clDedupeInfo=null;document.getElementById('cl-export-status').textContent='No CircleLoop export loaded - full current sheet export ready.';renderClExportPreview();return}
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      _clDedupeInfo=analyseClExport(e.target.result);
+      _clDedupeSet=_clDedupeInfo.set;
+      document.getElementById('cl-export-status').textContent=`Loaded ${_clDedupeSet.size} existing CircleLoop phone numbers for dedupe only.${clAccountExportWarning(_clDedupeInfo)}`;
+      renderClExportPreview();
+    }catch(err){
+      _clDedupeSet=null;
+      _clDedupeInfo=null;
+      document.getElementById('cl-export-status').textContent='Could not parse the file. Try again or skip dedupe.';
+    }
+  };
+  r.readAsText(f);
+}
+function doClExport(){
+  const dedupeSet=_clDedupeSet;
+  const todayOnly=!!document.getElementById('cl-today-only').checked;
+  closeClExportModal();
+  exportCircleLoopContacts(dedupeSet,{todayOnly});
+  _clDedupeSet=null;
+  _clDedupeInfo=null;
+}
+// CircleLoop contacts export - matches their exact CSV format from the Example Import CSV:
+//   global,companyName,fullName,firstName,lastName,email,jobTitle,phoneNumber,phoneNumberLabel,
+//   phoneNumber1,phoneNumberLabel1,phoneNumber2,phoneNumberLabel2,phoneNumber3,phoneNumberLabel3
+// One row per lead. phone goes in phoneNumber (work), phone2 in phoneNumber1 (mobile).
+function clTouchedToday(l){
+  const today=todayKey();
+  const d=new Date();
+  const dmy=pad2(d.getDate())+'/'+pad2(d.getMonth()+1);
+  const iso=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+  return !!(l&&l.notes&&l.notes.some(n=>{
+    if(!n.legacy&&n.ts&&localDateKey(n.ts)===today)return true;
+    if(n.legacy&&n.text){
+      const txt=String(n.text);
+      return new RegExp('(^|\\D)'+dmy.replace('/','\\/')+'(\\D|$)').test(txt)||txt.includes(iso);
+    }
+    return false;
+  }));
+}
+function exportCircleLoopContacts(dedupeSet,opts){
+  if(!leads.length){alert('No leads to export');return}
+  opts=opts||{};
+  const headers=['global','companyName','fullName','firstName','lastName','email','jobTitle','phoneNumber','phoneNumberLabel','phoneNumber1','phoneNumberLabel1','phoneNumber2','phoneNumberLabel2','phoneNumber3','phoneNumberLabel3'];
+  const lines=[headers.join(',')];
+  let count=0, skipped=0, skippedExisting=0, skippedDuplicate=0, partialExisting=0, sourceRows=0;
+  const seenPhones=new Set();
+  leads.forEach(l=>{
+    if(opts.todayOnly&&!clTouchedToday(l))return;
+    if(!l.business||(!l.phone&&!l.phone2))return;
+    if(![clNormPhone(l.phone),clNormPhone(l.phone2)].filter(Boolean).length)return;
+    sourceRows++;
+    const result=circleLoopNovelPhones(l,dedupeSet,seenPhones);
+    if(!result.phones.length){
+      skipped++;
+      if(result.existing)skippedExisting++;else skippedDuplicate++;
+      return;
+    }
+    if(result.existing)partialExisting++;
+    const first=result.phones[0];
+    const second=result.phones[1];
+    const row=[
+      'false',
+      csvEscape(l.business),
+      csvEscape(l.business),
+      '',
+      '',
+      csvEscape(l.email||''),
+      '',
+      csvEscape(first.raw),
+      first.label,
+      csvEscape(second?second.raw:''),
+      second?second.label:'',
+      '','','',''
+    ];
+    lines.push(row.join(','));
+    count++;
+  });
+  if(count===0){alert(skipped?`All ${skipped} leads are already in CircleLoop. Nothing new to export.`:'No contacts with a phone number to export');return}
+  const csv=lines.join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const ts=new Date();
+  const scope=opts.todayOnly?'TODAY_TOUCHED_':'';
+  const stamp=`${pad2(ts.getDate())}-${pad2(ts.getMonth()+1)}-${ts.getFullYear()}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}_${safeFilePart(user.name,'Rep')}`;
+  const fnBase=dedupeSet?`CircleLoop_Import_NEW_ONLY_${scope}${stamp}.csv`:`CircleLoop_Contacts_${scope}${stamp}.csv`;
+  downloadBlob(fnBase,blob);
+  const detailMsg=dedupeSet
+    ? `Exported ${count} NEW contacts. Current sheet: ${sourceRows}. Fully existing: ${skippedExisting}. Existing contact with new number: ${partialExisting}. Duplicate in export: ${skippedDuplicate}.`
+    : `Exported ${count} contacts for CircleLoop import.`;
+  showToast(detailMsg);
+}
+
+// ===== Init =====
+async function initialiseApp(){
+  loadPrefs();
+  loadEventLog();
+  const hasUserSetup=loadUser();
+  document.getElementById('upload-screen').style.display='flex';
+  try{idb=await openIDB()}catch(e){}
+  if(await hasStoredSession())document.getElementById('resume-box').style.display='block';
+  setupModalAccessibility();
+  if(!hasUserSetup)setTimeout(openSetup,0);
+}
+initialiseApp();
+
+// Drag-drop on upload zone
+const uz=document.getElementById('upload-zone');
+['dragover','dragenter'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.classList.add('drag')}));
+['dragleave','drop'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.classList.remove('drag')}));
+uz.addEventListener('drop',ev=>processCsvFile(ev.dataTransfer.files[0]));
+
+// Refresh block banner every 5 min in case session crosses an hour
+setInterval(()=>{if(leads.length)renderBlockBanner()},5*60*1000);
+// Callback auto-queue check every 30s
+setInterval(()=>{if(leads.length){renderDueQueueBanner();if(document.getElementById('leads-modal').style.display==='flex')renderLeadList()}},30000);
+</script>
+</body>
+</html>
