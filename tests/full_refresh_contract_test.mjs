@@ -24,8 +24,9 @@ assert(html.includes('role="status"'), 'save/toast feedback must be announced ac
 assert(html.includes('aria-live="polite"'), 'live feedback must use a polite live region');
 assert(html.includes('@media (prefers-reduced-motion: reduce)'), 'reduced motion support is missing');
 assert(html.includes('function setupModalAccessibility'), 'modal focus management is missing');
-assert(!html.includes('toggleTheme()'), 'the broken light theme control must be removed');
-assert(!html.includes('fonts.googleapis.com'), 'the app must not depend on remote fonts');
+assert(html.includes('onclick="toggleTheme()"'), 'the original appearance switch must be restored');
+assert(html.includes('function applyTheme()') && html.includes('function toggleTheme()'), 'the restored appearance switch must work');
+assert(html.includes('fonts.googleapis.com/css2?family=DM+Sans'), 'the original app typography must be restored');
 
 assert(html.includes('{SENDER_NAME} at AresFit'), 'email templates must use the configured sender');
 assert(!html.includes("I'm Sandde, Director at AresFit"), 'email templates must not impersonate Sandde for every rep');
