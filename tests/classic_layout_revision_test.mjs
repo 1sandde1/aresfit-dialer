@@ -24,15 +24,17 @@ assert.equal(
 );
 assert(manifest.includes('archive/live-2026-07-14-full-qa-c4b70a1'), 'the preserved release branch is not documented');
 assert(archivePolicy.includes('Archived releases are append-only'), 'the future release archive policy is missing');
-assert(index.includes('20260715-compact-mobile-r1'), 'the current entry file does not target the compact-mobile revision');
-assert(html.includes("const APP_BUILD = '2026.07.15'"), 'the compact-mobile build identifier is missing');
+assert(index.includes('20260721-original-layout-r1'), 'the current entry file does not target the restored original-layout revision');
+assert(html.includes("const APP_BUILD = '2026.07.21'"), 'the restored-layout build identifier is missing');
 
 const renderCard = html.slice(html.indexOf('function renderCard()'), html.indexOf('function renderLeadList()'));
 const fieldsPosition = renderCard.indexOf('<div class="fields">');
 const actionsPosition = renderCard.indexOf('<div class="call-actions">');
 assert(fieldsPosition >= 0 && actionsPosition > fieldsPosition, 'lead context must appear before call controls');
-assert(html.includes('.stat{background:var(--card);border:1px solid var(--border);border-radius:9px'), 'separate stat cards were not restored');
-assert(html.includes('.card{background:var(--panel);border-color:var(--border);border-radius:14px'), 'the familiar lead-card treatment was not restored');
-assert(html.includes('.toolbar{position:static;'), 'the toolbar must not obscure the lead card');
+const activeCss = html.slice(html.indexOf('<style>'), html.indexOf('@media not all {'));
+assert(activeCss.includes("--font:'DM Sans',sans-serif"), 'the original typography was not restored');
+assert(activeCss.includes('.stat{background:var(--card);padding:8px 6px;border-radius:9px'), 'the original stat cards were not restored');
+assert(activeCss.includes('.card{background:var(--panel);border:1px solid var(--border);border-radius:14px'), 'the original lead-card treatment was not restored');
+assert(activeCss.includes('.toolbar{display:grid;grid-template-columns:repeat(4,1fr)'), 'the original toolbar layout was not restored');
 
 console.log('classic layout and preserved-release checks passed');
