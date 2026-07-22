@@ -12,6 +12,7 @@ const fixturePath = resolve(fixtureArg);
 const outputDir = resolve(outputArg);
 const downloadDir = resolve(outputDir, 'downloads');
 const profileDir = resolve(tmpdir(), `aresfit-edge-qa-${Date.now()}`);
+const appOrigin = new URL(appUrl).origin;
 await mkdir(downloadDir, { recursive: true });
 await mkdir(profileDir, { recursive: true });
 
@@ -107,7 +108,7 @@ async function findPageTarget() {
     try {
       const response = await fetch(`http://127.0.0.1:${port}/json/list`);
       const targets = await response.json();
-      const page = targets.find(target => target.type === 'page' && target.url.startsWith('http://127.0.0.1:8765/'));
+      const page = targets.find(target => target.type === 'page' && target.url.startsWith(appOrigin));
       if (page) return page;
     } catch {}
     await sleep(100);
