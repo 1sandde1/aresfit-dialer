@@ -24,8 +24,8 @@ assert.equal(
 );
 assert(manifest.includes('archive/live-2026-07-14-full-qa-c4b70a1'), 'the preserved release branch is not documented');
 assert(archivePolicy.includes('Archived releases are append-only'), 'the future release archive policy is missing');
-assert(index.includes('20260721-original-layout-r1'), 'the current entry file does not target the restored original-layout revision');
-assert(html.includes("const APP_BUILD = '2026.07.21'"), 'the restored-layout build identifier is missing');
+assert(index.includes('20260722-stable-r1'), 'the current entry file does not target the stable original-layout revision');
+assert(html.includes("const APP_BUILD = '2026.07.22'"), 'the stable original-layout build identifier is missing');
 
 const renderCard = html.slice(html.indexOf('function renderCard()'), html.indexOf('function renderLeadList()'));
 const fieldsPosition = renderCard.indexOf('<div class="fields">');

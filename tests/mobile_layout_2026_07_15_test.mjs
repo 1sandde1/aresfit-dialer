@@ -21,10 +21,11 @@ assert(manifest.includes('archive/live-2026-07-15-classic-layout-64c3b73'), 'rol
 assert.equal(sha256(latestArchivedHtml), 'D9ADB032BC95C12BCCD263E5D719C7F38CF88A0CCF7E68A1DFC4ABCD358FA06A');
 assert.equal(sha256(latestArchivedIndex), '620752BEB96C7A26B912B5471A0B641BA1C20A3D346FD9088B91C9E4E0B3E95B');
 assert(latestManifest.includes('archive/live-2026-07-21-compact-mobile-3995075'), 'latest rollback branch is not documented');
-assert(index.includes('20260721-original-layout-r1'), 'cache-busting redirect is stale');
-assert(html.includes("const APP_BUILD = '2026.07.21'"), 'build label is stale');
+assert(index.includes('20260722-stable-r1'), 'cache-busting redirect is stale');
+assert(html.includes("const APP_BUILD = '2026.07.22'"), 'build label is stale');
 assert(html.includes('@media not all {'), 'the July redesign is not explicitly disabled');
 assert(html.includes('.source-summary,.queue-strip{display:none!important}'), 'new header clutter must stay hidden in the original layout');
+assert(html.includes('class="queue-chip"'), 'the compact in-card queue context is missing');
 assert(html.includes("if(onTarget){slot.innerHTML='';return}"), 'current callback is still rendered twice');
 assert(html.includes("if(state.state!=='blocked'&&(state.state==='warm'||allowed)){slot.innerHTML='';return}"), 'allowed-call banner is still duplicated');
 assert(html.includes('input,textarea,select{font-size:16px;'), 'iOS focus zoom protection is missing');

@@ -58,6 +58,8 @@ row=buildEventRow(lead,{channel:'blocker',outcome:'customer waiting',blocker_typ
 assert.equal(validateEventDraft(row).length,0);
 
 row=buildEventRow(lead,{channel:'app issue',outcome:'app issue',blocked_value:'12500',proof_source:'manual app issue log',notes:'export failed'});
+assert(validateEventDraft(row).includes('Blocker type required'));
+row=buildEventRow(lead,{channel:'app issue',outcome:'app issue',blocker_type:'app/CircleLoop',blocked_value:'12500',proof_source:'manual app issue log',notes:'export failed'});
 assert.equal(validateEventDraft(row).length,0);
 
 ensureQueueGateState();

@@ -201,7 +201,7 @@ option{background:var(--card);color:var(--txt);padding:6px}
 .call-btn{flex:1;padding:18px;font-size:19px;font-weight:800;border-radius:12px;background:#fff;color:#000;letter-spacing:.02em;border:none;cursor:pointer}
 .call-btn:active{transform:scale(.98)}
 .call-btn .n{font-family:var(--mono);font-size:15px;font-weight:700;display:block;margin-top:2px;opacity:.95}
-.copy-btn{width:54px;background:var(--card);border:1px solid var(--border);font-size:20px;border-radius:14px}
+.copy-btn{width:58px;min-width:58px;padding:6px 4px;background:var(--card);border:1px solid var(--border);font-size:11px;border-radius:12px}
 .call-info{font-size:11px;padding:8px 10px;background:rgba(255,171,0,.08);border-left:3px solid var(--amber);border-radius:6px;margin-bottom:10px;color:var(--amber);display:none}
 .call-info.show{display:block}
 .call-info .t{font-family:var(--mono);font-weight:700}
@@ -458,6 +458,13 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 .speaker-role button{padding:6px;background:transparent;border:1px solid var(--border);font-size:10px}
 .speaker-role button.sel{background:#fff;color:#000;border-color:#fff}
 .speaker-badge{display:inline-block;padding:1px 5px;border:1px solid var(--border2);border-radius:4px;color:var(--txt);font-size:9px;font-weight:700}
+.queue-chip{margin-left:auto;display:inline-flex;align-items:center;gap:5px;max-width:100%;padding:2px 4px 2px 7px;border:1px solid var(--border2);border-radius:5px;color:var(--txt2);background:var(--card);text-transform:none;letter-spacing:0}
+.queue-chip .queue-name{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.queue-chip button{min-height:22px;min-width:22px;padding:0 5px;border:0;background:transparent;color:var(--txt);font-size:14px;line-height:1}
+.diagnostics-body{white-space:pre-wrap;word-break:break-word;font:10px/1.55 var(--mono);color:var(--txt2);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;margin:6px 0 8px;max-height:250px;overflow:auto}
+.diagnostics-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.call-info.success{background:rgba(0,230,118,.08);border-left-color:var(--green);color:var(--green)}
+.call-info.danger{background:rgba(255,23,68,.08);border-left-color:var(--danger);color:var(--red2)}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[tabindex]:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--txt);outline-offset:2px}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
@@ -583,9 +590,17 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
     <h2>CircleLoop scheme (iOS)</h2>
     <p class="sub" style="font-size:11px;margin-bottom:6px">Test which scheme auto-populates the keypad.</p>
     <select id="cl-scheme-sel" onchange="saveClScheme(this.value)" style="margin-bottom:14px"></select>
+    <details class="reveal" style="margin-bottom:14px" ontoggle="if(this.open)renderDiagnostics()">
+      <summary>App diagnostics</summary>
+      <pre id="diagnostics-body" class="diagnostics-body">Open to generate diagnostics.</pre>
+      <div class="diagnostics-actions">
+        <button class="btn-ghost" type="button" onclick="copyDiagnostics()">Copy diagnostics</button>
+        <button class="btn-ghost" type="button" onclick="reloadForUpdate()">Reload update</button>
+      </div>
+    </details>
     <h2>Danger</h2>
     <button style="width:100%;background:#1a0f0f;color:var(--red2);border:1px solid var(--red);padding:10px;border-radius:8px;font-size:12px" onclick="clearSession()">Clear all session data</button>
-    <p class="sub" style="text-align:center;font-size:10px;margin-top:14px;color:var(--txt3)">AresFit Dialer · build 2026.07.21</p>
+    <p class="sub" id="settings-build" style="text-align:center;font-size:10px;margin-top:14px;color:var(--txt3)">AresFit Dialer</p>
   </div>
 </div>
 
@@ -719,6 +734,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
       <div class="c-lbl">Outcome</div>
       <select id="ne-outcome"></select>
     </div>
+    <div class="c-row">
+      <div class="c-lbl">Spoke to</div>
+      <select id="ne-speaker"><option value="">Not recorded</option><option value="DM">Decision maker</option><option value="GK">Gatekeeper</option></select>
+    </div>
     <div class="composer-grid">
       <div>
         <div class="c-lbl">Date (DD/MM)</div>
@@ -740,6 +759,10 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
           <button type="button" id="ne-dir-out" onclick="setNeDirection('out')" style="flex:1;padding:8px;border-radius:6px;font-size:12px;font-weight:600">I call them</button>
           <button type="button" id="ne-dir-in" onclick="setNeDirection('in')" style="flex:1;padding:8px;border-radius:6px;font-size:12px;font-weight:600">They call me</button>
         </div>
+      </div>
+      <div class="c-row">
+        <div class="c-lbl">Scheduled callback date & time</div>
+        <input type="datetime-local" id="ne-cb-date">
       </div>
       <div class="c-row">
         <div class="c-lbl">End time (optional, defines a window)</div>
@@ -836,7 +859,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
       <button class="btn-ghost btn-sm" onclick="openLeads()">&#128203; Leads</button>
       <button class="btn-ghost btn-sm" onclick="openSettings()" aria-label="Settings">&#9881;</button>
     </div>
-    <div class="source-summary" id="source-summary">Build 2026.07.21 · No CSV loaded</div>
+    <div class="source-summary" id="source-summary">Build 2026.07.22 · No CSV loaded</div>
     <div class="stats">
       <div class="stat"><div class="stat-val" id="s-calls">0</div><div class="stat-lbl">Dialled</div></div>
       <div class="stat"><div class="stat-val" id="s-rate">0%</div><div class="stat-lbl">Contact%</div></div>
@@ -867,8 +890,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.07.21';
+const APP_BUILD = '2026.07.22';
+const RELEASE_ID = '20260722-stable-r1';
 const ROLLBACK_BASE_COMMIT = '0b04ff2eea8f5f440001d19fbac400316b426014';
+const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
+const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
 const FIELDS = ['priority','business','phone','website','status','stage','notes','followUp','equipBrands','aresBrands','dm','email','callAngle','research'];
 const LABELS = {
   priority:'FINAL PRIORITY', business:'Business Name', phone:'Phone', website:'Website',
@@ -881,9 +907,10 @@ const SHEET_COLS = ['FINAL PRIORITY','Business Name','Phone','Website','Status',
 // Header → FIELDS key
 const HEADER_MAP = {'FINAL PRIORITY':'priority','Business Name':'business','Phone':'phone','Website':'website','Status':'status','Stage':'stage','Notes':'notes','Follow-up Date':'followUp','Equipment Brands':'equipBrands','AresFit Brands':'aresBrands','PSC / Decision Maker':'dm','Email':'email','Call Angle':'callAngle','Research Notes':'research'};
 
-const STATUS_OPTS = ['','Callback','Quoted','No Answer','Awaiting Callback','Not Interested','Hot Lead','DO NOT CALL','Emailed','Awaiting Pass-Through'];
+const STATUS_OPTS = ['','Uncalled','No Answer','Voicemail','Contacted','Callback','Quoted','Awaiting Callback','Not Interested','Hot Lead','DO NOT CALL','Emailed','Awaiting Pass-Through'];
 const STAGE_OPTS  = ['','Intro','Contacted','Quoted','Lost','Closed'];
 const OUTCOMES = ['Contacted','VM','NA','Emailed','Awaiting Callback','Dead Air','Provider Reject','Not Int.','Callback','HOT'];
+const NOTE_OUTCOMES = [...OUTCOMES,'EMAIL','EMAIL OPENED','EMAIL SENT','EMAIL NOT SENT','Note','Event'];
 const ATTEMPT_OUTCOMES = new Set(['VM','NA','Dead Air']); // increment attempts on these
 // Outcomes that auto-fill a default note if user leaves the note blank - removes friction on the low-info outcomes
 const AUTOFILL_OUTCOMES = {
@@ -1121,7 +1148,7 @@ let manualNoteOpen=false; // toggles inline manual-note editor on the call card
 let manualNoteText='';    // draft text for the manual-note editor
 let dueQueueIdx=0;        // index for cycling through overdue/due banner
 let user={name:'', email:''};
-let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null};
+let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null, queueBannerCollapsed:true, diagnostics:{}};
 let idb=null;
 let outcomesSinceBackup=0;
 let timeEditContext=null; // {leadId, noteId} for time-modal
@@ -1129,6 +1156,7 @@ let manualEventContext=null;
 let lastToastTs=0;
 let saveTimer=null;
 let pendingSessionState=null;
+let lastExternalLaunchAt=0;
 
 // ===== Utils =====
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -1171,8 +1199,32 @@ function todayKey(){return localDateKey()}
 function normaliseBusinessName(value){return String(value||'').trim().replace(/\s+/g,' ').toUpperCase()}
 function normaliseLeadPhone(value){
   let digits=String(value||'').replace(/\D/g,'');
-  if(digits.startsWith('44')&&digits.length>=11)digits='0'+digits.slice(2);
+  if(digits.startsWith('00440'))digits='0'+digits.slice(5);
+  else if(digits.startsWith('0044'))digits='0'+digits.slice(4);
+  else if(digits.startsWith('440'))digits='0'+digits.slice(3);
+  else if(digits.startsWith('44'))digits='0'+digits.slice(2);
   return digits;
+}
+function normaliseDialNumber(value){
+  const rawValue=String(value||'').trim();
+  const hasPlus=rawValue.startsWith('+');
+  let digits=rawValue.replace(/\D/g,'');
+  if(hasPlus&&digits.startsWith('440'))digits='44'+digits.slice(3);
+  else if(!hasPlus&&digits.startsWith('00440'))digits='0044'+digits.slice(5);
+  return digits?(hasPlus?'+'+digits:digits):'';
+}
+function isAndroidPlatform(){return /Android/i.test(navigator.userAgent||'')}
+function isIOSPlatform(){return /iPhone|iPad|iPod/i.test(navigator.userAgent||'')}
+function appDisplayMode(){
+  if(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)return 'standalone';
+  if(navigator.standalone)return 'standalone';
+  return 'browser';
+}
+function dialNumberKind(value){
+  const uk=normaliseLeadPhone(value);
+  if(/^07\d{9}$/.test(uk))return 'UK mobile';
+  if(/^0\d{9,10}$/.test(uk))return 'UK landline';
+  return uk?'other':'missing';
 }
 function leadMatchKeys(leadId,phone,business){
   const keys=[];
@@ -1472,7 +1524,7 @@ function parseTime(s){
 
 // ===== CSV parser - handles quoted fields, embedded newlines =====
 function parseCSV(text){
-  text=text.replace(/^\ufeff/,'');
+  text=String(text==null?'':text).replace(/^\ufeff/,'');
   const rows=[];let row=[],field='',q=false;
   for(let i=0;i<text.length;i++){
     const ch=text[i],nx=text[i+1];
@@ -1487,6 +1539,7 @@ function parseCSV(text){
       row=[];
     }else{field+=ch}
   }
+  if(q)throw new Error('CSV contains an unclosed quoted field.');
   if(field.length||row.length){row.push(field);if(row.some(v=>v!==''))rows.push(row)}
   return rows;
 }
@@ -1512,11 +1565,12 @@ function flushSessionSave(){
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null}
   const data=pendingSessionState||buildSessionState();
   pendingSessionState=null;
-  let ok=false;
-  try{localStorage.setItem(SAVE_KEY,JSON.stringify(data));ok=true}catch(e){console.warn('LS save failed',e)}
-  idbSave(data).catch(()=>{});
-  flashDot(ok);
-  return ok;
+  let localOk=false;
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(data));localOk=true}catch(e){console.warn('LS save failed',e)}
+  const durableSave=idbSave(data).catch(()=>false);
+  if(localOk)flashDot(true);
+  else durableSave.then(idbOk=>flashDot(!!idbOk));
+  return localOk;
 }
 function save(immediate=false){
   pendingSessionState=buildSessionState();
@@ -1605,10 +1659,18 @@ async function clearSession(){
   location.reload();
 }
 window.addEventListener('pagehide',()=>{if(pendingSessionState)flushSessionSave()});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&pendingSessionState)flushSessionSave()});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden&&pendingSessionState)flushSessionSave();
+  if(document.hidden&&lastExternalLaunchAt&&Date.now()-lastExternalLaunchAt<10000){
+    if(!prefs.diagnostics||typeof prefs.diagnostics!=='object')prefs.diagnostics={};
+    prefs.diagnostics.dialPageHidden=true;
+    prefs.diagnostics.dialPageHiddenAt=Date.now();
+    savePrefs();
+  }
+});
 
 // ===== Prefs =====
-function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY));if(p)prefs={...prefs,...p}}catch(e){}if(!Array.isArray(prefs.subjects)||!prefs.subjects.length)prefs.subjects=[...DEFAULT_SUBJECTS];if(!prefs.usedSubjects||typeof prefs.usedSubjects!=='object')prefs.usedSubjects={};if(!Array.isArray(prefs.dismissedOverdue))prefs.dismissedOverdue=[];if(typeof prefs.autoQueue!=='boolean')prefs.autoQueue=true;if(!CL_SCHEME_OPTIONS.some(option=>option.value===prefs.clScheme))prefs.clScheme=CL_SCHEME_DEFAULT;if(!prefs.signature)prefs.signature=DEFAULT_SIGNATURE;if(!prefs.emailTemplates||typeof prefs.emailTemplates!=='object')prefs.emailTemplates={};if(!prefs.subjectDomainLock||typeof prefs.subjectDomainLock!=='object')prefs.subjectDomainLock={};ensureQueueGateState()}
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREFS_KEY));if(p)prefs={...prefs,...p}}catch(e){}if(!Array.isArray(prefs.subjects)||!prefs.subjects.length)prefs.subjects=[...DEFAULT_SUBJECTS];if(!prefs.usedSubjects||typeof prefs.usedSubjects!=='object')prefs.usedSubjects={};if(!Array.isArray(prefs.dismissedOverdue))prefs.dismissedOverdue=[];if(typeof prefs.autoQueue!=='boolean')prefs.autoQueue=true;if(typeof prefs.queueBannerCollapsed!=='boolean')prefs.queueBannerCollapsed=true;if(!prefs.diagnostics||typeof prefs.diagnostics!=='object')prefs.diagnostics={};if(!CL_SCHEME_OPTIONS.some(option=>option.value===prefs.clScheme))prefs.clScheme=CL_SCHEME_DEFAULT;if(!prefs.signature)prefs.signature=DEFAULT_SIGNATURE;if(!prefs.emailTemplates||typeof prefs.emailTemplates!=='object')prefs.emailTemplates={};if(!prefs.subjectDomainLock||typeof prefs.subjectDomainLock!=='object')prefs.subjectDomainLock={};ensureQueueGateState()}
 function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs))}catch(e){}}
 function loadEventLog(){try{const rows=JSON.parse(localStorage.getItem(EVENT_LOG_STORAGE_KEY));eventLog=Array.isArray(rows)?rows:[]}catch(e){eventLog=[]}}
 function saveEventLog(){try{localStorage.setItem(EVENT_LOG_STORAGE_KEY,JSON.stringify(eventLog))}catch(e){}}
@@ -1659,6 +1721,8 @@ function openSettings(){
   if(sel)sel.innerHTML=CL_SCHEME_OPTIONS.map(o=>`<option value="${esc(o.value)}"${(prefs.clScheme||CL_SCHEME_DEFAULT)===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
   renderQueueGateControls();
   applyTheme();
+  const build=document.getElementById('settings-build');if(build)build.textContent=`AresFit Dialer - build ${APP_BUILD} - ${RELEASE_ID}`;
+  renderDiagnostics();
   document.getElementById('settings-modal').style.display='flex';
 }
 function saveClScheme(v){prefs.clScheme=CL_SCHEME_OPTIONS.some(option=>option.value===v)?v:CL_SCHEME_DEFAULT;savePrefs();showToast('CircleLoop scheme set → '+prefs.clScheme)}
@@ -1675,6 +1739,58 @@ function toggleTheme(){
   showToast(prefs.theme==='light'?'Light mode':'Dark mode');
 }
 function closeSettings(){document.getElementById('settings-modal').style.display='none'}
+function diagnosticsText(){
+  const d=prefs.diagnostics||{};
+  const current=filtered[idx]||null;
+  const platform=isAndroidPlatform()?'Android':(isIOSPlatform()?'iOS':'desktop/other');
+  const clipboardAvailable=!!(navigator.clipboard&&navigator.clipboard.writeText);
+  return [
+    `Build: ${APP_BUILD}`,
+    `Release: ${RELEASE_ID}`,
+    `Rollback baseline: ${ROLLBACK_BASE_COMMIT}`,
+    `Export schema: ${EXPORT_SCHEMA_VERSION} (${SHEET_COLS.length} columns)`,
+    `Source: ${sourceMeta.fileName||'none'} (${sourceMeta.rowCount||raw.length} rows)`,
+    `Stored leads: ${leads.length}`,
+    `Platform: ${platform}`,
+    `Display mode: ${appDisplayMode()}`,
+    `Secure context: ${window.isSecureContext?'yes':'no'}`,
+    `Clipboard API: ${clipboardAvailable?'available':'unavailable'}`,
+    `Last clipboard: ${d.lastClipboardStatus||'not tested'}${d.lastClipboardMethod?` via ${d.lastClipboardMethod}`:''}`,
+    `Last dial route: ${d.lastDialRoute||'none'}`,
+    `Last dial number type: ${d.lastDialNumberKind||'none'}`,
+    `Dial page hidden signal: ${d.dialPageHidden?'yes (route hand-off inferred only)':'no/not observed'}`,
+    `Last download request: ${d.lastDownload||'none'}`,
+    `Active queue: ${queueLeadIds.length?(queueLabel||'filtered')+' - '+filtered.length+' leads':'none'}`,
+    `Current lead: ${current?`R${current.row} - ${current.business}`:'none'}`,
+    `Generated: ${new Date().toLocaleString('en-GB')}`
+  ].join('\n');
+}
+function renderDiagnostics(){const el=document.getElementById('diagnostics-body');if(el)el.textContent=diagnosticsText()}
+async function copyDiagnostics(){
+  const result=await copyTextVerified(diagnosticsText());
+  recordClipboardDiagnostic(result);
+  showToast(result.ok?'Diagnostics copied':'Copy failed - diagnostics remain visible',result.ok?'':'danger');
+}
+function reloadForUpdate(){
+  const url=new URL(location.href);
+  url.searchParams.set('_refresh',String(Date.now()));
+  location.replace(url.href);
+}
+function recordClipboardDiagnostic(result){
+  if(!prefs.diagnostics||typeof prefs.diagnostics!=='object')prefs.diagnostics={};
+  prefs.diagnostics.lastClipboardStatus=result&&result.ok?'passed':'failed';
+  prefs.diagnostics.lastClipboardMethod=(result&&result.method)||'none';
+  prefs.diagnostics.lastClipboardAt=Date.now();
+  savePrefs();renderDiagnostics();
+}
+function recordDialDiagnostic(route,numberKind){
+  if(!prefs.diagnostics||typeof prefs.diagnostics!=='object')prefs.diagnostics={};
+  prefs.diagnostics.lastDialRoute=route||'none';
+  prefs.diagnostics.lastDialNumberKind=numberKind||'unknown';
+  prefs.diagnostics.lastDialAt=Date.now();
+  prefs.diagnostics.dialPageHidden=false;
+  savePrefs();renderDiagnostics();
+}
 
 // ===== Event log + daily queue gate =====
 function ensureQueueGateState(){
@@ -1781,13 +1897,14 @@ function buildEventRow(l,draft){
 }
 function validateEventDraft(row){
   const errors=[];
+  const blockerContext=row.channel==='blocker'||row.channel==='app issue'||row.outcome==='supplier needed'||row.outcome==='app issue';
   if(!row.outcome)errors.push('Outcome required');
   if(row.outcome&&!EVENT_OUTCOMES.includes(row.outcome))errors.push('Outcome is not parser-compatible');
   ['timestamp','row_number','business_name','channel','owner','proof_source'].forEach(f=>{if(!row[f])errors.push(`${f} required`)});
   if(row.outcome==='lost'&&!row.reason)errors.push('Lost requires a reason');
   if((row.outcome==='quote sent'||row.outcome==='quote needed')&&!row.quote_value)errors.push('Quote outcome requires quote value');
-  if((row.channel==='blocker'||row.blocker_type)&&!row.blocker_type)errors.push('Blocker type required');
-  if((row.channel==='blocker'||row.outcome==='supplier needed'||row.outcome==='app issue')&&!row.blocked_value)errors.push('Blocked value required');
+  if(blockerContext&&!row.blocker_type)errors.push('Blocker type required');
+  if((blockerContext||row.channel==='Shopify')&&!row.blocked_value)errors.push('Blocked value required');
   if(row.next_action_date&&!/^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2})?$/.test(row.next_action_date))errors.push('Next action date must be YYYY-MM-DD or YYYY-MM-DD HH:MM');
   return errors;
 }
@@ -1817,7 +1934,7 @@ function buildCallEventRow(l,noteEntry,p){
     reason,
     next_action:callNextAction(l,p,outcome),
     next_action_date:nextDate,
-    proof_source:p.callStartTs?'CircleLoop dial tap':'manual call outcome',
+    proof_source:p.callStartTs?`in-app dial request (${p.dialRoute||'route unknown'})`:'manual call outcome',
     notes:(noteEntry.speakerRole?`[${noteEntry.speakerRole}] `:'')+noteEntry.text
   });
 }
@@ -1832,7 +1949,7 @@ function logEmailEvent(l,draft){
     outcome:draft.confirmed?'email sent':'HOLD',
     email:draft.toAddr||l.email||'',
     next_action:draft.next_action||(draft.confirmed?'follow up':'confirm sent or not sent'),
-    proof_source:draft.proof_source||(draft.confirmed?'Rep confirmed Gmail send':'Gmail compose launched; send not verified'),
+    proof_source:draft.proof_source||(draft.confirmed?'Rep confirmed Gmail send':'Gmail compose requested; open and send not verified'),
     notes:draft.notes||''
   }));
 }
@@ -1855,7 +1972,7 @@ function trackConfirmedEmailSubject(pending){
 function recordEmailCompose(l,draft){
   const ts=draft.ts||Date.now();
   const composeId=uid();
-  const noteText=`Gmail compose opened to ${draft.toAddr} - subject: "${draft.subject}" - ${draft.detail||'body prepared'} - send not yet confirmed`;
+  const noteText=`Gmail compose requested for ${draft.toAddr} - subject: "${draft.subject}" - ${draft.detail||'body prepared'} - open and send not yet confirmed`;
   const note={id:uid(),ts,dmy:ddmm(ts),hm:hhmm(ts),outcome:'EMAIL OPENED',text:noteText};
   l.notes.push(note);
   l.pendingEmail={
@@ -1907,7 +2024,7 @@ function exportEventLog(){
   const rows=eventRowsForToday();
   if(!rows.length){alert('No event rows for today');return}
   downloadTextFile(`AresFit_Event_Log_${exportStampLegacy(new Date())}.csv`,eventRowsToCsv(rows),'text/csv;charset=utf-8');
-  showToast(`Exported ${rows.length} event rows`);
+  showToast(`Event log download requested - ${rows.length} rows`);
 }
 function exportNotionDelta(){
   const rows=eventRowsForToday();
@@ -1933,7 +2050,7 @@ function exportNotionDelta(){
   lines.push('## Event Detail');
   rows.forEach(r=>lines.push(`- ${r.timestamp} - R${r.row_number} - ${r.business_name} - ${r.channel} - ${r.outcome} - ${r.notes}`));
   downloadTextFile(`AresFit_Notion_Delta_${exportStampLegacy(new Date())}.md`,lines.join('\n'),'text/markdown;charset=utf-8');
-  showToast(`Exported Notion delta with ${rows.length} rows`);
+  showToast(`Notion delta download requested - ${rows.length} rows`);
 }
 function openManualEvent(channel){
   const l=filtered[idx];if(!l)return;
@@ -1945,8 +2062,8 @@ function openManualEvent(channel){
   const out=document.getElementById('manual-event-outcome');
   out.dataset.touched='';
   out.innerHTML=EVENT_OUTCOMES.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
-  document.getElementById('manual-event-reason').innerHTML=EVENT_LOST_REASONS.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
-  document.getElementById('manual-event-blocker-type').innerHTML=EVENT_BLOCKER_TYPES.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
+  document.getElementById('manual-event-reason').innerHTML='<option value="">Pick reason</option>'+EVENT_LOST_REASONS.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
+  document.getElementById('manual-event-blocker-type').innerHTML='<option value="">Pick blocker type</option>'+EVENT_BLOCKER_TYPES.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
   document.getElementById('manual-event-quote-value').value='';
   document.getElementById('manual-event-blocked-value').value='';
   document.getElementById('manual-event-next-action').value='';
@@ -1967,7 +2084,7 @@ function refreshManualEventFields(){
   const outcome=out.value;
   const needsReason=outcome==='lost';
   const needsQuote=outcome==='quote sent'||outcome==='quote needed'||channel==='quote';
-  const needsBlocker=channel==='blocker'||outcome==='supplier needed'||outcome==='app issue';
+  const needsBlocker=channel==='blocker'||channel==='app issue'||outcome==='supplier needed'||outcome==='app issue';
   const needsBlocked=needsBlocker||channel==='Shopify';
   document.getElementById('manual-event-reason-wrap').style.display=needsReason?'block':'none';
   document.getElementById('manual-event-quote-wrap').style.display=needsQuote?'block':'none';
@@ -2013,17 +2130,33 @@ function handleFile(ev){
 }
 function processCsvFile(f){
   if(!f)return;
+  if(f.size>25*1024*1024){alert('Import blocked: CSV is larger than 25 MB.');return}
   previousImportSnapshot=createImportSnapshot();
   const r=new FileReader();
-  r.onload=e=>{const rows=parseCSV(e.target.result);if(rows.length<2){alert('CSV looks empty');return}
-    headers=rows[0].map(h=>h.trim().replace(/^\ufeff/,''));
-    const duplicateHeaders=headers.filter((header,index)=>header&&headers.indexOf(header)!==index);
-    if(duplicateHeaders.length){alert(`Import blocked: duplicate column heading(s): ${[...new Set(duplicateHeaders)].join(', ')}`);return}
-    raw=rows.slice(1).map(cols=>{const o={};headers.forEach((h,i)=>o[h]=(cols[i]||'').trim());return o}).filter(r=>Object.values(r).some(v=>v));
-    sourceMeta={fileName:f.name,rowCount:raw.length,importedAt:Date.now()};
-    const settings=document.getElementById('settings-modal');if(settings&&settings.style.display!=='none')closeSettings();
-    showMapping();
+  r.onload=e=>{
+    try{
+      const rows=parseCSV(e.target.result);
+      if(rows.length<2)throw new Error('CSV looks empty.');
+      const nextHeaders=rows[0].map(h=>String(h||'').trim().replace(/^\ufeff/,''));
+      if(nextHeaders.some(h=>!h))throw new Error('Import blocked: every column must have a heading.');
+      const seenHeaders=new Map();const duplicateHeaders=[];
+      nextHeaders.forEach(header=>{const key=header.toLowerCase();if(seenHeaders.has(key))duplicateHeaders.push(header);else seenHeaders.set(key,header)});
+      if(duplicateHeaders.length)throw new Error(`Import blocked: duplicate column heading(s): ${[...new Set(duplicateHeaders)].join(', ')}`);
+      const badRows=[];
+      rows.slice(1).forEach((cols,index)=>{if(cols.some(value=>String(value||'')!=='')&&cols.length!==nextHeaders.length)badRows.push(index+2)});
+      if(badRows.length)throw new Error(`Import blocked: ${badRows.length} row(s) have the wrong column count. First affected CSV row: ${badRows[0]}.`);
+      const nextRaw=rows.slice(1).map(cols=>{const o={};nextHeaders.forEach((h,i)=>o[h]=String(cols[i]||'').trim());return o}).filter(row=>Object.values(row).some(v=>v));
+      headers=nextHeaders;
+      raw=nextRaw;
+      sourceMeta={fileName:f.name,rowCount:raw.length,importedAt:Date.now()};
+      const settings=document.getElementById('settings-modal');if(settings&&settings.style.display!=='none')closeSettings();
+      showMapping();
+    }catch(err){
+      previousImportSnapshot=null;
+      alert(err&&err.message?err.message:'Import failed: invalid CSV.');
+    }
   };
+  r.onerror=()=>{previousImportSnapshot=null;alert('Import failed: the CSV file could not be read.');};
   r.readAsText(f);
 }
 function cancelImport(){
@@ -2138,7 +2271,7 @@ function showApp(){document.getElementById('upload-screen').style.display='none'
 // Predicate per filter - used for multi-filter intersection logic.
 const FILTER_PREDICATES = {
   All: () => true,
-  Recent: () => true, // sort handled below; everything passes
+  Recent: l => latestNoteTs(l)>0,
   Uncalled: l => !l.notes.length && (!((l.status||'').trim())||(l.status||'').trim()==='Uncalled'),
   Retry: l => isRetryLead(l),
   Callback: l => isActiveCallNowCallback(l),
@@ -2258,6 +2391,11 @@ function setFilter(f){
   filter=activeFilters[0]||'All';
   renderFilterBar();renderLeadList();save();
 }
+function selectOnlyFilter(f){
+  activeFilters=[f||'All'];
+  filter=activeFilters[0];
+  renderFilterBar();renderLeadList();save();
+}
 function onSearch(){searchTerm=document.getElementById('lead-search').value.trim().toLowerCase();renderLeadList();save()}
 
 // ===== Render =====
@@ -2307,7 +2445,7 @@ function renderBlockBanner(){
 }
 function tapBlockBanner(kind){
   // Single tap action during work hours: jump to callbacks (highest-value default).
-  if(kind==='prime'){setFilter('Callback');openLeads()}
+  if(kind==='prime'){selectOnlyFilter('Callback');openLeads()}
 }
 function renderCard(){
   const slot=document.getElementById('card-slot');
@@ -2321,14 +2459,17 @@ function renderCard(){
   const pending=l.pending||{outcome:'',text:'',callStartTs:0,editedHm:'',speakerRole:''};
   const pendingTime=pending.editedHm||(pending.callStartTs?hhmm(pending.callStartTs):'');
   const pendingEventOutcome=CALL_OUTCOME_EVENT_MAP[pending.outcome]||'';
-  const canNext=!pending.outcome||pending.text.trim().length>0||(pending.outcome in AUTOFILL_OUTCOMES);
+  const noteReady=!pending.outcome||pending.text.trim().length>0||(pending.outcome in AUTOFILL_OUTCOMES);
+  const callbackReady=pending.outcome!=='Callback'||!!l.cbDate;
+  const lostReasonReady=pendingEventOutcome!=='lost'||!!pending.reason;
+  const canNext=noteReady&&callbackReady&&lostReasonReady;
 
-  const callInfo=pending.callStartTs?`<div class="call-info show">Called <span class="t">${hhmm(pending.callStartTs)}</span> · number copied. Paste into CircleLoop if it did not open.</div>`:'';
+  const callInfo=pending.callStartTs?`<div class="call-info show ${pending.dialCopyOk===true?'success':(pending.dialCopyOk===false?'danger':'')}">Dial requested <span class="t">${hhmm(pending.callStartTs)}</span> - ${esc(pending.dialFeedback||'number remains visible while the phone handles the request.')}</div>`:'';
 
   // P1: Virgin row check + gates
   const virgin=!l.notes.some(n=>!n.legacy);
-  const digits=(l.phone||'').replace(/\D/g,'');
-  const digits2=(l.phone2||'').replace(/\D/g,'');
+  const digits=normaliseLeadPhone(l.phone);
+  const digits2=normaliseLeadPhone(l.phone2);
   // is07 fires the mobile gate UI when EITHER number is mobile (single tickbox covers both)
   const is07=digits.startsWith('07')||digits2.startsWith('07');
   const gatesPassed=canCall(l,'primary');
@@ -2387,6 +2528,7 @@ function renderCard(){
         <span class="r">R${l.row}</span>
         ${l.priority?`<span class="pri ${priClass}">${esc(l.priority)}</span>`:''}
         <span class="att" title="Attempts">${l.attempts||0} attempts</span>
+        ${queueLeadIds.length?`<span class="queue-chip" title="${esc(queueLabel||'Filtered queue')}"><span class="queue-name">${esc(queueLabel||'Queue')}</span><span>${idx+1}/${filtered.length}</span><button type="button" onclick="clearLeadQueue()" aria-label="Clear active queue" title="Clear active queue">&times;</button></span>`:''}
       </div>
       <div class="biz-head" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${esc(l.business)}<button class="btn-sm btn-ghost" style="padding:5px 9px;font-weight:600;line-height:1;align-self:center" onclick="copyBiz()">Copy name</button></div>
       ${(()=>{
@@ -2437,11 +2579,11 @@ function renderCard(){
         </div>
         <div class="field">
           <label class="field-lbl" for="status-select">Status / next action</label>
-          <select id="status-select" onchange="updateField('status',this.value)">${STATUS_OPTS.map(o=>`<option value="${esc(o)}"${(l.status||'')===o?' selected':''}>${o||'-'}</option>`).join('')}</select>
+          <select id="status-select" onchange="updateField('status',this.value)">${(l.status&&!STATUS_OPTS.includes(l.status)?[l.status,...STATUS_OPTS]:STATUS_OPTS).map(o=>`<option value="${esc(o)}"${(l.status||'')===o?' selected':''}>${o||'-'}</option>`).join('')}</select>
         </div>
         <div class="field">
           <label class="field-lbl" for="stage-select">Funnel Stage</label>
-          <select id="stage-select" onchange="updateField('stage',this.value)">${STAGE_OPTS.map(o=>`<option value="${esc(o)}"${(l.stage||'')===o?' selected':''}>${o||'-'}</option>`).join('')}</select>
+          <select id="stage-select" onchange="updateField('stage',this.value)">${(l.stage&&!STAGE_OPTS.includes(l.stage)?[l.stage,...STAGE_OPTS]:STAGE_OPTS).map(o=>`<option value="${esc(o)}"${(l.stage||'')===o?' selected':''}>${o||'-'}</option>`).join('')}</select>
         </div>
         <div class="field full" role="button" tabindex="0" onclick="editField('equipBrands',event)" onkeydown="editFieldKey(event,'equipBrands')">
           <div class="field-lbl">Equipment Brands <span class="edit">tap</span></div>
@@ -2491,7 +2633,9 @@ function renderCard(){
         <div id="swap-chip-slot">${swapChipHtml}</div>
         ${pending.outcome?`<button class="btn-ghost" onclick="clearPendingOutcome()" style="width:100%;font-size:12px;margin-top:6px">Clear outcome</button>`:''}
         <div class="note-warn ${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'show':''}">Note required before logging.</div>
+        <div class="note-warn ${pendingEventOutcome==='lost'&&!pending.reason?'show':''}">Lost reason required before logging.</div>
         ${pending.outcome==='Callback'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Callback direction</div><div style="display:flex;gap:4px"><button class="${(pending.direction||'out')==='out'?'sel':''}" onclick="setCbDirection('out')" style="flex:1;padding:8px;border-radius:6px;background:${(pending.direction||'out')==='out'?'#fff':'var(--card)'};color:${(pending.direction||'out')==='out'?'#000':'var(--txt)'};border:1px solid ${(pending.direction||'out')==='out'?'#fff':'var(--border)'};font-size:12px;font-weight:600">I call them</button><button class="${pending.direction==='in'?'sel':''}" onclick="setCbDirection('in')" style="flex:1;padding:8px;border-radius:6px;background:${pending.direction==='in'?'#fff':'var(--card)'};color:${pending.direction==='in'?'#000':'var(--txt)'};border:1px solid ${pending.direction==='in'?'#fff':'var(--border)'};font-size:12px;font-weight:600">They call me</button></div><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">Callback start date & time <span style="color:var(--amber)">· required</span></div><input type="datetime-local" id="cb-in" value="${esc(l.cbDate||'')}" onchange="updateCb(this.value)"><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">End time (optional - defines a window for "they call me")</div><input type="time" id="cb-end" value="${esc(l.cbEndTime||'')}" onchange="updateCbEnd(this.value)"></div>`:''}
+        <div class="note-warn ${pending.outcome==='Callback'&&!l.cbDate?'show':''}">Callback date and time required before logging.</div>
         ${l.cbDate&&pending.outcome!=='Callback'?`<button type="button" style="width:100%;margin-top:8px;font-size:11px;color:var(--amber);padding:6px 8px;border:1px dashed var(--amber);border-radius:6px;background:transparent;text-align:left" onclick="openCbEdit()">Scheduled callback: ${esc(l.cbDate.replace('T',' '))}${l.cbEndTime?` to ${esc(l.cbEndTime)}`:''}<span style="float:right">Edit</span></button>`:''}
       </div>
 
@@ -2642,7 +2786,7 @@ function editField(f,ev){
   ip.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ip.blur()}if(e.key==='Escape'){ip.value=cur;ip.blur()}});
 }
 function updateField(f,v){const l=filtered[idx];if(!l)return;l[f]=v;save();renderLeadList();renderStats()}
-function updateCb(v){const l=filtered[idx];if(!l)return;l.cbDate=v||'';l.cbSetAt=Date.now();save()}
+function updateCb(v){const l=filtered[idx];if(!l)return;l.cbDate=v||'';l.cbSetAt=Date.now();save();renderCard();renderLeadList();renderDueQueueBanner()}
 function updateCbEnd(v){const l=filtered[idx];if(!l)return;l.cbEndTime=v||'';save()}
 function openCbEdit(){
   const l=filtered[idx];if(!l)return;
@@ -2683,7 +2827,7 @@ function setCbDirection(d){const l=filtered[idx];if(!l)return;if(!l.pending)l.pe
 function canCall(l,which){
   if(!l)return false;
   const num=which==='secondary'?(l.phone2||''):(l.phone||'');
-  const digits=num.replace(/\D/g,'');
+  const digits=normaliseLeadPhone(num);
   if(!digits)return false;
   if(digits.startsWith('07')&&!l.mobileVerified)return false;
   return true;
@@ -3012,7 +3156,7 @@ function launchFromComposer(){
   recordEmailCompose(l,{toAddr,subject,schedule,detail:`template: ${tmplLabel}; mode: ${mode}`});
   closeComposer();render();
   _launchGmail(toAddr,subject,body);
-  showToast(`Gmail opened · confirm sent or not sent when you return`);
+  showToast('Gmail open requested - confirm sent or not sent when you return');
 }
 function launchBlankFromComposer(){
   const l=filtered[idx];if(!l||!l.email){showToast('No email on this row','danger');return}
@@ -3024,7 +3168,7 @@ function launchBlankFromComposer(){
   recordEmailCompose(l,{toAddr,subject,schedule:'now',detail:'blank body for GPT drafting'});
   closeComposer();render();
   _launchGmail(toAddr,subject,'');
-  showToast('Blank Gmail opened · confirm sent or not sent when you return');
+  showToast('Blank Gmail open requested - confirm sent or not sent when you return');
 }
 function _launchGmail(to,subject,body){
   const toEnc=encodeURIComponent(to);
@@ -3145,8 +3289,8 @@ function showToast(msg,kind){
 }
 
 // ===== P4: Handover markdown =====
-function generateHandover(){
-  const today=todayKey();
+function generateHandover(generatedAt=new Date()){
+  const today=localDateKey(generatedAt.getTime());
   const isToday=ts=>ts&&localDateKey(ts)===today;
   const todayCalls=[];
   leads.forEach(l=>{l.notes.forEach(n=>{if(!n.legacy&&isToday(n.ts)&&OUTCOMES.includes(n.outcome))todayCalls.push({l,n})})});
@@ -3174,9 +3318,13 @@ function generateHandover(){
   const subjUsedToday=(prefs.usedSubjects[today]||[]);
   const sentEmailRows=eventLog.filter(row=>eventLocalDateKey(row)===today&&row.outcome==='email sent');
   const lines=[];
-  lines.push(`# AresFit Dialer Handover - ${new Date().toLocaleString('en-GB')}`);
+  lines.push(`# AresFit Dialer Handover - ${generatedAt.toLocaleString('en-GB')}`);
   lines.push('');
   lines.push(`**App build:** ${APP_BUILD} (rollback baseline ${ROLLBACK_BASE_COMMIT.slice(0,7)})`);
+  lines.push(`**Release:** ${RELEASE_ID}`);
+  lines.push(`**Export schema:** ${EXPORT_SCHEMA_VERSION} - ${SHEET_COLS.length} columns`);
+  lines.push(`**Exported by:** ${user.name||'sender not set'}`);
+  lines.push(`**Export time:** ${generatedAt.toLocaleString('en-GB')}`);
   lines.push(`**Source CSV:** ${sourceMeta.fileName||'unknown'} - ${sourceMeta.rowCount||raw.length} rows - imported ${sourceMeta.importedAt?new Date(sourceMeta.importedAt).toLocaleString('en-GB'):'time unknown'}`);
   lines.push('**External activity warning:** Calls, emails or edits made outside this app are not included unless they were imported or logged manually.');
   lines.push('');
@@ -3219,8 +3367,8 @@ function generateHandover(){
   return lines.join('\n');
 }
 function showHandover(){const md=generateHandover();document.getElementById('handover-body').textContent=md;document.getElementById('handover-modal').style.display='flex'}
-function copyHandover(){copyToClipboard(document.getElementById('handover-body').textContent);flashDot(true);showToast('Handover copied to clipboard')}
-function downloadHandover(){const md=document.getElementById('handover-body').textContent;const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});downloadBlob(sessionPackageNames(new Date(),user.name).handover,blob)}
+async function copyHandover(){await copyWithFeedback(document.getElementById('handover-body').textContent,'Handover copied to clipboard')}
+function downloadHandover(){const d=new Date();const md=generateHandover(d);const name=sessionPackageNames(d).handover;document.getElementById('handover-body').textContent=md;const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});downloadBlob(name,blob);showToast(`Handover download requested - ${name}`)}
 function closeHandover(){document.getElementById('handover-modal').style.display='none'}
 
 // ===== Subject pool editor =====
@@ -3253,13 +3401,61 @@ function pickDD(ev,f,v){
 document.addEventListener('click',e=>{if(!e.target.closest('.dd'))document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'))});
 
 // ===== CALL =====
+function buildAndroidCircleLoopIntent(number){
+  const clean=normaliseDialNumber(number);
+  const fallback=encodeURIComponent(`tel:${clean}`);
+  return `intent://${clean}#Intent;scheme=tel;package=${CIRCLELOOP_ANDROID_PACKAGE};S.browser_fallback_url=${fallback};end`;
+}
+function launchHrefFromUserGesture(href){
+  const anchor=document.createElement('a');
+  anchor.href=href;
+  anchor.style.display='none';
+  document.body.appendChild(anchor);
+  try{anchor.click()}finally{anchor.remove()}
+}
+function dialRouteForNumber(number){
+  if(isAndroidPlatform())return{kind:'android-circleloop-intent',href:buildAndroidCircleLoopIntent(number)};
+  if(isIOSPlatform()){
+    const scheme=CL_SCHEME_OPTIONS.some(option=>option.value===prefs.clScheme)?prefs.clScheme:CL_SCHEME_DEFAULT;
+    return{kind:'ios-circleloop-scheme',href:scheme+number};
+  }
+  return{kind:'tel',href:`tel:${number}`};
+}
+async function copyTextVerified(txt){
+  let firstError=null;
+  try{
+    if(window.isSecureContext&&navigator.clipboard&&navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(String(txt));
+      return{ok:true,method:'clipboard-api'};
+    }
+  }catch(error){firstError=error}
+  let ta=null;
+  try{
+    ta=document.createElement('textarea');
+    ta.value=String(txt);
+    ta.setAttribute('readonly','');
+    ta.style.position='fixed';ta.style.left='-9999px';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);
+    const ok=!!document.execCommand('copy');
+    return{ok,method:'execCommand',error:ok?'':String(firstError||'copy command returned false')};
+  }catch(error){
+    return{ok:false,method:'none',error:String(error||firstError||'copy failed')};
+  }finally{if(ta&&ta.parentNode)ta.remove()}
+}
+async function copyWithFeedback(text,successMessage){
+  const result=await copyTextVerified(text);
+  recordClipboardDiagnostic(result);
+  showToast(result.ok?successMessage:'Copy failed - the text remains visible',result.ok?'':'danger');
+  return result;
+}
 function tapCall(which){
   const l=filtered[idx];if(!l)return;
   const num=which==='secondary'?(l.phone2||''):(l.phone||'');
-  const digits=num.replace(/\D/g,'');
-  if(!digits){alert('No phone number on this row');return}
+  const dialNumber=normaliseDialNumber(num);
+  const ukNumber=normaliseLeadPhone(num);
+  if(!dialNumber){alert('No phone number on this row');return}
   // Mobile gate now applies to phone2 too - was only enforced on primary before.
-  if(digits.startsWith('07')&&!l.mobileVerified){alert('Mobile number - tick "verified on website" before dialling.');return}
+  if(ukNumber.startsWith('07')&&!l.mobileVerified){alert('Mobile number - tick "verified on website" before dialling.');return}
   const gate=dialGateState(l);
   if(gate.state==='blocked'){
     alert(gate.message||'This row cannot be called');
@@ -3272,28 +3468,43 @@ function tapCall(which){
   }
   // Auto-capture call start time
   if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:'',speakerRole:''};
-  l.pending.callStartTs=Date.now();
+  const callTs=Date.now();
+  l.pending.callStartTs=callTs;
   l.pending.editedHm='';
-  // Clipboard copy - always, as failsafe
-  copyToClipboard(digits);
-  // Use user-selected scheme (default circleloop://call/). On desktop also works via Chrome extension.
-  const scheme=CL_SCHEME_OPTIONS.some(option=>option.value===prefs.clScheme)?prefs.clScheme:CL_SCHEME_DEFAULT;
-  try{window.location.href=scheme+digits}catch(e){}
-  save();renderCard();
+  const copyPromise=copyTextVerified(dialNumber);
+  const route=dialRouteForNumber(dialNumber);
+  l.pending.dialRoute=route.kind;
+  l.pending.dialFeedback='request sent; number remains visible until copy is confirmed.';
+  delete l.pending.dialCopyOk;
+  lastExternalLaunchAt=Date.now();
+  recordDialDiagnostic(route.kind,dialNumberKind(num));
+  save();
+  try{launchHrefFromUserGesture(route.href)}catch(error){
+    l.pending.dialRoute='launch-error';
+    l.pending.dialFeedback='external request failed; use Copy or tap the visible number.';
+    l.pending.dialCopyOk=false;
+    recordDialDiagnostic('launch-error',dialNumberKind(num));
+    showToast('Dial request failed - number remains visible','danger');
+  }
+  renderCard();
+  copyPromise.then(result=>{
+    recordClipboardDiagnostic(result);
+    if(l.pending&&l.pending.callStartTs===callTs){
+      l.pending.dialCopyOk=!!result.ok;
+      l.pending.dialFeedback=result.ok?'number copied; external open requested.':'copy failed; number remains visible.';
+      save();
+      if(filtered[idx]&&String(filtered[idx].id)===String(l.id))renderCard();
+    }
+    showToast(result.ok?'Dial request sent - number copied':'Dial request sent - copy failed; number remains visible',result.ok?'':'danger');
+  });
 }
-function copyPhone(){const l=filtered[idx];if(!l)return;const d=(l.phone||'').replace(/\D/g,'');if(!d)return;copyToClipboard(d);flashDot(true)}
-function copyPhone2(){const l=filtered[idx];if(!l)return;const d=(l.phone2||'').replace(/\D/g,'');if(!d)return;copyToClipboard(d);flashDot(true)}
-function copyBiz(){const l=filtered[idx];if(!l||!l.business)return;copyToClipboard(l.business);flashDot(true);showToast(`Copied: ${l.business}`)}
-function copyToClipboard(txt){
-  try{
-    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt);return}
-  }catch(e){}
-  const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);
-}
-function copyNotes(){
+async function copyPhone(){const l=filtered[idx];if(!l)return;const d=normaliseDialNumber(l.phone);if(!d)return;await copyWithFeedback(d,'Phone number copied')}
+async function copyPhone2(){const l=filtered[idx];if(!l)return;const d=normaliseDialNumber(l.phone2);if(!d)return;await copyWithFeedback(d,'Secondary number copied')}
+async function copyBiz(){const l=filtered[idx];if(!l||!l.business)return;await copyWithFeedback(l.business,`Copied: ${l.business}`)}
+async function copyNotes(){
   const l=filtered[idx];if(!l||!l.notes.length)return;
   const s=l.notes.map(n=>n.legacy?n.text:`${n.dmy} ${n.hm} - ${n.outcome}${n.speakerRole?` [${n.speakerRole}]`:''} - ${n.text}`).join(' | ');
-  copyToClipboard(s);flashDot(true);
+  await copyWithFeedback(s,'Notes copied');
 }
 
 // ===== Outcome / pending note =====
@@ -3328,7 +3539,9 @@ function updatePending(v){
   const needsText=!!l.pending.outcome&&!v.trim()&&!(l.pending.outcome in AUTOFILL_OUTCOMES);
   const warn=document.querySelector('.note-warn');if(warn)warn.classList.toggle('show',needsText);
   const ta=document.getElementById('new-note');if(ta)ta.classList.toggle('pending',needsText);
-  const nb=document.querySelector('.next-btn');if(nb)nb.disabled=needsText;
+  const callbackMissing=l.pending.outcome==='Callback'&&!l.cbDate;
+  const lostReasonMissing=(CALL_OUTCOME_EVENT_MAP[l.pending.outcome]||'')==='lost'&&!l.pending.reason;
+  const nb=document.querySelector('.next-btn');if(nb)nb.disabled=needsText||callbackMissing||lostReasonMissing;
   updateSwapChip(v);
   // Throttled save
   clearTimeout(updatePending._t);updatePending._t=setTimeout(save,400);
@@ -3337,12 +3550,14 @@ function setPendingReason(v){
   const l=filtered[idx];if(!l)return;
   if(!l.pending)l.pending={outcome:'',text:'',callStartTs:0,editedHm:'',reason:'',speakerRole:''};
   l.pending.reason=v;
-  save();
+  save();renderCard();
 }
 function commitPending(){
   const l=filtered[idx];if(!l)return false;
   const p=l.pending||{};
   if(!p.outcome)return true; // nothing to commit
+  if(p.outcome==='Callback'&&!l.cbDate){alert('Callback date and time required before logging.');return false}
+  if((CALL_OUTCOME_EVENT_MAP[p.outcome]||'')==='lost'&&!p.reason){alert('Lost reason required before logging.');return false}
   // Auto-fill default text for low-info outcomes if user left note blank
   if(!p.text.trim()){
     if(AUTOFILL_OUTCOMES[p.outcome])p.text=AUTOFILL_OUTCOMES[p.outcome];
@@ -3383,6 +3598,8 @@ function nav(dir){
       if(!l.pending.text.trim()&&!(l.pending.outcome in AUTOFILL_OUTCOMES)){
         alert('Note required before logging. Type the note or clear the outcome.');return;
       }
+      if(l.pending.outcome==='Callback'&&!l.cbDate){alert('Callback date and time required before logging.');return}
+      if((CALL_OUTCOME_EVENT_MAP[l.pending.outcome]||'')==='lost'&&!l.pending.reason){alert('Lost reason required before logging.');return}
       const lid=l.id;
       if(!commitPending())return;
       justLoggedId=lid;
@@ -3397,7 +3614,7 @@ function nav(dir){
   // Leaving this row clears justLogged
   justLoggedId=null;
   idx=Math.max(0,Math.min(filtered.length-1,idx+dir));
-  render();window.scrollTo({top:0,behavior:'smooth'});
+  save();render();window.scrollTo({top:0,behavior:'smooth'});
 }
 
 // ===== Time edit =====
@@ -3420,9 +3637,11 @@ function openNoteEdit(leadId,noteId){
   noteEditContext={leadId:String(leadId),noteId:String(noteId)};
   document.getElementById('ne-header').textContent=`R${l.row} · ${l.business}`;
   const sel=document.getElementById('ne-outcome');
-  const opts=n.legacy?['legacy',...OUTCOMES,'EMAIL','Note']:[...OUTCOMES,'EMAIL','Note'];
+  const opts=[...(n.legacy?['legacy']:[]),...NOTE_OUTCOMES];
+  if(n.outcome&&!opts.includes(n.outcome))opts.unshift(n.outcome);
   sel.innerHTML=opts.map(o=>`<option value="${esc(o)}"${n.outcome===o?' selected':''}>${esc(o)}</option>`).join('');
   sel.onchange=renderNeCbFields;
+  document.getElementById('ne-speaker').value=['DM','GK'].includes(n.speakerRole)?n.speakerRole:'';
   document.getElementById('ne-date').value=n.dmy||'';
   document.getElementById('ne-time').value=n.hm||'';
   document.getElementById('ne-text').value=n.text||'';
@@ -3430,6 +3649,7 @@ function openNoteEdit(leadId,noteId){
   const dir=n.direction||(l.cbDate?(n.outcome==='Callback'?'out':''):'');
   document.getElementById('ne-dir-out').dataset.sel=(dir==='out'||!dir)?'1':'0';
   document.getElementById('ne-dir-in').dataset.sel=dir==='in'?'1':'0';
+  document.getElementById('ne-cb-date').value=l.cbDate||'';
   document.getElementById('ne-end').value=n.cbEndTime||l.cbEndTime||'';
   document.getElementById('ne-queue').checked=true;
   renderNeCbFields();
@@ -3459,16 +3679,27 @@ function saveNoteEdit(){
   const newDate=document.getElementById('ne-date').value.trim();
   const newTime=document.getElementById('ne-time').value.trim();
   const newText=document.getElementById('ne-text').value.trim();
+  const newSpeaker=document.getElementById('ne-speaker').value;
+  const newCallbackDate=document.getElementById('ne-cb-date').value||'';
   if(!newText){alert('Note text required');return}
   if(newDate&&!/^\d{1,2}\/\d{1,2}$/.test(newDate)){alert('Bad date. Use DD/MM format');return}
+  let noteDay=0,noteMonth=0;
+  if(newDate){
+    [noteDay,noteMonth]=newDate.split('/').map(Number);
+    const maxDay=new Date(2024,noteMonth,0).getDate();
+    if(noteMonth<1||noteMonth>12||noteDay<1||noteDay>maxDay){alert('Bad date. Use a real DD/MM date.');return}
+  }
   let parsedTime='';
   if(newTime){parsedTime=parseTime(newTime);if(!parsedTime){alert('Bad time. Use HH:MM');return}}
+  if(newOutcome==='Callback'&&document.getElementById('ne-queue').checked&&!newCallbackDate){alert('A queued callback needs a scheduled date and time.');return}
   n.outcome=newOutcome;
   n.dmy=newDate;
   n.hm=parsedTime;
   n.text=newText;
+  if(newDate&&parsedTime){const [hour,minute]=parsedTime.split(':').map(Number);n.ts=importedNoteTimestamp(noteDay,noteMonth,hour,minute)}
+  if(['DM','GK'].includes(newSpeaker))n.speakerRole=newSpeaker;else delete n.speakerRole;
   if(newOutcome==='legacy')n.legacy=true;else delete n.legacy;
-  if(newOutcome==='Note')n.manual=true;else delete n.manual;
+  if(newOutcome==='Note'||newOutcome==='Event')n.manual=true;else delete n.manual;
   // Callback-specific fields
   if(newOutcome==='Callback'){
     const dir=document.getElementById('ne-dir-in').dataset.sel==='1'?'in':'out';
@@ -3477,19 +3708,16 @@ function saveNoteEdit(){
     if(endT)n.cbEndTime=endT;else delete n.cbEndTime;
     // If user wants to queue it, write cbDate/cbEndTime onto the lead
     if(document.getElementById('ne-queue').checked){
-      // Build cbDate from note date + time (DD/MM + HH:MM) - assume current year
-      if(newDate&&parsedTime){
-        const [dd,mm]=newDate.split('/').map(x=>parseInt(x,10));
-        const [hh,mi]=parsedTime.split(':').map(x=>parseInt(x,10));
-        const yr=new Date().getFullYear();
-        const iso=`${yr}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}T${String(hh).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
-        l.cbDate=iso;
+      if(newCallbackDate){
+        l.cbDate=newCallbackDate;
         l.cbEndTime=endT;
         l.cbSetAt=Date.now();
         l.callbackSourceNoteId=n.id;
         // Also auto-set row status=Callback if safe
         if(STATUS_SAFE_OVERWRITE.includes((l.status||'').trim())||['Hot Lead','Awaiting Pass-Through'].includes((l.status||'').trim()))l.status='Callback';
       }
+    } else if(String(l.callbackSourceNoteId||'')===String(n.id)){
+      l.cbDate='';l.cbEndTime='';l.cbSetAt=0;delete l.callbackSourceNoteId;
     }
   } else {
     delete n.direction;delete n.cbEndTime;
@@ -3500,7 +3728,7 @@ function saveNoteEdit(){
   // Recalculate attempts
   l.attempts=countLeadAttempts(l.notes);
   const after={outcome:n.outcome||'',dmy:n.dmy||'',hm:n.hm||'',text:n.text||'',speakerRole:n.speakerRole||''};
-  appendEventRow(buildEventRow(l,{channel:'app issue',outcome:'HOLD',next_action:'note correction recorded',proof_source:'in-app note edit audit',notes:`Note edited from ${JSON.stringify(before)} to ${JSON.stringify(after)}`}));
+  if(!appendEventRow(buildEventRow(l,{channel:'app issue',outcome:'HOLD',next_action:'note correction recorded',proof_source:'in-app note edit audit',blocked_value:'call-sheet note correction',blocker_type:'app/CircleLoop',notes:`Note edited from ${JSON.stringify(before)} to ${JSON.stringify(after)}`})))return;
   save();closeNoteEdit();renderCard();renderLeadList();renderStats();renderDueQueueBanner();
   showToast('Note updated · audit event retained');
 }
@@ -3509,7 +3737,7 @@ function deleteNoteEdit(){
   if(!confirm('Delete this note from the call sheet? An audit event will retain what was removed.'))return;
   const l=leads.find(x=>String(x.id)===noteEditContext.leadId);if(!l){closeNoteEdit();return}
   const removed=l.notes.find(x=>String(x.id)===noteEditContext.noteId);if(!removed){closeNoteEdit();return}
-  if(!appendEventRow(buildEventRow(l,{channel:'app issue',outcome:'HOLD',next_action:'note deletion recorded',proof_source:'in-app note delete audit',notes:`Deleted note ${JSON.stringify({outcome:removed.outcome||'',dmy:removed.dmy||'',hm:removed.hm||'',text:removed.text||'',speakerRole:removed.speakerRole||''})}`})))return;
+  if(!appendEventRow(buildEventRow(l,{channel:'app issue',outcome:'HOLD',next_action:'note deletion recorded',proof_source:'in-app note delete audit',blocked_value:'call-sheet note deletion',blocker_type:'app/CircleLoop',notes:`Deleted note ${JSON.stringify({outcome:removed.outcome||'',dmy:removed.dmy||'',hm:removed.hm||'',text:removed.text||'',speakerRole:removed.speakerRole||''})}`})))return;
   l.notes=l.notes.filter(x=>String(x.id)!==noteEditContext.noteId);
   if(String(l.callbackSourceNoteId||'')===String(removed.id)){
     l.cbDate='';l.cbEndTime='';l.cbSetAt=0;delete l.callbackSourceNoteId;
@@ -3642,8 +3870,11 @@ function canExportSnapshot(){
 function generateCsvText(){return buildCsvLines().join('\n')}
 function downloadBlob(filename,blob){
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);
+  try{a.click()}finally{a.remove()}
+  if(!prefs.diagnostics||typeof prefs.diagnostics!=='object')prefs.diagnostics={};
+  prefs.diagnostics.lastDownload=String(filename||'');prefs.diagnostics.lastDownloadAt=Date.now();savePrefs();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
 function crc32(bytes){
   if(!crc32.table){
@@ -3710,7 +3941,7 @@ function exportCSV(){
   const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
   const fn=getExportFileName();
   downloadBlob(fn,blob);
-  flashDot(true);
+  showToast(`CSV download requested - ${fn}`);
 }
 function exportSessionPackage(){
   if(!leads.length){alert('No leads');return}
@@ -3719,12 +3950,11 @@ function exportSessionPackage(){
   const d=new Date();
   const names=sessionPackageNames(d,user.name);
   const zip=createZipBlob([
-    {name:names.handover,text:generateHandover()},
+    {name:names.handover,text:generateHandover(d)},
     {name:names.csv,text:'\ufeff'+generateCsvText()}
   ]);
   downloadBlob(names.zip,zip);
-  flashDot(true);
-  showToast('Exported handover + CSV package');
+  showToast(`Session package download requested - ${names.zip}`);
 }
 function autoBackup(){if(!leads.length)return;exportCSV()}
 function manualBackup(){exportCSV()}
@@ -3734,8 +3964,10 @@ function clNormPhone(raw){
   if(!raw)return '';
   let d=String(raw).replace(/\D/g,'');
   if(!d)return '';
-  if(d.startsWith('44')&&d.length===12)d='0'+d.slice(2);
-  else if(d.startsWith('440')&&d.length===13)d='0'+d.slice(3);
+  if(d.startsWith('00440'))d='0'+d.slice(5);
+  else if(d.startsWith('0044'))d='0'+d.slice(4);
+  else if(d.startsWith('440'))d='0'+d.slice(3);
+  else if(d.startsWith('44'))d='0'+d.slice(2);
   return d;
 }
 // Parse a CircleLoop EXPORT CSV (different format than the import - has phoneNumber1..10 + phoneNumberLabel1..10)
@@ -3745,7 +3977,7 @@ function parseClExport(csvText){
   if(!csvText)return set;
   const rows=parseCSV(csvText);
   if(!rows.length)return set;
-  const headers=rows[0].map(h=>(h||'').trim().replace(/^﻿/,''));
+  const headers=rows[0].map(h=>(h||'').trim().replace(/^\ufeff/,''));
   // Find every "phoneNumberN" column (export uses phoneNumber1..10, import uses phoneNumber + phoneNumber1..3)
   const phoneIdx=[];
   headers.forEach((h,i)=>{if(/^phoneNumber\d*$/i.test(h))phoneIdx.push(i)});
@@ -3761,7 +3993,7 @@ function analyseClExport(csvText){
   if(!csvText)return {set,warnings,rows:0};
   const rows=parseCSV(csvText);
   if(!rows.length)return {set,warnings,rows:0};
-  const headers=rows[0].map(h=>(h||'').trim().replace(/^ï»¿/,''));
+  const headers=rows[0].map(h=>(h||'').trim().replace(/^\ufeff/,''));
   const phoneIdx=[];
   const sourceIdx=headers.findIndex(h=>/^source$/i.test(h));
   const fullNameIdx=headers.findIndex(h=>/^fullName$/i.test(h));
@@ -3929,8 +4161,8 @@ function exportCircleLoopContacts(dedupeSet,opts){
   const fnBase=dedupeSet?`CircleLoop_Import_NEW_ONLY_${scope}${stamp}.csv`:`CircleLoop_Contacts_${scope}${stamp}.csv`;
   downloadBlob(fnBase,blob);
   const detailMsg=dedupeSet
-    ? `Exported ${count} NEW contacts. Current sheet: ${sourceRows}. Fully existing: ${skippedExisting}. Existing contact with new number: ${partialExisting}. Duplicate in export: ${skippedDuplicate}.`
-    : `Exported ${count} contacts for CircleLoop import.`;
+    ? `CircleLoop download requested for ${count} new contacts. Current sheet: ${sourceRows}. Fully existing: ${skippedExisting}. Existing contact with new number: ${partialExisting}. Duplicate in export: ${skippedDuplicate}.`
+    : `CircleLoop download requested for ${count} contacts.`;
   showToast(detailMsg);
 }
 
