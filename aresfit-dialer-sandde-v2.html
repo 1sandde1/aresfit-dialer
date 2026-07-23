@@ -1440,9 +1440,9 @@ function isDueTodayRow(l){
   if(fu){const s=startOfToday(),e=endOfToday();if(fu.ts>=s&&fu.ts<=e)return true}
   return false;
 }
-function allLeadText(l){
+function callbackEvidenceText(l){
   if(!l)return '';
-  const parts=[l.status,l.stage,l.followUp,l.callAngle,l.research,l.business,l.dm];
+  const parts=[l.status,l.stage,l.followUp];
   (l.notes||[]).forEach(n=>parts.push(n.text,n.outcome));
   return parts.join(' ').toLowerCase();
 }
@@ -1463,10 +1463,10 @@ function classifyCallbackState(l){
   const override=callbackOverrideForLead(l);
   if(override)return override;
   const st=(l.status||'').trim();
-  const text=allLeadText(l);
+  const text=callbackEvidenceText(l);
   if(st==='DO NOT CALL')return{state:'',detail:''};
   if(/waiting|await response|whatsapp sent|sent whatsapp|awaiting reply|customer waiting/.test(text))return{state:'waiting reply',detail:'Waiting for customer reply'};
-  if(/park|no current need|nothing immediate|winter|end of year|not in position|future-only|future only/.test(text))return{state:'parked/no current need',detail:'Parked or no current need'};
+  if(/\bpark(?:ed)?\b|no current need|nothing immediate|winter|end of year|not in position|future-only|future only/.test(text))return{state:'parked/no current need',detail:'Parked or no current need'};
   if(/verify|verification|wrong contact|no gmail proof|contact\/email|contact email|bad callback/.test(text))return{state:'contact verification needed',detail:'Needs contact verification'};
   if(/stale|old missed|remove from active|do not chase/.test(text))return{state:'stale callback/remove',detail:'Stale callback'};
   if(st==='Awaiting Callback')return{state:'waiting reply',detail:'Awaiting callback'};
