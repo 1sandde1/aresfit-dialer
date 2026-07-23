@@ -74,8 +74,8 @@ const context = vm.createContext({
 vm.runInContext(script, context);
 
 vm.runInContext(`
-  assert.equal(APP_BUILD, '2026.07.22');
-  assert.equal(RELEASE_ID, '20260722-stable-r1');
+  assert.equal(APP_BUILD, '2026.07.23');
+  assert.equal(RELEASE_ID, '20260723-upload-layout-r1');
   assert.equal(SHEET_COLS.length, 22);
   assert(STATUS_OPTS.includes('Uncalled'));
   assert(STATUS_OPTS.includes('Voicemail'));
@@ -137,7 +137,7 @@ vm.runInContext(`
   assert(alerts.some(message=>message.includes('Lost reason required')));
 `, context);
 
-assert(index.includes('20260722-stable-r1'), 'entry file cache bust does not match the release');
+assert(index.includes('20260723-upload-layout-r1'), 'entry file cache bust does not match the release');
 assert(html.includes('class="queue-chip"'), 'compact queue context is missing');
 assert(html.includes('id="ne-speaker"'), 'editable DM/GK note attribution is missing');
 assert(html.includes('id="ne-cb-date"'), 'separate callback scheduling field is missing from note editing');

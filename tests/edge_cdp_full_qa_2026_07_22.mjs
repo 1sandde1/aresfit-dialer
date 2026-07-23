@@ -186,6 +186,73 @@ async function capture(name, width, height) {
   return layout;
 }
 
+async function captureUpload(name, width, height) {
+  await cdp.send('Emulation.setDeviceMetricsOverride', {
+    width,
+    height,
+    deviceScaleFactor: 1,
+    mobile: true,
+    screenWidth: width,
+    screenHeight: height,
+  });
+  await evaluate('window.scrollTo(0,0); true', { userGesture: false });
+  await sleep(100);
+  const layout = await evaluate(`(() => {
+    const screen=document.getElementById('upload-screen');
+    const card=document.querySelector('.upload-card');
+    const zone=document.getElementById('upload-zone');
+    const title=card?.querySelector('.logo span');
+    const sender=card?.querySelector('.x-btn');
+    const cardRect=card?.getBoundingClientRect();
+    const zoneRect=zone?.getBoundingClientRect();
+    const titleRect=title?.getBoundingClientRect();
+    const senderRect=sender?.getBoundingClientRect();
+    const cardStyle=card?getComputedStyle(card):null;
+    const contentLeft=(cardRect?.left||0)+parseFloat(cardStyle?.borderLeftWidth||0)+parseFloat(cardStyle?.paddingLeft||0);
+    const contentRight=(cardRect?.right||0)-parseFloat(cardStyle?.borderRightWidth||0)-parseFloat(cardStyle?.paddingRight||0);
+    const contentWidth=contentRight-contentLeft;
+    const contentCentre=(contentLeft+contentRight)/2;
+    const overlaps=!!(titleRect&&senderRect&&titleRect.left<senderRect.right&&titleRect.right>senderRect.left&&titleRect.top<senderRect.bottom&&titleRect.bottom>senderRect.top);
+    return {
+      display:getComputedStyle(screen).display,
+      viewport:window.innerWidth,
+      viewportHeight:window.innerHeight,
+      documentWidth:document.documentElement.scrollWidth,
+      cardLeft:cardRect?.left||0,
+      cardRight:cardRect?.right||0,
+      cardTop:cardRect?.top||0,
+      cardBottom:cardRect?.bottom||0,
+      cardWidth:cardRect?.width||0,
+      cardHeight:cardRect?.height||0,
+      cardCentreDelta:Math.abs(((cardRect?.left||0)+(cardRect?.right||0))/2-window.innerWidth/2),
+      zoneLeft:zoneRect?.left||0,
+      zoneRight:zoneRect?.right||0,
+      zoneWidth:zoneRect?.width||0,
+      zoneHeight:zoneRect?.height||0,
+      contentWidth,
+      zoneWidthDelta:Math.abs((zoneRect?.width||0)-contentWidth),
+      zoneCentreDelta:Math.abs(((zoneRect?.left||0)+(zoneRect?.right||0))/2-contentCentre),
+      titleSenderOverlap:overlaps,
+      zoneTextClipped:!!zone&&(zone.scrollWidth>zone.clientWidth+1||zone.scrollHeight>zone.clientHeight+1),
+      clippedButtons:[...card.querySelectorAll('button')].filter(button=>button.scrollWidth>button.clientWidth+1).map(button=>(button.textContent||'').trim())
+    };
+  })()`);
+  check(layout.display === 'flex', `${name} upload screen visible`, JSON.stringify(layout));
+  check(layout.documentWidth <= layout.viewport, `${name} horizontal page fit`, JSON.stringify(layout));
+  check(layout.cardCentreDelta <= 1, `${name} upload card centred`, JSON.stringify(layout));
+  check(layout.zoneCentreDelta <= 1 && layout.zoneWidthDelta <= 1.5, `${name} upload control full-width and centred`, JSON.stringify(layout));
+  check(layout.zoneHeight >= 145, `${name} upload control usable height`, JSON.stringify(layout));
+  check(layout.cardTop >= 0 && layout.cardBottom <= layout.viewportHeight, `${name} upload card vertical fit`, JSON.stringify(layout));
+  check(!layout.titleSenderOverlap, `${name} title and sender do not overlap`, JSON.stringify(layout));
+  check(!layout.zoneTextClipped, `${name} upload text fit`, JSON.stringify(layout));
+  check(layout.clippedButtons.length === 0, `${name} upload buttons fit`, JSON.stringify(layout));
+  const image = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, fromSurface: true });
+  const bytes = Buffer.from(image.data, 'base64');
+  check(bytes.length > 10000, `${name} screenshot nonblank`, `${bytes.length} bytes`);
+  await writeFile(resolve(outputDir, `${name}.png`), bytes);
+  return layout;
+}
+
 try {
   const target = await findPageTarget();
   cdp = new CdpClient(target.webSocketDebuggerUrl);
@@ -203,7 +270,7 @@ try {
   ]);
   await waitFor("document.readyState==='complete'");
   await waitFor("location.pathname.endsWith('aresfit-dialer-sandde-v2.html')");
-  check((await evaluate('location.search')).includes('v=20260722-stable-r1'), 'cache-busted entry redirect');
+  check((await evaluate('location.search')).includes('v=20260723-upload-layout-r1'), 'cache-busted entry redirect');
 
   await evaluate(`localStorage.clear();
     localStorage.setItem('aresfit_sandde_v2_user', JSON.stringify({name:'Sandde Kloer',email:'sandde@aresfit.co.uk'}));
@@ -212,6 +279,11 @@ try {
   await sleep(400);
   await waitFor("document.readyState==='complete' && document.getElementById('upload-screen')?.style.display==='flex'");
   await evaluate("window.__qaAlerts=[]; window.alert=message=>window.__qaAlerts.push(String(message)); window.confirm=()=>true; true");
+  await evaluate("document.getElementById('resume-box').style.display='block'; true");
+
+  await captureUpload('upload-mobile-320x568', 320, 568);
+  await captureUpload('upload-mobile-390x844', 390, 844);
+  await captureUpload('upload-mobile-430x932', 430, 932);
 
   const fixtureText = await readFile(fixturePath, 'utf8');
   await evaluate(`processCsvFile(new File([${JSON.stringify(fixtureText)}], ${JSON.stringify(basename(fixturePath))}, {type:'text/csv'})); true`);
@@ -233,7 +305,7 @@ try {
     headerHeight: Math.round(document.querySelector('.sticky-top').getBoundingClientRect().height),
     dueSlotHeight: Math.round(document.getElementById('due-queue-slot').getBoundingClientRect().height)
   }))()`);
-  check(imported.build === '2026.07.22' && imported.release === '20260722-stable-r1', 'build and release identity', JSON.stringify(imported));
+  check(imported.build === '2026.07.23' && imported.release === '20260723-upload-layout-r1', 'build and release identity', JSON.stringify(imported));
   check(imported.rows === 4 && imported.leads === 4 && imported.schema === 22, '22-column import counts', JSON.stringify(imported));
   check(imported.first === 'QA FRESH FITNESS' && imported.source === basename(fixturePath), 'imported source and first lead', JSON.stringify(imported));
   check(imported.retryAttempts === 1 && imported.callbackRole === 'DM', 'structured note restoration', JSON.stringify(imported));
@@ -351,7 +423,7 @@ try {
   const handoverText = await readFile(resolve(downloadDir, downloads.handover), 'utf8');
   check(csvText.split(/\r?\n/)[0].split(',').length === 22 && csvText.includes('LQA001'), 'downloaded 22-column CSV round trip');
   check(packageBytes.includes(Buffer.from('AresFit_Call_Sheet_')) && packageBytes.includes(Buffer.from('handover-')), 'session package inner files');
-  check(handoverText.includes('**Release:** 20260722-stable-r1') && handoverText.includes('**Export schema:** AresFit-22-column-v1 - 22 columns'), 'handover provenance');
+  check(handoverText.includes('**Release:** 20260723-upload-layout-r1') && handoverText.includes('**Export schema:** AresFit-22-column-v1 - 22 columns'), 'handover provenance');
   check(Object.values(downloads).every(name => /\d{2}-\d{2}-\d{4}_\d{4}/.test(name)), 'all export filenames use readable date and time', JSON.stringify(downloads));
 
   await evaluate(`clearLeadQueue(); filtered=leads; idx=0; prefs.queueBannerCollapsed=true; render(); document.querySelector('.toast')?.remove(); window.scrollTo(0,0); true`);
@@ -366,7 +438,7 @@ try {
   await evaluate('openSettings(); true');
   await waitFor("document.getElementById('settings-modal')?.style.display==='flex'");
   const diagnosticText = await evaluate("document.getElementById('diagnostics-body').textContent");
-  check(diagnosticText.includes('Build: 2026.07.22') && diagnosticText.includes('Last dial route: android-circleloop-intent') && diagnosticText.includes('Last download request:'), 'settings diagnostics evidence', diagnosticText);
+  check(diagnosticText.includes('Build: 2026.07.23') && diagnosticText.includes('Last dial route: android-circleloop-intent') && diagnosticText.includes('Last download request:'), 'settings diagnostics evidence', diagnosticText);
   await evaluate("document.querySelector('.toast')?.remove(); true", { userGesture: false });
   const settingsImage = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false, fromSurface: true });
   await writeFile(resolve(outputDir, 'mobile-settings-390x844.png'), Buffer.from(settingsImage.data, 'base64'));
