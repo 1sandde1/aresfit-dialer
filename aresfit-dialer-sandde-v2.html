@@ -891,9 +891,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.07.23';
-const RELEASE_ID = '20260723-upload-layout-r1';
-const ROLLBACK_BASE_COMMIT = 'f711a4569f6d636cd838be08fd03d95b1c1403d5';
+const APP_BUILD = '2026.07.26';
+const RELEASE_ID = '20260726-retry-override-r1';
+const ROLLBACK_BASE_COMMIT = '7b9ed090b6b1ed6aa4adbcd8479a3f42ce4074f2';
 const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
 const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
 const FIELDS = ['priority','business','phone','website','status','stage','notes','followUp','equipBrands','aresBrands','dm','email','callAngle','research'];
@@ -1379,7 +1379,7 @@ function latestRealNote(l){
 }
 function isRetryLead(l){
   const status=(l.status||'').trim();
-  if(['DO NOT CALL','Not Interested','Provider Reject','Callback','Awaiting Callback','Emailed','Quoted'].includes(status))return false;
+  if(!['','Uncalled','No Answer'].includes(status))return false;
   if(Number(l.attempts||0)!==1)return false;
   const latest=latestRealNote(l);
   if(!latest)return false;

@@ -15,14 +15,14 @@ const latestArchivedIndex = readFileSync(new URL('index.html', latestArchive));
 const latestManifest = readFileSync(new URL('MANIFEST.md', latestArchive), 'utf8');
 const sha256 = value => createHash('sha256').update(value).digest('hex').toUpperCase();
 
-assert.equal(sha256(archivedHtml), 'B683E30073B6B9683E2791D8E8D61A2C92DB4C0D2C6CB3B88F6A09D885A4C5A8');
+assert.equal(sha256(archivedHtml), 'A700AAA2D554EFEF2F43BBD302A68160E04A1492DAA14990212543E06B488264');
 assert.equal(sha256(archivedIndex), 'A6BF541F023CDAA3C3B892BC96540AAF011B32E228236C28B5CAC17D7B370D44');
 assert(manifest.includes('archive/live-2026-07-15-classic-layout-64c3b73'), 'rollback branch is not documented');
 assert.equal(sha256(latestArchivedHtml), 'D9ADB032BC95C12BCCD263E5D719C7F38CF88A0CCF7E68A1DFC4ABCD358FA06A');
 assert.equal(sha256(latestArchivedIndex), '620752BEB96C7A26B912B5471A0B641BA1C20A3D346FD9088B91C9E4E0B3E95B');
 assert(latestManifest.includes('archive/live-2026-07-21-compact-mobile-3995075'), 'latest rollback branch is not documented');
-assert(index.includes('20260723-upload-layout-r1'), 'cache-busting redirect is stale');
-assert(html.includes("const APP_BUILD = '2026.07.23'"), 'build label is stale');
+assert(index.includes('20260726-retry-override-r1'), 'cache-busting redirect is stale');
+assert(html.includes("const APP_BUILD = '2026.07.26'"), 'build label is stale');
 assert(html.includes('@media not all {'), 'the July redesign is not explicitly disabled');
 assert(html.includes('.source-summary,.queue-strip{display:none!important}'), 'new header clutter must stay hidden in the original layout');
 assert(html.includes('class="queue-chip"'), 'the compact in-card queue context is missing');

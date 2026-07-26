@@ -14,7 +14,7 @@ const sha256 = value => createHash('sha256').update(value).digest('hex').toUpper
 
 assert.equal(
   sha256(archivedHtml),
-  'B498C3D16F189CEB0FBF6F32EEC74E8509562DB311FF468F31B7F9A5B6BBD2BD',
+  '7753B90AD751202E619ABE03E9B0FC04E8EEDCFA18CC295B0770F0C871E67451',
   'the preserved 2026.07.14 app changed',
 );
 assert.equal(
@@ -24,8 +24,8 @@ assert.equal(
 );
 assert(manifest.includes('archive/live-2026-07-14-full-qa-c4b70a1'), 'the preserved release branch is not documented');
 assert(archivePolicy.includes('Archived releases are append-only'), 'the future release archive policy is missing');
-assert(index.includes('20260723-upload-layout-r1'), 'the current entry file does not target the stable original-layout revision');
-assert(html.includes("const APP_BUILD = '2026.07.23'"), 'the stable original-layout build identifier is missing');
+assert(index.includes('20260726-retry-override-r1'), 'the current entry file does not target the stable original-layout revision');
+assert(html.includes("const APP_BUILD = '2026.07.26'"), 'the stable original-layout build identifier is missing');
 
 const renderCard = html.slice(html.indexOf('function renderCard()'), html.indexOf('function renderLeadList()'));
 const fieldsPosition = renderCard.indexOf('<div class="fields">');
