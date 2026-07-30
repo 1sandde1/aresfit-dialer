@@ -12,7 +12,7 @@ const duplicateIds = ids.filter((id, index) => ids.indexOf(id) !== index);
 assert.deepEqual([...new Set(duplicateIds)], [], `duplicate HTML ids: ${[...new Set(duplicateIds)].join(', ')}`);
 
 const handlers = [...html.matchAll(/\bon(?:click|change|input|keydown|toggle)="([^"]+)"/g)].map(match => match[1]);
-const ignored = new Set(['if', 'encodeURIComponent', 'parseInt', 'click', 'preventDefault']);
+const ignored = new Set(['if', 'encodeURIComponent', 'parseInt', 'click', 'blur', 'preventDefault']);
 const handlerCalls = new Set();
 for (const handler of handlers) {
   for (const match of handler.matchAll(/\b([A-Za-z_$][\w$]*)\s*\(/g)) {

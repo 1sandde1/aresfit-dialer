@@ -270,7 +270,7 @@ try {
   ]);
   await waitFor("document.readyState==='complete'");
   await waitFor("location.pathname.endsWith('aresfit-dialer-sandde-v2.html')");
-  check((await evaluate('location.search')).includes('v=20260726-retry-override-r1'), 'cache-busted entry redirect');
+  check((await evaluate('location.search')).includes('v=20260730-callback-picker-r1'), 'cache-busted entry redirect');
 
   await evaluate(`localStorage.clear();
     localStorage.setItem('aresfit_sandde_v2_user', JSON.stringify({name:'Sandde Kloer',email:'sandde@aresfit.co.uk'}));
@@ -305,7 +305,7 @@ try {
     headerHeight: Math.round(document.querySelector('.sticky-top').getBoundingClientRect().height),
     dueSlotHeight: Math.round(document.getElementById('due-queue-slot').getBoundingClientRect().height)
   }))()`);
-  check(imported.build === '2026.07.26' && imported.release === '20260726-retry-override-r1', 'build and release identity', JSON.stringify(imported));
+  check(imported.build === '2026.07.30' && imported.release === '20260730-callback-picker-r1', 'build and release identity', JSON.stringify(imported));
   check(imported.rows === 4 && imported.leads === 4 && imported.schema === 22, '22-column import counts', JSON.stringify(imported));
   check(imported.first === 'QA FRESH FITNESS' && imported.source === basename(fixturePath), 'imported source and first lead', JSON.stringify(imported));
   check(imported.retryAttempts === 1 && imported.callbackRole === 'DM', 'structured note restoration', JSON.stringify(imported));
@@ -423,7 +423,7 @@ try {
   const handoverText = await readFile(resolve(downloadDir, downloads.handover), 'utf8');
   check(csvText.split(/\r?\n/)[0].split(',').length === 22 && csvText.includes('LQA001'), 'downloaded 22-column CSV round trip');
   check(packageBytes.includes(Buffer.from('AresFit_Call_Sheet_')) && packageBytes.includes(Buffer.from('handover-')), 'session package inner files');
-  check(handoverText.includes('**Release:** 20260726-retry-override-r1') && handoverText.includes('**Export schema:** AresFit-22-column-v1 - 22 columns'), 'handover provenance');
+  check(handoverText.includes('**Release:** 20260730-callback-picker-r1') && handoverText.includes('**Export schema:** AresFit-22-column-v1 - 22 columns'), 'handover provenance');
   check(Object.values(downloads).every(name => /\d{2}-\d{2}-\d{4}_\d{4}/.test(name)), 'all export filenames use readable date and time', JSON.stringify(downloads));
 
   await evaluate(`clearLeadQueue(); filtered=leads; idx=0; prefs.queueBannerCollapsed=true; render(); document.querySelector('.toast')?.remove(); window.scrollTo(0,0); true`);
@@ -438,7 +438,7 @@ try {
   await evaluate('openSettings(); true');
   await waitFor("document.getElementById('settings-modal')?.style.display==='flex'");
   const diagnosticText = await evaluate("document.getElementById('diagnostics-body').textContent");
-  check(diagnosticText.includes('Build: 2026.07.26') && diagnosticText.includes('Last dial route: android-circleloop-intent') && diagnosticText.includes('Last download request:'), 'settings diagnostics evidence', diagnosticText);
+  check(diagnosticText.includes('Build: 2026.07.30') && diagnosticText.includes('Last dial route: android-circleloop-intent') && diagnosticText.includes('Last download request:'), 'settings diagnostics evidence', diagnosticText);
   await evaluate("document.querySelector('.toast')?.remove(); true", { userGesture: false });
   const settingsImage = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false, fromSurface: true });
   await writeFile(resolve(outputDir, 'mobile-settings-390x844.png'), Buffer.from(settingsImage.data, 'base64'));

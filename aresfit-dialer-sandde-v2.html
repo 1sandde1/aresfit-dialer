@@ -891,9 +891,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.07.26';
-const RELEASE_ID = '20260726-retry-override-r1';
-const ROLLBACK_BASE_COMMIT = '7b9ed090b6b1ed6aa4adbcd8479a3f42ce4074f2';
+const APP_BUILD = '2026.07.30';
+const RELEASE_ID = '20260730-callback-picker-r1';
+const ROLLBACK_BASE_COMMIT = '1696b3b6333f5de59532209b557452e8f2d4584c';
 const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
 const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
 const FIELDS = ['priority','business','phone','website','status','stage','notes','followUp','equipBrands','aresBrands','dm','email','callAngle','research'];
@@ -2635,7 +2635,7 @@ function renderCard(){
         ${pending.outcome?`<button class="btn-ghost" onclick="clearPendingOutcome()" style="width:100%;font-size:12px;margin-top:6px">Clear outcome</button>`:''}
         <div class="note-warn ${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'show':''}">Note required before logging.</div>
         <div class="note-warn ${pendingEventOutcome==='lost'&&!pending.reason?'show':''}">Lost reason required before logging.</div>
-        ${pending.outcome==='Callback'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Callback direction</div><div style="display:flex;gap:4px"><button class="${(pending.direction||'out')==='out'?'sel':''}" onclick="setCbDirection('out')" style="flex:1;padding:8px;border-radius:6px;background:${(pending.direction||'out')==='out'?'#fff':'var(--card)'};color:${(pending.direction||'out')==='out'?'#000':'var(--txt)'};border:1px solid ${(pending.direction||'out')==='out'?'#fff':'var(--border)'};font-size:12px;font-weight:600">I call them</button><button class="${pending.direction==='in'?'sel':''}" onclick="setCbDirection('in')" style="flex:1;padding:8px;border-radius:6px;background:${pending.direction==='in'?'#fff':'var(--card)'};color:${pending.direction==='in'?'#000':'var(--txt)'};border:1px solid ${pending.direction==='in'?'#fff':'var(--border)'};font-size:12px;font-weight:600">They call me</button></div><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">Callback start date & time <span style="color:var(--amber)">· required</span></div><input type="datetime-local" id="cb-in" value="${esc(l.cbDate||'')}" onchange="updateCb(this.value)"><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">End time (optional - defines a window for "they call me")</div><input type="time" id="cb-end" value="${esc(l.cbEndTime||'')}" onchange="updateCbEnd(this.value)"></div>`:''}
+        ${pending.outcome==='Callback'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Callback direction</div><div style="display:flex;gap:4px"><button class="${(pending.direction||'out')==='out'?'sel':''}" onclick="setCbDirection('out')" style="flex:1;padding:8px;border-radius:6px;background:${(pending.direction||'out')==='out'?'#fff':'var(--card)'};color:${(pending.direction||'out')==='out'?'#000':'var(--txt)'};border:1px solid ${(pending.direction||'out')==='out'?'#fff':'var(--border)'};font-size:12px;font-weight:600">I call them</button><button class="${pending.direction==='in'?'sel':''}" onclick="setCbDirection('in')" style="flex:1;padding:8px;border-radius:6px;background:${pending.direction==='in'?'#fff':'var(--card)'};color:${pending.direction==='in'?'#000':'var(--txt)'};border:1px solid ${pending.direction==='in'?'#fff':'var(--border)'};font-size:12px;font-weight:600">They call me</button></div><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">Callback start date & time <span style="color:var(--amber)">· required</span></div><input type="datetime-local" id="cb-in" value="${esc(l.cbDate||'')}" onblur="updateCb(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">End time (optional - defines a window for "they call me")</div><input type="time" id="cb-end" value="${esc(l.cbEndTime||'')}" onblur="updateCbEnd(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"></div>`:''}
         <div class="note-warn ${pending.outcome==='Callback'&&!l.cbDate?'show':''}">Callback date and time required before logging.</div>
         ${l.cbDate&&pending.outcome!=='Callback'?`<button type="button" style="width:100%;margin-top:8px;font-size:11px;color:var(--amber);padding:6px 8px;border:1px dashed var(--amber);border-radius:6px;background:transparent;text-align:left" onclick="openCbEdit()">Scheduled callback: ${esc(l.cbDate.replace('T',' '))}${l.cbEndTime?` to ${esc(l.cbEndTime)}`:''}<span style="float:right">Edit</span></button>`:''}
       </div>
@@ -2787,8 +2787,26 @@ function editField(f,ev){
   ip.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ip.blur()}if(e.key==='Escape'){ip.value=cur;ip.blur()}});
 }
 function updateField(f,v){const l=filtered[idx];if(!l)return;l[f]=v;save();renderLeadList();renderStats()}
-function updateCb(v){const l=filtered[idx];if(!l)return;l.cbDate=v||'';l.cbSetAt=Date.now();save();renderCard();renderLeadList();renderDueQueueBanner()}
-function updateCbEnd(v){const l=filtered[idx];if(!l)return;l.cbEndTime=v||'';save()}
+function updateCb(v){
+  const l=filtered[idx];
+  if(!l)return;
+  const next=v||'';
+  if(next===l.cbDate)return;
+  l.cbDate=next;
+  l.cbSetAt=Date.now();
+  save();
+  renderCard();
+  renderLeadList();
+  renderDueQueueBanner();
+}
+function updateCbEnd(v){
+  const l=filtered[idx];
+  if(!l)return;
+  const next=v||'';
+  if(next===l.cbEndTime)return;
+  l.cbEndTime=next;
+  save();
+}
 function openCbEdit(){
   const l=filtered[idx];if(!l)return;
   document.getElementById('cbe-header').textContent=`R${l.row} · ${l.business}`;
