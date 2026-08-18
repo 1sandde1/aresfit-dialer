@@ -24,8 +24,8 @@ assert.equal(
 );
 assert(manifest.includes('archive/live-2026-07-14-full-qa-c4b70a1'), 'the preserved release branch is not documented');
 assert(archivePolicy.includes('Archived releases are append-only'), 'the future release archive policy is missing');
-assert(index.includes('20260730-callback-picker-r1'), 'the current entry file does not target the stable original-layout revision');
-assert(html.includes("const APP_BUILD = '2026.07.30'"), 'the stable original-layout build identifier is missing');
+assert(index.includes('20260817-uk-callback-display-r1'), 'the current entry file does not target the UK callback display revision');
+assert(html.includes("const APP_BUILD = '2026.08.17'"), 'the current build identifier is missing');
 
 const renderCard = html.slice(html.indexOf('function renderCard()'), html.indexOf('function renderLeadList()'));
 const fieldsPosition = renderCard.indexOf('<div class="fields">');

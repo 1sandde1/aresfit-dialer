@@ -170,7 +170,7 @@ try {
   ]);
   await waitFor("document.readyState==='complete'");
   await waitFor("location.pathname.endsWith('aresfit-dialer-sandde-v2.html')");
-  check((await evaluate('location.search')).includes('v=20260730-callback-picker-r1'), 'cache-busted entry redirect');
+  check((await evaluate('location.search')).includes('v=20260817-uk-callback-display-r1'), 'cache-busted entry redirect');
 
   await evaluate(`localStorage.clear();
     localStorage.setItem('aresfit_sandde_v2_user', JSON.stringify({name:'QA',email:'qa@aresfit.co.uk'}));
@@ -213,7 +213,7 @@ try {
     };
   })()`);
 
-  check(acceptance.build === '2026.07.30' && acceptance.release === '20260730-callback-picker-r1', 'build and release identity', JSON.stringify(acceptance));
+  check(acceptance.build === '2026.08.17' && acceptance.release === '20260817-uk-callback-display-r1', 'build and release identity', JSON.stringify(acceptance));
   check(acceptance.physicalRows === 999 && acceptance.realLeads === 438, 'sheet row and lead counts', JSON.stringify(acceptance));
   check(acceptance.uncalledCount === 75, 'Uncalled count is 75', JSON.stringify(acceptance));
   check(acceptance.uncalledFirst === 'EAST SUSSEX NATIONAL GOLF RESORT AND SPA', 'first Uncalled lead', acceptance.uncalledFirst);
