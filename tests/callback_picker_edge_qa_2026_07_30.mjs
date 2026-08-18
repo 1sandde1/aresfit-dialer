@@ -204,7 +204,7 @@ try {
 
   await waitFor("document.readyState==='complete'");
   await waitFor("location.pathname.endsWith('aresfit-dialer-sandde-v2.html')");
-  check((await evaluate('location.search')).includes('v=20260730-callback-picker-r1'), 'cache-busted entry redirect');
+  check((await evaluate('location.search')).includes('v=20260817-uk-callback-display-r1'), 'cache-busted entry redirect');
 
   await evaluate(`localStorage.clear();
     localStorage.setItem('aresfit_sandde_v2_user', JSON.stringify({name:'Callback QA',email:'qa@aresfit.co.uk'}));
@@ -407,7 +407,7 @@ try {
       exportFollowUp:buildCanonicalSheetRows().find(row=>row.Lead_ID==='LQA001')?.['Follow-up Date'],
     };
   })()`);
-  check(persisted.build === '2026.07.30' && persisted.release === '20260730-callback-picker-r1', 'resumed session uses the callback picker release', JSON.stringify(persisted));
+  check(persisted.build === '2026.08.17' && persisted.release === '20260817-uk-callback-display-r1', 'resumed session uses the UK callback display release', JSON.stringify(persisted));
   check(persisted.start === pickerLifecycle.finalStart && persisted.end === '23:30' && persisted.noteEnd === '23:30', 'complete callback survives reload and resume', JSON.stringify(persisted));
   check(persisted.callbackState === 'future callback' && persisted.exportFollowUp === `${pickerLifecycle.finalStart.replace('T',' ')}-23:30`, 'future callback classification and export snapshot retain the complete callback', JSON.stringify(persisted));
 

@@ -231,6 +231,8 @@ option{background:var(--card);color:var(--txt);padding:6px}
 .time-pill.unset{color:var(--txt3)}
 .note-warn{font-size:11px;color:var(--red2);margin-top:3px;display:none}
 .note-warn.show{display:block}
+.callback-date-preview{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:5px;line-height:1.35}
+.callback-date-preview.invalid{color:var(--red2)}
 
 /* Nav */
 .nav-row{display:flex;gap:6px;margin-top:10px;align-items:center}
@@ -710,11 +712,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
     <p class="sub" style="margin-bottom:10px" id="cbe-header">-</p>
     <div class="c-row">
       <div class="c-lbl">Date & time</div>
-      <input type="datetime-local" id="cbe-date">
+      <input type="datetime-local" id="cbe-date" oninput="refreshCallbackPreview('cbe-date','cbe-date-preview','cbe-end')">
+      <div class="callback-date-preview" id="cbe-date-preview">Choose date and time</div>
     </div>
     <div class="c-row">
       <div class="c-lbl">End time (optional)</div>
-      <input type="time" id="cbe-end">
+      <input type="time" id="cbe-end" oninput="refreshCallbackPreview('cbe-date','cbe-date-preview','cbe-end')">
     </div>
     <div style="display:flex;gap:6px;margin-top:12px;align-items:center">
       <button style="background:#1a0a0a;color:var(--red2);border:1px solid var(--red);padding:10px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" onclick="clearCbEdit()">Clear callback</button>
@@ -763,11 +766,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
       </div>
       <div class="c-row">
         <div class="c-lbl">Scheduled callback date & time</div>
-        <input type="datetime-local" id="ne-cb-date">
+        <input type="datetime-local" id="ne-cb-date" oninput="refreshCallbackPreview('ne-cb-date','ne-cb-date-preview','ne-end')">
+        <div class="callback-date-preview" id="ne-cb-date-preview">Choose date and time</div>
       </div>
       <div class="c-row">
         <div class="c-lbl">End time (optional, defines a window)</div>
-        <input type="time" id="ne-end">
+        <input type="time" id="ne-end" oninput="refreshCallbackPreview('ne-cb-date','ne-cb-date-preview','ne-end')">
       </div>
       <div class="c-row">
         <label class="c-chk"><input type="checkbox" id="ne-queue" checked> Also set this as the row's scheduled callback (adds to due queue)</label>
@@ -891,9 +895,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.07.30';
-const RELEASE_ID = '20260730-callback-picker-r1';
-const ROLLBACK_BASE_COMMIT = '1696b3b6333f5de59532209b557452e8f2d4584c';
+const APP_BUILD = '2026.08.17';
+const RELEASE_ID = '20260817-uk-callback-display-r1';
+const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1';
 const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
 const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
 const FIELDS = ['priority','business','phone','website','status','stage','notes','followUp','equipBrands','aresBrands','dm','email','callAngle','research'];
@@ -945,15 +949,15 @@ const CALL_OUTCOME_EVENT_MAP = {
 const FILTERS = ['All','Recent','Uncalled','Retry','Callback','Future CB','Waiting','Parked','Verify','Stale CB','Awaiting CB','Quoted','Hot','VM','Contacted','Reached','DNC'];
 const FILTER_LABELS = {'Future CB':'Future callbacks',Waiting:'Waiting reply',Verify:'Verify contact','Stale CB':'Stale callbacks','Awaiting CB':'Awaiting callback',VM:'Voicemail',DNC:'Do not call'};
 const CALLBACK_LEAD_OVERRIDES = {
-  L01311:{state:'future callback',detail:'Park until 2026-10-01'},
+  L01311:{state:'future callback',detail:'Park until 01/10/2026'},
   L02465:{state:'parked/no current need',detail:'Touch base near winter/end-year'},
   L03467:{state:'parked/no current need',detail:'No current need; keep parked'},
   L04449:{state:'waiting reply',detail:'WhatsApp sent to Jim; await response'},
   L03003:{state:'parked/no current need',detail:'Not in position right now'},
   L03637:{state:'contact verification needed',detail:'Corrected email/number; verify before contact'},
-  L03684:{state:'future callback',detail:'Park until 2026-08-25'},
+  L03684:{state:'future callback',detail:'Park until 25/08/2026'},
   L03400:{state:'contact verification needed',detail:'Verify contact before more calls'},
-  L04717:{state:'future callback',detail:'Park until 2026-08-01'},
+  L04717:{state:'future callback',detail:'Park until 01/08/2026'},
   L00687:{state:'stale callback/remove',detail:'Old missed callback only'}
 };
 const CALLBACK_NAME_OVERRIDES = {
@@ -1385,6 +1389,81 @@ function isRetryLead(l){
   if(!latest)return false;
   const outcome=(latest.outcome||'').trim();
   return ['NA','No Answer'].includes(outcome);
+}
+function callbackPartsValid(y,mo,d,h=0,mi=0,sec=0,hasTime=false){
+  if(!Number.isInteger(y)||!Number.isInteger(mo)||!Number.isInteger(d)||!Number.isInteger(h)||!Number.isInteger(mi)||!Number.isInteger(sec))return false;
+  if(y<1000||y>9999||mo<1||mo>12||d<1||d>31||h<0||h>23||mi<0||mi>59||sec<0||sec>59)return false;
+  const check=new Date(y,mo-1,d,h,mi,sec,0);
+  if(check.getFullYear()!==y||check.getMonth()!==mo-1||check.getDate()!==d)return false;
+  return !hasTime||(check.getHours()===h&&check.getMinutes()===mi&&check.getSeconds()===sec);
+}
+function callbackDisplayParts(value){
+  const clean=String(value||'').trim();
+  if(!clean)return{ok:false,empty:true,label:''};
+  let m;
+  m=clean.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?\s*-\s*(\d{1,2}):(\d{2})$/);
+  if(m){
+    const y=+m[1],mo=+m[2],d=+m[3],h=+m[4],mi=+m[5],sec=+(m[6]||0),eh=+m[7],emi=+m[8];
+    if(!callbackPartsValid(y,mo,d,h,mi,sec,true)||eh<0||eh>23||emi<0||emi>59)return{ok:false,label:'Invalid callback date'};
+    return{ok:true,y,mo,d,h,mi,hasTime:true,rangeEnd:pad2(eh)+':'+pad2(emi)};
+  }
+  if(/^\d{4}-\d{2}-\d{2}[T ].*(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(clean))return{ok:false,label:'Unsupported timezone date'};
+  m=clean.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if(m){
+    const y=+m[1],mo=+m[2],d=+m[3],h=+m[4],mi=+m[5],sec=+(m[6]||0);
+    if(!callbackPartsValid(y,mo,d,h,mi,sec,true))return{ok:false,label:'Invalid callback date'};
+    return{ok:true,y,mo,d,h,mi,hasTime:true};
+  }
+  m=clean.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m){
+    const y=+m[1],mo=+m[2],d=+m[3];
+    if(!callbackPartsValid(y,mo,d))return{ok:false,label:'Invalid callback date'};
+    return{ok:true,y,mo,d,hasTime:false};
+  }
+  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$/);
+  if(m){
+    const d=+m[1],mo=+m[2],y=+m[3],h=+m[4],mi=+m[5],eh=+m[6],emi=+m[7];
+    if(!callbackPartsValid(y,mo,d,h,mi,0,true)||eh<0||eh>23||emi<0||emi>59)return{ok:false,label:'Invalid callback date'};
+    return{ok:true,y,mo,d,h,mi,hasTime:true,rangeEnd:pad2(eh)+':'+pad2(emi)};
+  }
+  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})$/);
+  if(m){
+    const d=+m[1],mo=+m[2],y=+m[3],h=+m[4],mi=+m[5];
+    if(!callbackPartsValid(y,mo,d,h,mi,0,true))return{ok:false,label:'Invalid callback date'};
+    return{ok:true,y,mo,d,h,mi,hasTime:true};
+  }
+  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m){
+    const d=+m[1],mo=+m[2],y=+m[3];
+    if(!callbackPartsValid(y,mo,d))return{ok:false,label:'Invalid callback date'};
+    return{ok:true,y,mo,d,hasTime:false};
+  }
+  return{ok:false,label:'Invalid callback date'};
+}
+function formatCallbackDisplay(value,endTime=''){
+  const parts=callbackDisplayParts(value);
+  if(!parts.ok)return parts.label;
+  let label=pad2(parts.d)+'/'+pad2(parts.mo)+'/'+parts.y;
+  if(!parts.hasTime)return label;
+  label+=' '+pad2(parts.h)+':'+pad2(parts.mi);
+  const range=String(endTime||parts.rangeEnd||'').trim();
+  if(!range)return label;
+  const m=range.match(/^(\d{1,2}):(\d{2})$/);
+  if(!m||+m[1]>23||+m[2]>59)return 'Invalid callback end time';
+  return label+'-'+pad2(+m[1])+':'+pad2(+m[2]);
+}
+function callbackPreviewMarkup(value,endTime='',id=''){
+  const label=formatCallbackDisplay(value,endTime)||'Choose date and time';
+  const invalid=/^(Invalid|Unsupported)/.test(label);
+  return `<div class="callback-date-preview${invalid?' invalid':''}"${id?` id="${esc(id)}"`:''}>${esc(label)}</div>`;
+}
+function refreshCallbackPreview(dateId,previewId,endId=''){
+  const dateInput=document.getElementById(dateId),preview=document.getElementById(previewId);
+  if(!dateInput||!preview)return;
+  const endInput=endId?document.getElementById(endId):null;
+  const label=formatCallbackDisplay(dateInput.value,endInput?endInput.value:'')||'Choose date and time';
+  preview.textContent=label;
+  preview.classList.toggle('invalid',/^(Invalid|Unsupported)/.test(label));
 }
 // Parse Follow-up Date column - handles ISO date, ISO datetime, UK date, UK date+time range, datetime-local
 function parseFollowUp(s){
@@ -2479,7 +2558,7 @@ function renderCard(){
   const poolFlag=poolStatus(l.id);
 
   // Due banner (P3) - when this lead IS the due/overdue one
-  const dueWhen=l.cbDate?esc((l.cbDate||'').replace('T',' ')):(l.followUp?esc(l.followUp):'today');
+  const dueWhen=esc(formatCallbackDisplay(l.cbDate||l.followUp,l.cbEndTime)||'today');
   const dueBanner=poolFlag?`<div class="due-banner ${poolFlag==='overdue'?'overdue':''}" role="status"><h3>${poolFlag==='overdue'?'OVERDUE':'DUE NOW'} · ${dueWhen}</h3><div class="due-banner-btns"><button class="dismiss" onclick="dismissForToday(${l.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${l.id})">Clear callback</button></div></div>`:'';
 
   // Gates
@@ -2635,9 +2714,9 @@ function renderCard(){
         ${pending.outcome?`<button class="btn-ghost" onclick="clearPendingOutcome()" style="width:100%;font-size:12px;margin-top:6px">Clear outcome</button>`:''}
         <div class="note-warn ${pending.outcome&&!pending.text.trim()&&!(pending.outcome in AUTOFILL_OUTCOMES)?'show':''}">Note required before logging.</div>
         <div class="note-warn ${pendingEventOutcome==='lost'&&!pending.reason?'show':''}">Lost reason required before logging.</div>
-        ${pending.outcome==='Callback'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Callback direction</div><div style="display:flex;gap:4px"><button class="${(pending.direction||'out')==='out'?'sel':''}" onclick="setCbDirection('out')" style="flex:1;padding:8px;border-radius:6px;background:${(pending.direction||'out')==='out'?'#fff':'var(--card)'};color:${(pending.direction||'out')==='out'?'#000':'var(--txt)'};border:1px solid ${(pending.direction||'out')==='out'?'#fff':'var(--border)'};font-size:12px;font-weight:600">I call them</button><button class="${pending.direction==='in'?'sel':''}" onclick="setCbDirection('in')" style="flex:1;padding:8px;border-radius:6px;background:${pending.direction==='in'?'#fff':'var(--card)'};color:${pending.direction==='in'?'#000':'var(--txt)'};border:1px solid ${pending.direction==='in'?'#fff':'var(--border)'};font-size:12px;font-weight:600">They call me</button></div><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">Callback start date & time <span style="color:var(--amber)">· required</span></div><input type="datetime-local" id="cb-in" value="${esc(l.cbDate||'')}" onblur="updateCb(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">End time (optional - defines a window for "they call me")</div><input type="time" id="cb-end" value="${esc(l.cbEndTime||'')}" onblur="updateCbEnd(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"></div>`:''}
+        ${pending.outcome==='Callback'?`<div style="margin-top:8px"><div class="field-lbl" style="margin-bottom:3px">Callback direction</div><div style="display:flex;gap:4px"><button class="${(pending.direction||'out')==='out'?'sel':''}" onclick="setCbDirection('out')" style="flex:1;padding:8px;border-radius:6px;background:${(pending.direction||'out')==='out'?'#fff':'var(--card)'};color:${(pending.direction||'out')==='out'?'#000':'var(--txt)'};border:1px solid ${(pending.direction||'out')==='out'?'#fff':'var(--border)'};font-size:12px;font-weight:600">I call them</button><button class="${pending.direction==='in'?'sel':''}" onclick="setCbDirection('in')" style="flex:1;padding:8px;border-radius:6px;background:${pending.direction==='in'?'#fff':'var(--card)'};color:${pending.direction==='in'?'#000':'var(--txt)'};border:1px solid ${pending.direction==='in'?'#fff':'var(--border)'};font-size:12px;font-weight:600">They call me</button></div><div class="field-lbl" style="margin-top:8px;margin-bottom:3px">Callback start date & time <span style="color:var(--amber)">· required</span></div><input type="datetime-local" id="cb-in" value="${esc(l.cbDate||'')}" oninput="refreshCallbackPreview('cb-in','cb-in-preview','cb-end')" onblur="updateCb(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}">${callbackPreviewMarkup(l.cbDate,l.cbEndTime,'cb-in-preview')}<div class="field-lbl" style="margin-top:8px;margin-bottom:3px">End time (optional - defines a window for "they call me")</div><input type="time" id="cb-end" value="${esc(l.cbEndTime||'')}" oninput="refreshCallbackPreview('cb-in','cb-in-preview','cb-end')" onblur="updateCbEnd(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"></div>`:''}
         <div class="note-warn ${pending.outcome==='Callback'&&!l.cbDate?'show':''}">Callback date and time required before logging.</div>
-        ${l.cbDate&&pending.outcome!=='Callback'?`<button type="button" style="width:100%;margin-top:8px;font-size:11px;color:var(--amber);padding:6px 8px;border:1px dashed var(--amber);border-radius:6px;background:transparent;text-align:left" onclick="openCbEdit()">Scheduled callback: ${esc(l.cbDate.replace('T',' '))}${l.cbEndTime?` to ${esc(l.cbEndTime)}`:''}<span style="float:right">Edit</span></button>`:''}
+        ${l.cbDate&&pending.outcome!=='Callback'?`<button type="button" style="width:100%;margin-top:8px;font-size:11px;color:var(--amber);padding:6px 8px;border:1px dashed var(--amber);border-radius:6px;background:transparent;text-align:left" onclick="openCbEdit()">Scheduled callback: ${esc(formatCallbackDisplay(l.cbDate,l.cbEndTime))}<span style="float:right">Edit</span></button>`:''}
       </div>
 
       ${manualNoteOpen?`
@@ -2812,6 +2891,7 @@ function openCbEdit(){
   document.getElementById('cbe-header').textContent=`R${l.row} · ${l.business}`;
   document.getElementById('cbe-date').value=l.cbDate||'';
   document.getElementById('cbe-end').value=l.cbEndTime||'';
+  refreshCallbackPreview('cbe-date','cbe-date-preview','cbe-end');
   document.getElementById('cb-edit-modal').style.display='flex';
 }
 function closeCbEdit(){document.getElementById('cb-edit-modal').style.display='none'}
@@ -2946,7 +3026,7 @@ function renderDueQueueBanner(){
     return;
   }
   // Expanded form - hide the "jump to lead" CTA if you're already on that row, but keep the banner visible
-  const whenLabel=target.cbDate?esc((target.cbDate||'').replace('T',' ')):(target.followUp?esc(target.followUp):'today');
+  const whenLabel=esc(formatCallbackDisplay(target.cbDate||target.followUp,target.cbEndTime)||'today');
   // Cycle controls: only render when there's more than one to flip through
   const cycleControls=total>1?`<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:6px 0;font-size:11px;color:var(--txt2)"><button onclick="cycleDueQueue(-1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;font-size:11px">Previous</button><span>${dueQueueIdx+1} of ${total}</span><button onclick="cycleDueQueue(1)" style="background:transparent;border:1px solid var(--border2);color:inherit;padding:4px 10px;border-radius:6px;font-size:11px">Next</button></div>`:'';
   slot.innerHTML=`<div class="due-banner ${isOver?'overdue':''}"><h3>${isOver?'OVERDUE':'DUE NOW'} · ${whenLabel}<button onclick="toggleQueueBanner()" style="float:right;background:transparent;border:1px solid var(--border2);color:var(--txt2);font-size:10px;padding:2px 6px;min-height:26px">Hide</button></h3><div class="biz">R${target.row} ${esc(target.business)}</div>${cycleControls}<div class="due-banner-btns">${onTarget?'':`<button class="jump" onclick="jumpToDue(${target.id})">Jump to lead</button>`}<button class="dismiss" onclick="dismissForToday(${target.id})">Dismiss today</button><button class="dismiss" onclick="clearCbFromBanner(${target.id})">Clear callback</button></div></div>`;
@@ -3356,7 +3436,7 @@ function generateHandover(generatedAt=new Date()){
   lines.push('');
   lines.push('## Outstanding callbacks (active call-now only)');
   if(!callbackRows.length)lines.push('_None._');
-  else callbackRows.forEach(l=>lines.push(`- **R${l.row} ${l.business}** - Lead_ID: ${getLeadId(l)||'-'} - ${l.cbDate?(l.cbDate||'').replace('T',' '):'no scheduled time'} - DM: ${l.dm||'?'} - ${format443(l.phone)}`));
+  else callbackRows.forEach(l=>lines.push(`- **R${l.row} ${l.business}** - Lead_ID: ${getLeadId(l)||'-'} - ${formatCallbackDisplay(l.cbDate||l.followUp,l.cbEndTime)||'no scheduled time'} - DM: ${l.dm||'?'} - ${format443(l.phone)}`));
   lines.push('');
   lines.push('## Callback queue state split');
   Object.keys(callbackGroups).forEach(name=>{
@@ -3365,7 +3445,8 @@ function generateHandover(generatedAt=new Date()){
     if(!rows.length)lines.push('_None._');
     else rows.forEach(l=>{
       const c=classifyCallbackState(l);
-      lines.push(`- **R${l.row} ${l.business}** - Lead_ID: ${getLeadId(l)||'-'} - ${c.detail||c.state}`);
+      const callbackWhen=formatCallbackDisplay(l.cbDate||l.followUp,l.cbEndTime);
+      lines.push(`- **R${l.row} ${l.business}** - Lead_ID: ${getLeadId(l)||'-'} - ${c.detail||c.state}${callbackWhen?' - '+callbackWhen:''}`);
     });
     lines.push('');
   });
@@ -3672,6 +3753,7 @@ function openNoteEdit(leadId,noteId){
   document.getElementById('ne-end').value=n.cbEndTime||l.cbEndTime||'';
   document.getElementById('ne-queue').checked=true;
   renderNeCbFields();
+  refreshCallbackPreview('ne-cb-date','ne-cb-date-preview','ne-end');
   document.getElementById('note-edit-modal').style.display='flex';
 }
 function renderNeCbFields(){

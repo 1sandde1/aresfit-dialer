@@ -5,14 +5,14 @@ const html = readFileSync(new URL('../aresfit-dialer-sandde-v2.html', import.met
 const index = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 assert(html.startsWith('<!DOCTYPE html>'), 'the deployable v2 must be a standalone HTML document');
-assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260730-callback-picker-r1'), 'the repository entry link must cache-bust to the verified build');
+assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260817-uk-callback-display-r1'), 'the repository entry link must cache-bust to the verified build');
 assert(html.includes('<link rel="icon" href="data:,">') && index.includes('<link rel="icon" href="data:,">'), 'the public entry and app must not trigger a favicon 404');
 assert(!html.includes('ARES_V2_BASE_URL'), 'the deployable v2 must not fetch a second app at runtime');
 assert(!html.includes('applyUnifiedPatch'), 'the deployable v2 must not patch remote source in the browser');
-assert(html.includes("const APP_BUILD = '2026.07.30'"), 'the visible build identifier is missing');
+assert(html.includes("const APP_BUILD = '2026.08.17'"), 'the visible build identifier is missing');
 assert(!/setTimeout\([^\n]*(?:nl-biz|lead-search|time-in)[^\n]*focus/.test(html), 'delayed modal autofocus can steal user input');
 assert(
-  html.includes("const ROLLBACK_BASE_COMMIT = '1696b3b6333f5de59532209b557452e8f2d4584c'"),
+  html.includes("const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1'"),
   'the exact rollback baseline must be recorded in the app source'
 );
 
