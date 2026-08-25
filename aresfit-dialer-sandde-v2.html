@@ -472,6 +472,32 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
+/* OWR-001 mobile-first lead-card layout. */
+.research-first{margin:9px 0 7px;padding:8px;border-left:3px solid var(--green);border-radius:8px;background:rgba(61,220,132,.05)}
+.research-first .reveal{margin:0 0 6px;background:var(--card)}
+.research-first .reveal>summary{display:flex;align-items:center;min-height:34px}
+.research-first .reveal:last-child{margin-bottom:0}
+.primary-fields{grid-template-columns:1fr!important;margin:8px 0}
+.primary-fields .field{grid-column:1 / -1}
+.contact-phone-field{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;cursor:default}
+.contact-phone-main{min-width:0;cursor:pointer}
+.number-research-link{display:inline-flex;min-height:34px;align-items:center;padding:6px 9px;border:1px solid rgba(61,220,132,.45);border-radius:7px;background:rgba(61,220,132,.08);color:var(--green);font-size:10px;font-weight:700;text-decoration:none;white-space:nowrap}
+body.light-mode .number-research-link{border-color:rgba(13,107,42,.42);background:#e2eee7;color:#0d6b2a}
+.more-details{margin:8px 0 10px;border:1px solid var(--border);border-radius:9px;background:var(--card);overflow:hidden}
+.more-details>summary{padding:11px 12px;font-size:11px;font-weight:700;text-transform:uppercase}
+.more-details-body{padding:0 10px 10px;border-top:1px solid var(--border)}
+.more-details-body .fields{margin:9px 0}
+.activity-history-first{margin-top:10px}
+.activity-history-first .notes-hist{max-height:150px}
+.activity-history-first .notes-lbl button,.biz-head .btn-sm{min-height:28px!important}
+.note-composer{margin-top:10px}
+.call-actions{margin-top:8px}
+@media (max-width:430px){
+  .contact-phone-field{grid-template-columns:minmax(0,1fr) auto}
+  .number-research-link{padding:6px 8px}
+  .more-details-body .fields{grid-template-columns:1fr}
+  .more-details-body .field{grid-column:1 / -1}
+}
 </style>
 </head>
 <body>
@@ -895,8 +921,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.08.17';
-const RELEASE_ID = '20260817-uk-callback-display-r1';
+const APP_BUILD = '2026.08.25';
+const RELEASE_ID = '20260825-owr-001-mobile-r1';
 const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1';
 const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
 const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
@@ -1151,6 +1177,7 @@ let previousImportSnapshot=null;
 let justLoggedId=null; // tracks lead.id that just had an outcome logged - flips Log/Next button to Next on second tap
 let manualNoteOpen=false; // toggles inline manual-note editor on the call card
 let manualNoteText='';    // draft text for the manual-note editor
+let openMoreDetailsLeadId=null; // preserves the current lead's disclosure through render-triggering edits
 let dueQueueIdx=0;        // index for cycling through overdue/due banner
 let user={name:'', email:''};
 let prefs={autoQueue:true, subjects:null, usedSubjects:{}, dismissedOverdue:[], clScheme:null, queueBannerCollapsed:true, diagnostics:{}};
@@ -1467,25 +1494,14 @@ function refreshCallbackPreview(dateId,previewId,endId=''){
 }
 // Parse Follow-up Date column - handles ISO date, ISO datetime, UK date, UK date+time range, datetime-local
 function parseFollowUp(s){
-  if(!s)return null;
-  const clean=String(s).trim();if(!clean)return null;
-  let m;
-  // ISO datetime: 2026-04-23T14:30 or 2026-04-23 14:30:00
-  m=clean.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if(m){const h=+m[4],mi=+m[5];const hasTime=!(h===0&&mi===0);return{ts:new Date(+m[1],+m[2]-1,+m[3],h,mi).getTime(),hasTime}}
-  // ISO date-only: 2026-04-23
-  m=clean.match(/^(\d{4})-(\d{2})-(\d{2})(?!\d)/);
-  if(m)return{ts:new Date(+m[1],+m[2]-1,+m[3]).getTime(),hasTime:false};
-  // UK date + time range: 23/04/2026 10:00-11:00
-  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
-  if(m)return{ts:new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5]).getTime(),hasTime:true,rangeEnd:pad2(+m[6])+':'+m[7]};
-  // UK date + single time: 23/04/2026 14:30
-  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
-  if(m)return{ts:new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5]).getTime(),hasTime:true};
-  // UK date-only: 23/04/2026
-  m=clean.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if(m)return{ts:new Date(+m[3],+m[2]-1,+m[1]).getTime(),hasTime:false};
-  return null;
+  const parts=callbackDisplayParts(s);
+  if(!parts.ok)return null;
+  const result={
+    ts:new Date(parts.y,parts.mo-1,parts.d,parts.hasTime?parts.h:0,parts.hasTime?parts.mi:0).getTime(),
+    hasTime:parts.hasTime
+  };
+  if(parts.rangeEnd)result.rangeEnd=parts.rangeEnd;
+  return result;
 }
 // Normalise Status values on import - case/spacing variants → canonical dropdown values
 function normStatus(s){
@@ -2262,7 +2278,7 @@ function showMapping(){
   let dnc=0,dead=0,noP=0,noN=0;
   raw.forEach(r=>{const s=(r[st]||'').toUpperCase();if(s==='DNC'||s==='DO NOT CALL')dnc++;else if(s==='DEAD')dead++;if(!(r[ph]||'').replace(/\D/g,''))noP++;if(!(r[nm]||'').trim())noN++});
   const extra=headers.filter(h=>!FIELDS.some(f=>LABELS[f]===h));
-  document.getElementById('import-info').innerHTML=`<div class="import-stats"><strong>${raw.length}</strong> total rows · <strong>${extra.length}</strong> legacy cols preserved: <span style="color:var(--txt3);font-size:11px">${extra.map(esc).join(', ')||'(none)'}</span><br><span class="warn">${dnc} DNC</span>, ${dead} Dead, ${noP} no phone, ${noN} no name<br><strong>~${raw.length-noP-noN} callable</strong> after filter</div>`;
+  document.getElementById('import-info').innerHTML=`<div class="import-stats"><strong>${raw.length}</strong> total rows · <strong>${extra.length}</strong> extra input cols not included in the 22-column backup: <span style="color:var(--txt3);font-size:11px">${extra.map(esc).join(', ')||'(none)'}</span><br><span class="warn">${dnc} DNC</span>, ${dead} Dead, ${noP} no phone, ${noN} no name<br><strong>~${raw.length-noP-noN} callable</strong> after filter</div>`;
   document.getElementById('map-modal').style.display='flex';
 }
 function confirmImport(){
@@ -2527,6 +2543,7 @@ function tapBlockBanner(kind){
   // Single tap action during work hours: jump to callbacks (highest-value default).
   if(kind==='prime'){selectOnlyFilter('Callback');openLeads()}
 }
+function setMoreDetailsOpen(leadId,isOpen){openMoreDetailsLeadId=isOpen?String(leadId):null}
 function renderCard(){
   const slot=document.getElementById('card-slot');
   const l=filtered[idx];
@@ -2584,15 +2601,15 @@ function renderCard(){
     <button type="button" class="btn-ghost" onclick="markEmailNotSent('${esc(l.id)}')">Not sent</button>
     <button type="button" class="btn-red" onclick="markEmailSent('${esc(l.id)}')">Mark sent</button>
   </div>`:'';
+  const secondaryCallControls=l.phone2?`<div class="call-row" style="margin-top:6px">
+      <button class="call-btn" onclick="tapCall('secondary')" ${gatesPassed2?'':'disabled'} style="${gatesPassed2?'':'opacity:.4;cursor:not-allowed;'}font-size:13px;padding:10px">CALL ALT<span class="n">${phone2Fmt}</span></button>
+      <button class="copy-btn" onclick="copyPhone2()">Copy</button>
+    </div>`:'';
   const callControls=`${mobileGate}${callInfo}
     <div class="call-row">
       <button class="call-btn" onclick="tapCall('primary')" ${gatesPassed?'':'disabled'} style="${gatesPassed?'':'opacity:.4;cursor:not-allowed'}">CALL<span class="n">${phoneFmt||'(no number)'}</span></button>
       <button class="copy-btn" onclick="copyPhone()">Copy</button>
     </div>
-    ${l.phone2?`<div class="call-row" style="margin-top:6px">
-      <button class="call-btn" onclick="tapCall('secondary')" ${gatesPassed2?'':'disabled'} style="${gatesPassed2?'':'opacity:.4;cursor:not-allowed;'}font-size:13px;padding:10px">CALL ALT<span class="n">${phone2Fmt}</span></button>
-      <button class="copy-btn" onclick="copyPhone2()">Copy</button>
-    </div>`:''}
     ${emailBtn}${emailConfirmation}`;
 
   // Swap chip slot (filled by updateSwapChip on input)
@@ -2636,52 +2653,72 @@ function renderCard(){
       })()}
       ${websiteUrl?`<div class="sub"><a href="${esc(websiteUrl)}" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none">${esc(l.website)} ↗</a></div>`:(l.website?`<div class="sub">${esc(l.website)}</div>`:'')}
 
-      <div class="fields">
-        <div class="field" role="button" tabindex="0" onclick="editField('dm',event)" onkeydown="editFieldKey(event,'dm')">
+      <div class="research-first">
+        ${l.research?`<details class="reveal" open><summary>Research notes</summary><div>${esc(l.research)}</div></details>`:''}
+        ${(()=>{const bq=encodeURIComponent(l.business||'');const s='padding:9px;text-align:center;text-decoration:none;font-size:12px;color:var(--txt)';
+          const safariClick=`if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.location.href='x-web-search://?'+'${bq}';return false}`;
+          return `<details class="reveal" open><summary>Research this lead</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"><a href="https://www.google.com/search?q=${bq}" onclick="${safariClick}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">Web search</a><a href="https://find-and-update.company-information.service.gov.uk/search/companies?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">Companies House</a><a href="https://www.facebook.com/search/top?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">Facebook</a><a href="https://www.google.com/maps/search/${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">Maps</a></div></details>`})()}
+      </div>
+
+      <div class="fields primary-fields">
+        <div class="field full" role="button" tabindex="0" onclick="editField('dm',event)" onkeydown="editFieldKey(event,'dm')">
           <div class="field-lbl">Decision Maker <span class="edit">tap</span></div>
           <div class="field-val ${l.dm?'':'empty'}" id="fv-dm">${l.dm?esc(l.dm):'+ add'}</div>
         </div>
-        <div class="field" role="button" tabindex="0" onclick="editField('phone',event)" onkeydown="editFieldKey(event,'phone')">
-          <div class="field-lbl">Phone <span class="edit">tap</span></div>
-          <div class="field-val mono ${phoneFmt?'':'empty'}" id="fv-phone">${phoneFmt||'+ add'}</div>
-        </div>
-        <div class="field" role="button" tabindex="0" onclick="editField('phone2',event)" onkeydown="editFieldKey(event,'phone2')">
-          <div class="field-lbl">Secondary number <span class="edit">tap</span></div>
-          <div class="field-val mono ${phone2Fmt?'':'empty'}" id="fv-phone2">${phone2Fmt||'+ add secondary'}</div>
+        <div class="field full contact-phone-field">
+          <div class="contact-phone-main" role="button" tabindex="0" onclick="editField('phone',event)" onkeydown="editFieldKey(event,'phone')">
+            <div class="field-lbl">Phone <span class="edit">tap</span></div>
+            <div class="field-val mono ${phoneFmt?'':'empty'}" id="fv-phone">${phoneFmt||'+ add'}</div>
+          </div>
+          ${phoneFmt?`<a class="number-research-link" href="https://www.google.com/search?q=${encodeURIComponent(phoneFmt)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Research number</a>`:''}
         </div>
         <div class="field full" role="button" tabindex="0" onclick="editField('email',event)" onkeydown="editFieldKey(event,'email')">
           <div class="field-lbl">Email <span class="edit">tap</span></div>
           <div class="field-val ${l.email?'':'empty'}" id="fv-email">${l.email?esc(l.email):'+ add email'}</div>
         </div>
-        <div class="field full" role="button" tabindex="0" onclick="editField('email2',event)" onkeydown="editFieldKey(event,'email2')">
-          <div class="field-lbl">Secondary email <span class="edit">tap</span></div>
-          <div class="field-val ${l.email2?'':'empty'}" id="fv-email2">${l.email2?esc(l.email2):'+ add secondary email'}</div>
-        </div>
-        <div class="field">
+        <div class="field full">
           <label class="field-lbl" for="status-select">Status / next action</label>
           <select id="status-select" onchange="updateField('status',this.value)">${(l.status&&!STATUS_OPTS.includes(l.status)?[l.status,...STATUS_OPTS]:STATUS_OPTS).map(o=>`<option value="${esc(o)}"${(l.status||'')===o?' selected':''}>${o||'-'}</option>`).join('')}</select>
         </div>
-        <div class="field">
-          <label class="field-lbl" for="stage-select">Funnel Stage</label>
-          <select id="stage-select" onchange="updateField('stage',this.value)">${(l.stage&&!STAGE_OPTS.includes(l.stage)?[l.stage,...STAGE_OPTS]:STAGE_OPTS).map(o=>`<option value="${esc(o)}"${(l.stage||'')===o?' selected':''}>${o||'-'}</option>`).join('')}</select>
-        </div>
-        <div class="field full" role="button" tabindex="0" onclick="editField('equipBrands',event)" onkeydown="editFieldKey(event,'equipBrands')">
-          <div class="field-lbl">Equipment Brands <span class="edit">tap</span></div>
-          <div class="field-val ${l.equipBrands?'':'empty'}" id="fv-equipBrands">${l.equipBrands?esc(l.equipBrands):'+ add if DM confirms kit'}</div>
-        </div>
       </div>
 
-      ${deconToggle}
-      ${l.callAngle?`<details class="reveal" open><summary>Call angle</summary><div>${esc(l.callAngle)}</div></details>`:''}
-      ${l.aresBrands?`<div style="margin:6px 0"><span class="ref-chip"><strong style="color:var(--txt)">AresFit:</strong> ${esc(l.aresBrands)}</span></div>`:''}
-      ${l.research?`<details class="reveal"><summary>Research notes</summary><div>${esc(l.research)}</div></details>`:''}
-      ${(()=>{const bq=encodeURIComponent(l.business||'');const s='padding:9px;text-align:center;text-decoration:none;font-size:12px;color:var(--txt)';
-        // Safari uses x-web-search:// on iOS and falls back to a normal web URL elsewhere.
-        // Falls back to Google search URL on desktop / non-iOS where the scheme isn't supported.
-        const safariClick=`if(/iPad|iPhone|iPod/.test(navigator.userAgent)){window.location.href='x-web-search://?'+'${bq}';return false}`;
-        return `<details class="reveal"><summary>Research this lead</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"><a href="https://www.google.com/search?q=${bq}" onclick="${safariClick}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">Web search</a><a href="https://find-and-update.company-information.service.gov.uk/search/companies?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">Companies House</a><a href="https://www.facebook.com/search/top?q=${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">Facebook</a><a href="https://www.google.com/maps/search/${bq}" target="_blank" rel="noopener" class="btn-ghost" style="${s}">Maps</a></div></details>`})()}
-
       <div class="call-actions">${callControls}</div>
+
+      <details class="more-details"${String(openMoreDetailsLeadId)===String(l.id)?' open':''} ontoggle="setMoreDetailsOpen('${esc(l.id)}',this.open)">
+        <summary>More details</summary>
+        <div class="more-details-body">
+          <div class="fields">
+            <div class="field" role="button" tabindex="0" onclick="editField('phone2',event)" onkeydown="editFieldKey(event,'phone2')">
+              <div class="field-lbl">Secondary number <span class="edit">tap</span></div>
+              <div class="field-val mono ${phone2Fmt?'':'empty'}" id="fv-phone2">${phone2Fmt||'+ add secondary'}</div>
+            </div>
+            <div class="field" role="button" tabindex="0" onclick="editField('email2',event)" onkeydown="editFieldKey(event,'email2')">
+              <div class="field-lbl">Secondary email <span class="edit">tap</span></div>
+              <div class="field-val ${l.email2?'':'empty'}" id="fv-email2">${l.email2?esc(l.email2):'+ add secondary email'}</div>
+            </div>
+            <div class="field">
+              <label class="field-lbl" for="stage-select">Funnel Stage</label>
+              <select id="stage-select" onchange="updateField('stage',this.value)">${(l.stage&&!STAGE_OPTS.includes(l.stage)?[l.stage,...STAGE_OPTS]:STAGE_OPTS).map(o=>`<option value="${esc(o)}"${(l.stage||'')===o?' selected':''}>${o||'-'}</option>`).join('')}</select>
+            </div>
+            <div class="field" role="button" tabindex="0" onclick="editField('equipBrands',event)" onkeydown="editFieldKey(event,'equipBrands')">
+              <div class="field-lbl">Equipment Brands <span class="edit">tap</span></div>
+              <div class="field-val ${l.equipBrands?'':'empty'}" id="fv-equipBrands">${l.equipBrands?esc(l.equipBrands):'+ add if DM confirms kit'}</div>
+            </div>
+          </div>
+          ${secondaryCallControls}
+          ${deconToggle}
+          ${l.callAngle?`<details class="reveal" open><summary>Call angle</summary><div>${esc(l.callAngle)}</div></details>`:''}
+          ${l.aresBrands?`<div style="margin:6px 0"><span class="ref-chip"><strong style="color:var(--txt)">AresFit:</strong> ${esc(l.aresBrands)}</span></div>`:''}
+        </div>
+      </details>
+
+      <div class="notes-wrap activity-history-first">
+        <div class="notes-lbl">
+          <span>Activity & notes ${l.notes.length?`· ${l.notes.length}`:''}</span>
+          ${l.notes.length?`<button class="btn-sm btn-ghost" style="font-size:10px;padding:3px 8px" onclick="copyNotes()">Copy all</button>`:''}
+        </div>
+        <div class="notes-hist" id="notes-hist">${renderNotesHist(l)}</div>
+      </div>
 
       <button class="btn-ghost" onclick="openManualEvent()" style="width:100%;font-size:12px;margin:0 0 10px">Log WhatsApp, quote, supplier, Shopify, blocker, or app issue</button>
 
@@ -2695,15 +2732,9 @@ function renderCard(){
         <button type="button" class="${!pending.speakerRole?'sel':''}" onclick="setSpeakerRole('')">Not recorded</button>
       </div>`:''}
 
-      <div class="notes-wrap">
-        <div class="notes-lbl">
-          <span>Notes history ${l.notes.length?`· ${l.notes.length}`:''}</span>
-          ${l.notes.length?`<button class="btn-sm btn-ghost" style="font-size:10px;padding:3px 8px" onclick="copyNotes()">Copy all</button>`:''}
-        </div>
-        <div class="notes-hist" id="notes-hist">${renderNotesHist(l)}</div>
-
+      <div class="notes-wrap note-composer">
         <div class="notes-lbl" style="margin-top:10px">
-          <span>New note ${pending.outcome?`· <span style="color:var(--amber)">${esc(pending.outcome)}</span> pending`:'· pick outcome first'}</span>
+          <label for="new-note">New note ${pending.outcome?`· <span style="color:var(--amber)">${esc(pending.outcome)}</span> pending`:'· pick outcome first'}</label>
           ${pending.callStartTs?`<span class="time-pill" onclick="openTime('${l.id}','pending')" title="Edit call start time">⏱ ${pendingTime}</span>`:''}
         </div>
         <div class="new-note-row">

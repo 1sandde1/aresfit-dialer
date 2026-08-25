@@ -24,13 +24,14 @@ assert.equal(
 );
 assert(manifest.includes('archive/live-2026-07-14-full-qa-c4b70a1'), 'the preserved release branch is not documented');
 assert(archivePolicy.includes('Archived releases are append-only'), 'the future release archive policy is missing');
-assert(index.includes('20260817-uk-callback-display-r1'), 'the current entry file does not target the UK callback display revision');
-assert(html.includes("const APP_BUILD = '2026.08.17'"), 'the current build identifier is missing');
+assert(index.includes('20260825-owr-001-mobile-r1'), 'the current entry file does not target the OWR-001 mobile release');
+assert(html.includes("const APP_BUILD = '2026.08.25'"), 'the current build identifier is missing');
 
 const renderCard = html.slice(html.indexOf('function renderCard()'), html.indexOf('function renderLeadList()'));
-const fieldsPosition = renderCard.indexOf('<div class="fields">');
+const researchPosition = renderCard.indexOf('<div class="research-first">');
+const fieldsPosition = renderCard.indexOf('<div class="fields primary-fields">');
 const actionsPosition = renderCard.indexOf('<div class="call-actions">');
-assert(fieldsPosition >= 0 && actionsPosition > fieldsPosition, 'lead context must appear before call controls');
+assert(researchPosition >= 0 && fieldsPosition > researchPosition && actionsPosition > fieldsPosition, 'research and primary lead context must appear before call controls');
 const activeCss = html.slice(html.indexOf('<style>'), html.indexOf('@media not all {'));
 assert(activeCss.includes("--font:'DM Sans',sans-serif"), 'the original typography was not restored');
 assert(activeCss.includes('.stat{background:var(--card);padding:8px 6px;border-radius:9px'), 'the original stat cards were not restored');

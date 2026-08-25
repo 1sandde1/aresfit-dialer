@@ -8,7 +8,7 @@ const constants = html
   .match(/const CALLBACK_LEAD_OVERRIDES[\s\S]*?const DUE_WINDOW_MS[^\n]*\n/)[0];
 
 const callbackHelpers = html
-  .match(/function parseFollowUp[\s\S]*?function isCallbackState\(l,state\)\{return classifyCallbackState\(l\)\.state===state\}/)[0];
+  .match(/function callbackPartsValid[\s\S]*?function isCallbackState\(l,state\)\{return classifyCallbackState\(l\)\.state===state\}/)[0];
 
 const duePoolBlock = html
   .match(/function getDuePool\(\)\{[\s\S]*?\r?\n\}\r?\nfunction poolStatus/)[0]

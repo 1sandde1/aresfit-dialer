@@ -21,6 +21,7 @@ const inlineScript = sliceBetween(html, '<script>\n', '\n</script>').slice('<scr
 assert.doesNotThrow(() => new vm.Script(inlineScript, { filename: 'aresfit-dialer-sandde-v2.html' }));
 
 const formatterSource = sliceBetween(html, 'function callbackPartsValid', '// Parse Follow-up Date column');
+const parserSource = sliceBetween(html, 'function callbackPartsValid', '// Normalise Status values on import');
 const context = {
   Date,
   pad2: value => String(value).padStart(2, '0'),
@@ -28,7 +29,7 @@ const context = {
 };
 vm.createContext(context);
 vm.runInContext(
-  `${formatterSource}\nthis.formatCallbackDisplay=formatCallbackDisplay;this.callbackPreviewMarkup=callbackPreviewMarkup;`,
+  `${parserSource}\nthis.formatCallbackDisplay=formatCallbackDisplay;this.callbackPreviewMarkup=callbackPreviewMarkup;this.parseFollowUp=parseFollowUp;`,
   context,
 );
 
@@ -58,9 +59,11 @@ for (const [input, end, expected] of cases) {
 
 assert.match(context.callbackPreviewMarkup('2026-08-26T09:05', '', 'preview-id'), /id="preview-id"/);
 assert.match(context.callbackPreviewMarkup('2026-02-31'), /callback-date-preview invalid/);
+assert.equal(context.parseFollowUp('26/08/2026 09:05-10:30').rangeEnd, '10:30');
+assert.equal(context.parseFollowUp('2026-08-26T09:05:00Z'), null);
+assert.equal(context.parseFollowUp('31/02/2026'), null);
 
 const unchangedBlocks = [
-  ['function parseFollowUp', '// Normalise Status values on import'],
   ['function buildCallEventRow', 'function logCallEvent'],
   ['function updateCb(v)', 'function openCbEdit'],
   ['function saveCbEdit', 'function clearCbEdit'],
@@ -77,10 +80,10 @@ for (const [start, end] of unchangedBlocks) {
   );
 }
 
-assert(html.includes("const APP_BUILD = '2026.08.17'"));
-assert(html.includes("const RELEASE_ID = '20260817-uk-callback-display-r1'"));
+assert(html.includes("const APP_BUILD = '2026.08.25'"));
+assert(html.includes("const RELEASE_ID = '20260825-owr-001-mobile-r1'"));
 assert(html.includes("const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1'"));
-assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260817-uk-callback-display-r1'));
+assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260825-owr-001-mobile-r1'));
 assert.equal((html.match(/id="cbe-date-preview"/g) || []).length, 1);
 assert.equal((html.match(/id="ne-cb-date-preview"/g) || []).length, 1);
 assert.equal((html.match(/callbackPreviewMarkup\(l\.cbDate,l\.cbEndTime,'cb-in-preview'\)/g) || []).length, 1);
