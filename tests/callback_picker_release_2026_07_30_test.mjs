@@ -10,10 +10,10 @@ const archivedHtml = read('../versions/2026-07-30-pre-callback-picker-1696b3b/ar
 const archivedIndex = read('../versions/2026-07-30-pre-callback-picker-1696b3b/index.html');
 const manifest = read('../versions/2026-07-30-pre-callback-picker-1696b3b/MANIFEST.md').toString('utf8');
 
-assert(html.includes("const APP_BUILD = '2026.08.25'"));
-assert(html.includes("const RELEASE_ID = '20260825-owr-001-mobile-r1'"));
+assert(html.includes("const APP_BUILD = '2026.08.25.1'"));
+assert(html.includes("const RELEASE_ID = '20260825-owr-001-mobile-overflow-r1'"));
 assert(html.includes("const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1'"));
-assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260825-owr-001-mobile-r1'));
+assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260825-owr-001-mobile-overflow-r1'));
 
 assert.equal(sha256(archivedHtml), 'D0CDDD45F9CF83853DA2F3A4F0C9ED2D908DAD09CFD4258F3E981C5D3DB58C18');
 assert.equal(sha256(archivedIndex), '6A8DDAE9DFD053FA4B5D0141D7E4C139C1D9E9DA30AAB5F2E9D122BE49F06DD5');
