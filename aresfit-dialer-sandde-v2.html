@@ -473,6 +473,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
 /* OWR-001 mobile-first lead-card layout. */
+html,body{max-width:100%;overflow-x:hidden}
+.app,.card,.research-first,.research-first .reveal{min-width:0;max-width:100%}
+.card>.sub,.card>.sub a,.research-first .reveal>div{overflow-wrap:anywhere;word-break:break-word}
 .research-first{margin:9px 0 7px;padding:8px;border-left:3px solid var(--green);border-radius:8px;background:rgba(61,220,132,.05)}
 .research-first .reveal{margin:0 0 6px;background:var(--card)}
 .research-first .reveal>summary{display:flex;align-items:center;min-height:34px}
@@ -921,8 +924,8 @@ body.light-mode .number-research-link{border-color:rgba(13,107,42,.42);backgroun
    ============================================================ */
 
 // ===== Config / constants =====
-const APP_BUILD = '2026.08.25';
-const RELEASE_ID = '20260825-owr-001-mobile-r1';
+const APP_BUILD = '2026.08.25.1';
+const RELEASE_ID = '20260825-owr-001-mobile-overflow-r1';
 const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1';
 const EXPORT_SCHEMA_VERSION = 'AresFit-22-column-v1';
 const CIRCLELOOP_ANDROID_PACKAGE = 'com.circleloop';
