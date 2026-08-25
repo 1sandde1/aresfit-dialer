@@ -5,11 +5,11 @@ const html = readFileSync(new URL('../aresfit-dialer-sandde-v2.html', import.met
 const index = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 assert(html.startsWith('<!DOCTYPE html>'), 'the deployable v2 must be a standalone HTML document');
-assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260825-owr-001-mobile-overflow-r1'), 'the repository entry link must cache-bust to the verified build');
+assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260825-owr-001-mobile-sticky-r1'), 'the repository entry link must cache-bust to the verified build');
 assert(html.includes('<link rel="icon" href="data:,">') && index.includes('<link rel="icon" href="data:,">'), 'the public entry and app must not trigger a favicon 404');
 assert(!html.includes('ARES_V2_BASE_URL'), 'the deployable v2 must not fetch a second app at runtime');
 assert(!html.includes('applyUnifiedPatch'), 'the deployable v2 must not patch remote source in the browser');
-assert(html.includes("const APP_BUILD = '2026.08.25.1'"), 'the visible build identifier is missing');
+assert(html.includes("const APP_BUILD = '2026.08.25.2'"), 'the visible build identifier is missing');
 assert(!/setTimeout\([^\n]*(?:nl-biz|lead-search|time-in)[^\n]*focus/.test(html), 'delayed modal autofocus can steal user input');
 assert(
   html.includes("const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1'"),
