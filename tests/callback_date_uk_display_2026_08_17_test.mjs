@@ -80,10 +80,10 @@ for (const [start, end] of unchangedBlocks) {
   );
 }
 
-assert(html.includes("const APP_BUILD = '2026.08.25.1'"));
-assert(html.includes("const RELEASE_ID = '20260825-owr-001-mobile-overflow-r1'"));
+assert(html.includes("const APP_BUILD = '2026.08.25.2'"));
+assert(html.includes("const RELEASE_ID = '20260825-owr-001-mobile-sticky-r1'"));
 assert(html.includes("const ROLLBACK_BASE_COMMIT = '1d0df30528684ff7acb277dbc7258e4a626766f1'"));
-assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260825-owr-001-mobile-overflow-r1'));
+assert(index.includes('aresfit-dialer-sandde-v2.html?v=20260825-owr-001-mobile-sticky-r1'));
 assert.equal((html.match(/id="cbe-date-preview"/g) || []).length, 1);
 assert.equal((html.match(/id="ne-cb-date-preview"/g) || []).length, 1);
 assert.equal((html.match(/callbackPreviewMarkup\(l\.cbDate,l\.cbEndTime,'cb-in-preview'\)/g) || []).length, 1);
