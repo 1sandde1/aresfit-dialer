@@ -13,7 +13,7 @@ assert(uploadRule.includes('padding:44px 20px'), 'upload button must retain the 
 assert(uploadRule.includes('margin:14px auto 0'), 'upload button must remain horizontally centred');
 assert(activeCss.includes('.upload-screen{display:flex;align-items:center;justify-content:center;min-height:100vh'), 'upload card must remain centred in the viewport');
 assert(html.includes('<button type="button" class="upload-zone" id="upload-zone"'), 'upload control must remain an accessible button');
-assert(html.includes("const APP_BUILD = '2026.08.17'"), 'upload layout release build is missing');
-assert(html.includes("const RELEASE_ID = '20260817-uk-callback-display-r1'"), 'upload layout release ID is missing');
+assert(html.includes("const APP_BUILD = '2026.08.25'"), 'upload layout release build is missing');
+assert(html.includes("const RELEASE_ID = '20260825-owr-001-mobile-r1'"), 'upload layout release ID is missing');
 
 console.log('upload screen full-width centring regression checks passed');
